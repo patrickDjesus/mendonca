@@ -3,6 +3,7 @@
    Mangá RPG Black & White Design System
    ============================================================ */
 :root {
+  /* Cores - Preto e Branco Absoluto */
   --color-black: #000000;
   --color-white: #ffffff;
   --color-gray-100: #f5f5f5;
@@ -15,11 +16,13 @@
   --color-gray-800: #303030;
   --color-gray-900: #1a1a1a;
 
+  /* Tipografia */
   --font-manga: 'Bangers', 'Impact', 'Arial Black', sans-serif;
   --font-comic: 'Comic Neue', 'Comic Sans MS', cursive;
   --font-body: 'Noto Sans', 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
+  /* Tamanhos */
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
@@ -31,6 +34,7 @@
   --text-5xl: 3.5rem;
   --text-6xl: 5rem;
 
+  /* Espaçamento */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -42,6 +46,7 @@
   --space-12: 3rem;
   --space-16: 4rem;
 
+  /* Bordas Mangá */
   --border-thin: 1px solid var(--color-black);
   --border-medium: 2px solid var(--color-black);
   --border-thick: 3px solid var(--color-black);
@@ -49,16 +54,20 @@
   --border-heavy: 6px solid var(--color-black);
   --border-massive: 8px solid var(--color-black);
 
+  /* Sombras Mangá */
   --shadow-manga: 4px 4px 0px var(--color-black);
   --shadow-manga-lg: 6px 6px 0px var(--color-black);
   --shadow-manga-xl: 8px 8px 0px var(--color-black);
   --shadow-manga-sm: 2px 2px 0px var(--color-black);
   --shadow-manga-deep: 8px 8px 0px var(--color-black), 12px 12px 0px var(--color-gray-800);
+  --shadow-inset-manga: inset 4px 4px 0px rgba(0,0,0,0.1);
 
+  /* Border Radius */
   --radius-sm: 2px;
   --radius-md: 4px;
   --radius-lg: 8px;
 
+  /* Z-Index */
   --z-base: 1;
   --z-dropdown: 10;
   --z-sidebar: 20;
@@ -67,10 +76,12 @@
   --z-toast: 50;
   --z-widget: 25;
 
+  /* Transições */
   --transition-fast: 150ms ease;
   --transition-base: 250ms ease;
   --transition-slow: 400ms ease;
 
+  /* Layout */
   --sidebar-width: 260px;
   --sidebar-collapsed: 70px;
   --header-height: 60px;

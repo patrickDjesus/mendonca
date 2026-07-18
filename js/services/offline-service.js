@@ -11,13 +11,21 @@ const OfflineService = (() => {
 
   let db = null;
 
+  // ---- IndexedDB Init ----
   async function initDB() {
     if (db) return db;
-    return new Promise((resolve) => {
-      if (!window.indexedDB) { resolve(null); return; }
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) {
+        console.warn('IndexedDB not supported, using localStorage');
+        resolve(null);
+        return;
+      }
       const request = indexedDB.open(DB_NAME, DB_VERSION);
       request.onerror = () => resolve(null);
-      request.onsuccess = (event) => { db = event.target.result; resolve(db); };
+      request.onsuccess = (event) => {
+        db = event.target.result;
+        resolve(db);
+      };
       request.onupgradeneeded = (event) => {
         const database = event.target.result;
         if (!database.objectStoreNames.contains(STORE_NAME)) {
@@ -27,8 +35,11 @@ const OfflineService = (() => {
     });
   }
 
+  // ---- Generic Cache ----
   async function cacheData(key, data) {
     const record = { key, data, timestamp: Date.now() };
+
+    // Try IndexedDB
     const database = await initDB();
     if (database) {
       try {
@@ -37,13 +48,19 @@ const OfflineService = (() => {
         return true;
       } catch (e) { /* fall through */ }
     }
+
+    // Fallback to localStorage
     try {
       localStorage.setItem(`enem_${key}`, JSON.stringify(record));
       return true;
-    } catch (e) { return false; }
+    } catch (e) {
+      console.warn('localStorage not available');
+      return false;
+    }
   }
 
   async function getCachedData(key, maxAgeMs = 3600000) {
+    // Try IndexedDB
     const database = await initDB();
     if (database) {
       try {
@@ -53,16 +70,23 @@ const OfflineService = (() => {
           request.onsuccess = () => resolve(request.result);
           request.onerror = () => resolve(null);
         });
-        if (result && (Date.now() - result.timestamp) < maxAgeMs) return result.data;
+        if (result && (Date.now() - result.timestamp) < maxAgeMs) {
+          return result.data;
+        }
       } catch (e) { /* fall through */ }
     }
+
+    // Fallback to localStorage
     try {
       const raw = localStorage.getItem(`enem_${key}`);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if ((Date.now() - parsed.timestamp) < maxAgeMs) return parsed.data;
+        if ((Date.now() - parsed.timestamp) < maxAgeMs) {
+          return parsed.data;
+        }
       }
     } catch (e) { /* ignore */ }
+
     return null;
   }
 
@@ -74,21 +98,33 @@ const OfflineService = (() => {
         tx.objectStore(STORE_NAME).delete(key);
       } catch (e) { /* ignore */ }
     }
-    try { localStorage.removeItem(`enem_${key}`); } catch (e) { /* ignore */ }
+    localStorage.removeItem(`enem_${key}`);
   }
 
   // ---- Offline Queue ----
   function getQueue() {
-    try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch { return []; }
+    try {
+      return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+    } catch {
+      return [];
+    }
   }
 
   function saveQueue(queue) {
-    try { localStorage.setItem(QUEUE_KEY, JSON.stringify(queue)); } catch (e) { /* ignore */ }
+    try {
+      localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+    } catch (e) {
+      console.warn('Could not save offline queue');
+    }
   }
 
   function queueOfflineAction(action) {
     const queue = getQueue();
-    queue.push({ ...action, queuedAt: Date.now(), id: crypto.randomUUID() });
+    queue.push({
+      ...action,
+      queuedAt: Date.now(),
+      id: crypto.randomUUID()
+    });
     saveQueue(queue);
   }
 
@@ -110,9 +146,6 @@ const OfflineService = (() => {
               { timestamp: action.payload.timestamp_seconds, content: action.payload.content, html: action.payload.content_html }
             );
             break;
-          case 'DELETE_NOTE':
-            await SupabaseService.deleteNote(action.noteId);
-            break;
           case 'SUBMIT_CHALLENGE':
             await SupabaseService.submitChallengeResult(
               action.userId, action.challengeId, action.answer, action.timeSpent
@@ -132,7 +165,7 @@ const OfflineService = (() => {
   function signUpOffline(email, password, metadata) {
     const users = JSON.parse(localStorage.getItem('enem_offline_users') || '[]');
     if (users.find(u => u.email === email)) {
-      return { success: false, error: 'Usuario ja existe localmente' };
+      return { success: false, error: 'Usuário já existe localmente' };
     }
     const user = {
       id: crypto.randomUUID(),
@@ -143,35 +176,50 @@ const OfflineService = (() => {
     };
     users.push(user);
     localStorage.setItem('enem_offline_users', JSON.stringify(users));
+
     const session = { user: { id: user.id, email: user.email, user_metadata: metadata }, access_token: 'offline' };
     localStorage.setItem('enem_offline_session', JSON.stringify(session));
-    return { success: true, user: { id: user.id, email, user_metadata: metadata }, session };
+    return { success: true, user: { id: user.id, email, user_metadata: metadata } };
   }
 
   function signInOffline(email, password) {
     const users = JSON.parse(localStorage.getItem('enem_offline_users') || '[]');
     const user = users.find(u => u.email === email && u.password === btoa(password));
-    if (!user) return { success: false, error: 'Credenciais invalidas' };
+    if (!user) {
+      return { success: false, error: 'Credenciais inválidas' };
+    }
     const session = { user: { id: user.id, email: user.email, user_metadata: user.metadata }, access_token: 'offline' };
     localStorage.setItem('enem_offline_session', JSON.stringify(session));
     return { success: true, user: { id: user.id, email, user_metadata: user.metadata }, session };
   }
 
-  function clearOfflineSession() { localStorage.removeItem('enem_offline_session'); }
-
-  function getOfflineSession() {
-    try { const raw = localStorage.getItem('enem_offline_session'); return raw ? JSON.parse(raw) : null; } catch { return null; }
+  function clearOfflineSession() {
+    localStorage.removeItem('enem_offline_session');
   }
 
+  function getOfflineSession() {
+    try {
+      const raw = localStorage.getItem('enem_offline_session');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  // ---- Connection Monitor ----
   function initConnectionMonitor() {
     window.addEventListener('online', () => {
       document.body.classList.remove('offline');
       processOfflineQueue();
-      if (typeof ToastManager !== 'undefined') ToastManager.show('Conexao Restaurada', 'Sincronizando dados...', 'info');
+      if (typeof ToastManager !== 'undefined') {
+        ToastManager.show('Conexão Restaurada', 'Sincronizando dados...', 'success');
+      }
     });
     window.addEventListener('offline', () => {
       document.body.classList.add('offline');
-      if (typeof ToastManager !== 'undefined') ToastManager.show('Sem Conexao', 'Modo offline ativado', 'warning');
+      if (typeof ToastManager !== 'undefined') {
+        ToastManager.show('Sem Conexão', 'Modo offline ativado', 'warning');
+      }
     });
   }
 

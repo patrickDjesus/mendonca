@@ -1,5 +1,6 @@
 /* ============================================================
    APP INITIALIZER - ENEM STUDY
+   Ponto de entrada da aplicação
    ============================================================ */
 
 const App = (() => {
@@ -8,15 +9,25 @@ const App = (() => {
   async function init() {
     if (initialized) return;
 
-    await OfflineService.initDB();
+    // Init offline capabilities
+    OfflineService.initDB();
     OfflineService.initConnectionMonitor();
 
+    // Check for existing session
     const session = SessionManager.getSavedSession();
-    if (session && session.user) SessionManager.setCurrentUser(session.user);
+    if (session && session.user) {
+      SessionManager.setCurrentUser(session.user);
+    }
 
-    SessionManager.startSessionMonitor(async () => SessionManager.getCurrentUser());
+    // Start session monitor
+    SessionManager.startSessionMonitor(async () => {
+      return SessionManager.getCurrentUser();
+    });
+
+    // Request notification permissions
     BreakNotifier.requestPermission();
 
+    // Init page-specific controllers
     const path = window.location.pathname;
     if (path.includes('auth') || path.endsWith('/') || path.endsWith('index.html')) {
       AuthController.init();
@@ -26,9 +37,14 @@ const App = (() => {
     console.log('[ENEM Study] App initialized');
   }
 
-  function isInitialized() { return initialized; }
+  function isInitialized() {
+    return initialized;
+  }
 
   return { init, isInitialized };
 })();
 
-document.addEventListener('DOMContentLoaded', () => App.init());
+// Auto-init on DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  App.init();
+});

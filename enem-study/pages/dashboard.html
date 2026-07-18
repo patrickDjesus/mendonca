@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ENEM Study — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/utils/variables.css">
+  <link rel="stylesheet" href="../css/utils/reset.css">
+  <link rel="stylesheet" href="../css/utils/patterns.css">
+  <link rel="stylesheet" href="../css/animations/animations.css">
+  <link rel="stylesheet" href="../css/components/components.css">
+  <link rel="stylesheet" href="../css/layouts/navigation.css">
+  <link rel="stylesheet" href="../css/layouts/widget.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar__logo">
+      <span class="sidebar__logo-text">ENEM Study</span>
+    </div>
+    <div class="sidebar__nav">
+      <a class="sidebar__link active" href="#/" data-nav="dashboard">
+        <span class="sidebar__link-icon">&#9671;</span>
+        Jornada
+      </a>
+      <a class="sidebar__link" href="#/videos" data-nav="videos">
+        <span class="sidebar__link-icon">&#9654;</span>
+        Videos
+      </a>
+      <a class="sidebar__link" href="#/challenges" data-nav="challenges">
+        <span class="sidebar__link-icon">&#9876;</span>
+        Desafios
+      </a>
+      <a class="sidebar__link" href="#/dungeons" data-nav="dungeons">
+        <span class="sidebar__link-icon">&#9783;</span>
+        Masmorras
+      </a>
+      <a class="sidebar__link" href="#/stats" data-nav="stats">
+        <span class="sidebar__link-icon">&#9733;</span>
+        Grimorio
+      </a>
+      <a class="sidebar__link" href="#/materials" data-nav="materials">
+        <span class="sidebar__link-icon">&#9998;</span>
+        Materiais
+      </a>
+    </div>
+    <div class="sidebar__user" id="sidebar-user">
+      <div class="sidebar__avatar" id="sidebar-avatar">&#9670;</div>
+      <div class="sidebar__user-info">
+        <div class="sidebar__user-name" id="sidebar-name">Aventureiro</div>
+        <div class="sidebar__user-level" id="sidebar-level">Nivel 1</div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile Nav -->
+  <nav class="mobile-nav" id="mobile-nav">
+    <div class="mobile-nav__list">
+      <a class="mobile-nav__link active" href="#/"><span class="mobile-nav__link-icon">&#9671;</span>Jornada</a>
+      <a class="mobile-nav__link" href="#/videos"><span class="mobile-nav__link-icon">&#9654;</span>Videos</a>
+      <a class="mobile-nav__link" href="#/challenges"><span class="mobile-nav__link-icon">&#9876;</span>Desafios</a>
+      <a class="mobile-nav__link" href="#/dungeons"><span class="mobile-nav__link-icon">&#9783;</span>Dungeon</a>
+      <a class="mobile-nav__link" href="#/stats"><span class="mobile-nav__link-icon">&#9733;</span>Grimorio</a>
+    </div>
+  </nav>
+
+  <!-- Widget Trigger -->
+  <button class="widget-trigger" id="widget-trigger" aria-label="Bloco de notas e calculadora">&#9881;</button>
+
+  <!-- Widget Panel -->
+  <div class="widget-panel" id="widget-panel">
+    <div class="widget-panel__tabs">
+      <button class="widget-tab active" data-tab="notepad">Pergaminho</button>
+      <button class="widget-tab" data-tab="calculator">Abaco</button>
+    </div>
+    <div class="widget-notepad active" id="widget-notepad">
+      <div class="widget-notepad__title">Anotacoes Rapidas</div>
+      <textarea class="widget-notepad__textarea" id="notepad-textarea" placeholder="Escreva suas anotacoes aqui..."></textarea>
+      <div class="widget-notepad__actions">
+        <button class="manga-btn manga-btn--sm" id="notepad-save">Salvar</button>
+        <button class="manga-btn manga-btn--sm" id="notepad-clear">Limpar</button>
+      </div>
+    </div>
+    <div class="widget-calculator" id="widget-calculator">
+      <input class="widget-calc__display" id="calc-display" value="0" readonly>
+      <div class="widget-calc__grid">
+        <button class="widget-calc__btn" data-val="C">C</button>
+        <button class="widget-calc__btn" data-val="(">(</button>
+        <button class="widget-calc__btn" data-val=")">)</button>
+        <button class="widget-calc__btn widget-calc__btn--op" data-val="/">/</button>
+        <button class="widget-calc__btn" data-val="7">7</button>
+        <button class="widget-calc__btn" data-val="8">8</button>
+        <button class="widget-calc__btn" data-val="9">9</button>
+        <button class="widget-calc__btn widget-calc__btn--op" data-val="*">*</button>
+        <button class="widget-calc__btn" data-val="4">4</button>
+        <button class="widget-calc__btn" data-val="5">5</button>
+        <button class="widget-calc__btn" data-val="6">6</button>
+        <button class="widget-calc__btn widget-calc__btn--op" data-val="-">-</button>
+        <button class="widget-calc__btn" data-val="1">1</button>
+        <button class="widget-calc__btn" data-val="2">2</button>
+        <button class="widget-calc__btn" data-val="3">3</button>
+        <button class="widget-calc__btn widget-calc__btn--op" data-val="+">+</button>
+        <button class="widget-calc__btn" data-val="0">0</button>
+        <button class="widget-calc__btn" data-val=".">.</button>
+        <button class="widget-calc__btn widget-calc__btn--eq" data-val="=">=</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-content" id="main-content">
+    <div id="app-root">
+      <h1 style="font-family:var(--font-manga);font-size:var(--text-3xl);margin-bottom:var(--space-6);">Mapa da Jornada</h1>
+      <p style="font-family:var(--font-comic);opacity:0.7;">Selecione um ponto no mapa para comecar sua aventura.</p>
+    </div>
+  </main>
+
+  <!-- Focus Overlay -->
+  <div class="focus-overlay" id="focus-overlay"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/services/offline-service.js"></script>
+  <script src="../js/services/supabase-service.js"></script>
+  <script src="../js/utils/session-manager.js"></script>
+  <script src="../js/utils/toast-manager.js"></script>
+  <script src="../js/utils/focus-mode.js"></script>
+  <script src="../js/utils/break-notifier.js"></script>
+  <script src="../js/routers/router.js"></script>
+  <script src="../js/controllers/auth-controller.js"></script>
+  <script src="../js/app.js"></script>
+
+  <script>
+    (function() {
+      // Auth guard
+      var session = SessionManager.getSavedSession();
+      if (!session || !session.user) {
+        window.location.href = '../index.html';
+        return;
+      }
+      SessionManager.setCurrentUser(session.user);
+
+      // Widget toggle
+      var trigger = document.getElementById('widget-trigger');
+      var panel = document.getElementById('widget-panel');
+      trigger.addEventListener('click', function() {
+        panel.classList.toggle('active');
+      });
+
+      // Widget tabs
+      document.querySelectorAll('.widget-tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          document.querySelectorAll('.widget-tab').forEach(function(t) { t.classList.remove('active'); });
+          tab.classList.add('active');
+          var target = tab.dataset.tab;
+          document.getElementById('widget-notepad').classList.toggle('active', target === 'notepad');
+          document.getElementById('widget-calculator').classList.toggle('active', target === 'calculator');
+        });
+      });
+
+      // Calculator
+      var calcDisplay = document.getElementById('calc-display');
+      document.querySelectorAll('.widget-calc__btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var val = btn.dataset.val;
+          if (val === 'C') { calcDisplay.value = '0'; return; }
+          if (val === '=') {
+            try { calcDisplay.value = Function('"use strict"; return (' + calcDisplay.value + ')')(); } catch(e) { calcDisplay.value = 'Erro'; }
+            return;
+          }
+          if (calcDisplay.value === '0') calcDisplay.value = '';
+          calcDisplay.value += val;
+        });
+      });
+
+      // Notepad persistence
+      var notepadKey = 'enem_notepad_' + session.user.id;
+      var textarea = document.getElementById('notepad-textarea');
+      textarea.value = localStorage.getItem(notepadKey) || '';
+      document.getElementById('notepad-save').addEventListener('click', function() {
+        localStorage.setItem(notepadKey, textarea.value);
+        ToastManager.show('Salvo', 'Anotacoes salvas no pergaminho', 'info');
+      });
+      document.getElementById('notepad-clear').addEventListener('click', function() {
+        textarea.value = '';
+        localStorage.removeItem(notepadKey);
+      });
+
+      // Sidebar active state
+      document.querySelectorAll('.sidebar__link, .mobile-nav__link').forEach(function(link) {
+        link.addEventListener('click', function() {
+          document.querySelectorAll('.sidebar__link').forEach(function(l) { l.classList.remove('active'); });
+          document.querySelectorAll('.mobile-nav__link').forEach(function(l) { l.classList.remove('active'); });
+          link.classList.add('active');
+        });
+      });
+
+      // Load user info
+      SupabaseService.getProfile(session.user.id).then(function(profile) {
+        if (profile) {
+          document.getElementById('sidebar-name').textContent = profile.adventurer_name || 'Aventureiro';
+          document.getElementById('sidebar-level').textContent = 'Nivel ' + (profile.level || 1);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

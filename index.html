@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ENEM Study — Forje Seu Destino</title>
+  <meta name="description" content="Plataforma de estudo para o ENEM com estética Mangá RPG">
+  <meta name="theme-color" content="#000000">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- CSS Modular -->
+  <link rel="stylesheet" href="css/utils/variables.css">
+  <link rel="stylesheet" href="css/utils/reset.css">
+  <link rel="stylesheet" href="css/utils/patterns.css">
+  <link rel="stylesheet" href="css/animations/animations.css">
+  <link rel="stylesheet" href="css/components/components.css">
+  <link rel="stylesheet" href="css/pages/auth.css">
+</head>
+<body>
+
+  <!-- ============================================================
+       LOADING SCREEN
+       ============================================================ -->
+  <div class="loading-screen" id="loading-screen">
+    <div class="loading-screen__title">ENEM STUDY</div>
+    <div class="loading-bar">
+      <div class="loading-bar__fill" id="loading-fill"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       IMPACT BURST (fullscreen overlay for dramatic transitions)
+       ============================================================ -->
+  <div class="impact-burst" id="impact-burst">
+    <div class="impact-burst__text"></div>
+  </div>
+
+  <!-- ============================================================
+       AUTH CONTAINER - Diagonal Split Layout
+       ============================================================ -->
+  <main class="auth-container" id="auth-container">
+
+    <!-- ---- LEFT PANEL: LOGIN ---- -->
+    <section class="auth-panel auth-panel--login" id="login-panel">
+
+      <!-- Manga Decorations -->
+      <div class="auth-decoration auth-decoration--dots"></div>
+      <div class="auth-decoration auth-decoration--lines"></div>
+
+      <!-- Logo -->
+      <div class="auth-logo">
+        <h1 class="auth-logo__title">ENEM Study</h1>
+        <p class="auth-logo__subtitle">Forje Seu Destino</p>
+      </div>
+
+      <!-- Login Form -->
+      <form class="auth-form" id="login-form" autocomplete="on">
+
+        <!-- Error Message -->
+        <div class="auth-error" id="login-error"></div>
+
+        <!-- Email -->
+        <div class="auth-form__group">
+          <label class="auth-form__label" for="login-email">E-mail do Herói</label>
+          <input
+            class="auth-form__input"
+            type="email"
+            id="login-email"
+            placeholder="seu@email.com"
+            required
+            autocomplete="email"
+          >
+        </div>
+
+        <!-- Password -->
+        <div class="auth-form__group">
+          <label class="auth-form__label" for="login-password">Senha Secreta</label>
+          <input
+            class="auth-form__input"
+            type="password"
+            id="login-password"
+            placeholder="••••••••"
+            required
+            autocomplete="current-password"
+          >
+        </div>
+
+        <!-- Submit -->
+        <button class="auth-btn auth-btn--primary" type="submit" id="login-submit">
+          Entrar na Guilda
+        </button>
+
+        <!-- Loading -->
+        <div class="auth-loading" id="login-loading">
+          <div class="auth-loading__spinner"></div>
+          <div class="auth-loading__text">Invocando...</div>
+        </div>
+
+        <!-- Toggle to Register -->
+        <div class="auth-toggle">
+          <span class="auth-toggle__text">Novo aventureiro? </span>
+          <a class="auth-toggle__link" id="toggle-to-register" href="#">Crie seu Personagem</a>
+        </div>
+      </form>
+    </section>
+
+    <!-- ---- DIAGONAL DIVIDER ---- -->
+    <div class="auth-diagonal-divider"></div>
+
+    <!-- ---- RIGHT PANEL: REGISTER ---- -->
+    <section class="auth-panel auth-panel--register" id="register-panel">
+
+      <!-- Manga Decorations -->
+      <div class="auth-decoration auth-decoration--crosshatch"></div>
+
+      <!-- Logo -->
+      <div class="auth-logo">
+        <h1 class="auth-logo__title" style="color:#fff">Crie Seu Herói</h1>
+        <p class="auth-logo__subtitle" style="color:rgba(255,255,255,0.5)">A jornada começa aqui</p>
+      </div>
+
+      <!-- Register Error -->
+      <div class="auth-error" id="register-error"></div>
+
+      <!-- Character Creation Container -->
+      <div class="character-creation" id="character-creation" style="display:block">
+
+        <!-- STEP 0: Credentials -->
+        <div class="creation-step active" data-step="0">
+          <h2 class="creation-step__title" style="color:#fff">§ 1 — Credenciais</h2>
+          <form class="auth-form" onsubmit="return false;">
+            <div class="auth-form__group">
+              <label class="auth-form__label" for="reg-email" style="color:rgba(255,255,255,0.7)">E-mail</label>
+              <input
+                class="auth-form__input"
+                type="email"
+                id="reg-email"
+                placeholder="seu@email.com"
+                required
+              >
+            </div>
+            <div class="auth-form__group">
+              <label class="auth-form__label" for="reg-password" style="color:rgba(255,255,255,0.7)">Senha</label>
+              <input
+                class="auth-form__input"
+                type="password"
+                id="reg-password"
+                placeholder="Mínimo 6 caracteres"
+                required
+                minlength="6"
+              >
+            </div>
+          </form>
+        </div>
+
+        <!-- STEP 1: Adventurer Name -->
+        <div class="creation-step" data-step="1">
+          <h2 class="creation-step__title" style="color:#fff">§ 2 — Nome do Aventureiro</h2>
+          <div class="auth-form__group">
+            <label class="auth-form__label" for="reg-name" style="color:rgba(255,255,255,0.7)">Qual será seu nome na guilda?</label>
+            <input
+              class="auth-form__input"
+              type="text"
+              id="reg-name"
+              placeholder="Ex: Sombra de Kael"
+              maxlength="30"
+              minlength="3"
+            >
+            <p style="font-size:12px;opacity:0.4;margin-top:8px;font-family:var(--font-comic)">
+              3 a 30 caracteres. Seu nome ecoará nos corredores da guilda.
+            </p>
+          </div>
+        </div>
+
+        <!-- STEP 2: Avatar Selection -->
+        <div class="creation-step" data-step="2">
+          <h2 class="creation-step__title" style="color:#fff">§ 3 — Escolha Seu Avatar</h2>
+          <p style="font-size:13px;opacity:0.5;margin-bottom:16px;font-family:var(--font-comic)">
+            Seleciona a aparência que representará sua jornada.
+          </p>
+          <div class="avatar-grid" id="avatar-grid"></div>
+        </div>
+
+        <!-- STEP 3: Hero Class -->
+        <div class="creation-step" data-step="3">
+          <h2 class="creation-step__title" style="color:#fff">§ 4 — Classe do Herói</h2>
+          <p style="font-size:13px;opacity:0.5;margin-bottom:16px;font-family:var(--font-comic)">
+            Sua classe define seu foco de estudos e habilidades especiais.
+          </p>
+          <div class="hero-class-grid" id="class-grid"></div>
+        </div>
+
+        <!-- Step Navigation -->
+        <div class="step-nav" id="step-nav">
+          <div class="step-nav__dots">
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+          </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div style="display:flex;gap:12px;margin-top:20px;">
+          <button class="auth-btn auth-btn--white" data-register-prev style="display:none;" id="reg-prev">
+            ← Voltar
+          </button>
+          <button class="auth-btn auth-btn--white" data-register-next id="reg-next">
+            Próximo →
+          </button>
+          <button class="auth-btn auth-btn--white" id="register-submit" style="display:none;">
+            ⚔ Iniciar Jornada
+          </button>
+        </div>
+
+        <!-- Loading -->
+        <div class="auth-loading" id="register-loading">
+          <div class="auth-loading__spinner"></div>
+          <div class="auth-loading__text">Forjando Herói...</div>
+        </div>
+      </div>
+
+      <!-- Toggle to Login -->
+      <div class="auth-toggle" style="margin-top:32px;">
+        <a class="auth-toggle__link" id="toggle-to-login" href="#" style="color:rgba(255,255,255,0.7)">
+          ← Voltar ao Login
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       SCRIPTS - Modular JS
+       ============================================================ -->
+  <!-- Supabase Client (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Services -->
+  <script src="js/services/offline-service.js"></script>
+  <script src="js/services/supabase-service.js"></script>
+
+  <!-- Utils -->
+  <script src="js/utils/session-manager.js"></script>
+  <script src="js/utils/toast-manager.js"></script>
+  <script src="js/utils/focus-mode.js"></script>
+  <script src="js/utils/break-notifier.js"></script>
+
+  <!-- Router -->
+  <script src="js/routers/router.js"></script>
+
+  <!-- Controllers -->
+  <script src="js/controllers/auth-controller.js"></script>
+
+  <!-- App Initializer -->
+  <script src="js/app.js"></script>
+
+  <!-- Loading screen dismiss -->
+  <script>
+    (function() {
+      const fill = document.getElementById('loading-fill');
+      const screen = document.getElementById('loading-screen');
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 25 + 10;
+        if (progress >= 100) {
+          progress = 100;
+          fill.style.width = '100%';
+          clearInterval(interval);
+          setTimeout(() => {
+            screen.classList.add('hidden');
+            setTimeout(() => screen.style.display = 'none', 500);
+          }, 300);
+        } else {
+          fill.style.width = progress + '%';
+        }
+      }, 200);
+
+      // Step navigation logic
+      let step = 0;
+      const totalSteps = 4;
+      const prevBtn = document.getElementById('reg-prev');
+      const nextBtn = document.getElementById('reg-next');
+      const submitBtn = document.getElementById('register-submit');
+      const dots = document.querySelectorAll('.step-dot');
+      const steps = document.querySelectorAll('.creation-step');
+
+      function updateStep() {
+        steps.forEach((s, i) => s.classList.toggle('active', i === step));
+        dots.forEach((d, i) => {
+          d.classList.toggle('active', i === step);
+          d.classList.toggle('completed', i < step);
+        });
+        prevBtn.style.display = step > 0 ? '' : 'none';
+        nextBtn.style.display = step < totalSteps - 1 ? '' : 'none';
+        submitBtn.style.display = step === totalSteps - 1 ? '' : 'none';
+      }
+
+      nextBtn.addEventListener('click', () => {
+        if (step < totalSteps - 1) {
+          step++;
+          updateStep();
+        }
+      });
+
+      prevBtn.addEventListener('click', () => {
+        if (step > 0) {
+          step--;
+          updateStep();
+        }
+      });
+
+      // Sync step with AuthController
+      if (typeof AuthController !== 'undefined') {
+        const origUpdate = AuthController.updateRegistrationView;
+      }
+    })();
+  </script>
+</body>
+</html>

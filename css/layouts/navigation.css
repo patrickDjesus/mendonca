@@ -1,7 +1,9 @@
 /* ============================================================
-   NAVIGATION CSS - ENEM STUDY
+   SIDEBAR / NAVIGATION CSS - ENEM STUDY
+   Menu lateral flutuante (desktop) / inferior (mobile)
    ============================================================ */
 
+/* ---- Desktop Sidebar ---- */
 .sidebar {
   position: fixed;
   left: var(--space-4);
@@ -25,9 +27,18 @@
   margin-bottom: var(--space-2);
 }
 
-.sidebar__logo-text { font-family: var(--font-manga); font-size: var(--text-xl); letter-spacing: 3px; }
+.sidebar__logo-text {
+  font-family: var(--font-manga);
+  font-size: var(--text-xl);
+  letter-spacing: 3px;
+}
 
-.sidebar__nav { display: flex; flex-direction: column; gap: var(--space-1); flex: 1; }
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+}
 
 .sidebar__link {
   display: flex;
@@ -52,11 +63,14 @@
 
 .sidebar__link.active {
   border-color: var(--color-black);
-  background: var(--color-gray-100);
   box-shadow: var(--shadow-manga-sm);
 }
 
-.sidebar__link-icon { font-size: var(--text-xl); width: 28px; text-align: center; }
+.sidebar__link-icon {
+  font-size: var(--text-xl);
+  width: 28px;
+  text-align: center;
+}
 
 .sidebar__user {
   border-top: var(--border-thick);
@@ -77,10 +91,27 @@
   background: var(--color-gray-100);
 }
 
-.sidebar__user-info { flex: 1; min-width: 0; }
-.sidebar__user-name { font-family: var(--font-manga); font-size: var(--text-sm); letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sidebar__user-level { font-family: var(--font-comic); font-size: var(--text-xs); opacity: 0.7; }
+.sidebar__user-info {
+  flex: 1;
+  min-width: 0;
+}
 
+.sidebar__user-name {
+  font-family: var(--font-manga);
+  font-size: var(--text-sm);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar__user-level {
+  font-family: var(--font-comic);
+  font-size: var(--text-xs);
+  opacity: 0.7;
+}
+
+/* ---- Mobile Bottom Nav ---- */
 .mobile-nav {
   display: none;
   position: fixed;
@@ -94,7 +125,10 @@
   padding-bottom: env(safe-area-inset-bottom, var(--space-2));
 }
 
-.mobile-nav__list { display: flex; justify-content: space-around; }
+.mobile-nav__list {
+  display: flex;
+  justify-content: space-around;
+}
 
 .mobile-nav__link {
   display: flex;
@@ -110,9 +144,16 @@
   transition: all var(--transition-fast);
 }
 
-.mobile-nav__link.active { background: var(--color-black); color: var(--color-white); }
-.mobile-nav__link-icon { font-size: var(--text-xl); }
+.mobile-nav__link.active {
+  background: var(--color-black);
+  color: var(--color-white);
+}
 
+.mobile-nav__link-icon {
+  font-size: var(--text-xl);
+}
+
+/* ---- Main Content Offset ---- */
 .main-content {
   margin-left: calc(var(--sidebar-width) + var(--space-8) + var(--space-8));
   padding: var(--space-8);
@@ -120,7 +161,17 @@
 }
 
 @media (max-width: 768px) {
-  .sidebar { display: none; }
-  .mobile-nav { display: block; }
-  .main-content { margin-left: 0; padding: var(--space-4); padding-bottom: 100px; }
+  .sidebar {
+    display: none;
+  }
+
+  .mobile-nav {
+    display: block;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: var(--space-4);
+    padding-bottom: 100px;
+  }
 }

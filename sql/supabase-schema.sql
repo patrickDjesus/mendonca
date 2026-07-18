@@ -325,21 +325,13 @@ CREATE INDEX idx_video_notes_user_video ON public.video_notes(user_id, video_id)
 CREATE INDEX idx_video_notes_timestamp ON public.video_notes(timestamp_seconds);
 CREATE INDEX idx_challenges_subject ON public.challenges(subject);
 CREATE INDEX idx_challenges_difficulty ON public.challenges(difficulty);
-CREATE INDEX idx_challenges_node_id ON public.challenges(node_id);
 CREATE INDEX idx_user_challenge_results_user ON public.user_challenge_results(user_id);
 CREATE INDEX idx_user_challenge_results_challenge ON public.user_challenge_results(challenge_id);
 CREATE INDEX idx_spaced_rep_user_next ON public.spaced_repetition_queue(user_id, next_review_at);
 CREATE INDEX idx_dungeon_sessions_user ON public.user_dungeon_sessions(user_id);
-CREATE INDEX idx_dungeon_room_results_session ON public.user_dungeon_room_results(session_id);
 CREATE INDEX idx_user_stats_user ON public.user_stats(user_id);
 CREATE INDEX idx_user_sessions_user ON public.user_sessions(user_id);
 CREATE INDEX idx_user_sessions_token ON public.user_sessions(session_token);
-CREATE INDEX idx_videos_node_id ON public.videos(node_id);
-CREATE INDEX idx_materials_node_id ON public.materials(node_id);
-CREATE INDEX idx_user_notifications_user ON public.user_notifications(user_id);
-CREATE INDEX idx_user_material_progress_user ON public.user_material_progress(user_id);
-CREATE INDEX idx_user_material_progress_material ON public.user_material_progress(material_id);
-CREATE INDEX idx_user_challenge_results_created ON public.user_challenge_results(created_at);
 
 -- ============================================================
 -- 5. FUNÇÕES E TRIGGERS
@@ -468,9 +460,8 @@ DECLARE
   v_xp INTEGER;
   v_result BOOLEAN;
   v_attempt INTEGER;
-  v_subject TEXT;
 BEGIN
-  SELECT correct_answer, xp_reward, subject INTO v_correct, v_xp, v_subject
+  SELECT correct_answer, xp_reward INTO v_correct, v_xp
   FROM public.challenges WHERE id = p_challenge_id;
 
   v_result := (p_user_answer = v_correct);
@@ -489,14 +480,7 @@ BEGIN
 
   IF v_result THEN
     UPDATE public.user_stats
-    SET challenges_solved = challenges_solved + 1,
-        accuracy_by_subject = jsonb_set(
-          COALESCE(accuracy_by_subject, '{}'),
-          ARRAY[v_subject],
-          to_jsonb(
-            COALESCE((accuracy_by_subject->>v_subject)::INTEGER, 0) + 1
-          )
-        )
+    SET challenges_solved = challenges_solved + 1
     WHERE user_id = p_user_id;
   ELSE
     UPDATE public.user_stats
@@ -552,9 +536,9 @@ BEGIN
   IF p_correct THEN
     UPDATE public.spaced_repetition_queue
     SET consecutive_correct = consecutive_correct + 1,
-        interval_days = GREATEST(1, ROUND(interval_days * ease_factor))::INTEGER,
+        interval_days = GREATEST(1, ROUND(interval_days * ease_factor)),
         ease_factor = LEAST(3.0, ease_factor + 0.1),
-        next_review_at = NOW() + (GREATEST(1, ROUND(interval_days * ease_factor))::INTEGER || ' days')::INTERVAL,
+        next_review_at = NOW() + (GREATEST(1, ROUND(interval_days * ease_factor)) || ' days')::INTERVAL,
         total_reviews = total_reviews + 1
     WHERE user_id = p_user_id AND challenge_id = p_challenge_id;
   ELSE
@@ -577,10 +561,6 @@ CREATE OR REPLACE FUNCTION public.record_study_time(
 )
 RETURNS VOID AS $$
 BEGIN
-  IF p_seconds <= 0 THEN
-    RETURN;
-  END IF;
-
   UPDATE public.profiles
   SET total_study_time_seconds = total_study_time_seconds + p_seconds
   WHERE id = p_user_id;
@@ -632,165 +612,221 @@ ALTER TABLE public.user_sessions ENABLE ROW LEVEL SECURITY;
 
 -- 6.1 Profiles
 CREATE POLICY "Users can view own profile"
-  ON public.profiles FOR SELECT USING (auth.uid() = id);
+  ON public.profiles FOR SELECT
+  USING (auth.uid() = id);
+
 CREATE POLICY "Users can update own profile"
-  ON public.profiles FOR UPDATE USING (auth.uid() = id);
+  ON public.profiles FOR UPDATE
+  USING (auth.uid() = id);
+
 CREATE POLICY "Users can insert own profile"
-  ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+  ON public.profiles FOR INSERT
+  WITH CHECK (auth.uid() = id);
 
 -- 6.2 Avatares (público leitura)
 CREATE POLICY "Anyone can view active avatars"
-  ON public.avatars FOR SELECT USING (active = TRUE);
+  ON public.avatars FOR SELECT
+  USING (active = TRUE);
 
 -- 6.3 Journey Nodes (público leitura)
 CREATE POLICY "Anyone can view active nodes"
-  ON public.journey_nodes FOR SELECT USING (active = TRUE);
+  ON public.journey_nodes FOR SELECT
+  USING (active = TRUE);
 
 -- 6.4 User Journey Progress
 CREATE POLICY "Users can view own progress"
-  ON public.user_journey_progress FOR SELECT USING (auth.uid() = user_id);
+  ON public.user_journey_progress FOR SELECT
+  USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can insert own progress"
-  ON public.user_journey_progress FOR INSERT WITH CHECK (auth.uid() = user_id);
+  ON public.user_journey_progress FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
 CREATE POLICY "Users can update own progress"
-  ON public.user_journey_progress FOR UPDATE USING (auth.uid() = user_id);
+  ON public.user_journey_progress FOR UPDATE
+  USING (auth.uid() = user_id);
 
 -- 6.5 Videos (público leitura)
 CREATE POLICY "Anyone can view videos"
-  ON public.videos FOR SELECT USING (TRUE);
+  ON public.videos FOR SELECT
+  USING (TRUE);
 
 -- 6.6 User Video Progress
 CREATE POLICY "Users can view own video progress"
-  ON public.user_video_progress FOR SELECT USING (auth.uid() = user_id);
+  ON public.user_video_progress FOR SELECT
+  USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can insert own video progress"
-  ON public.user_video_progress FOR INSERT WITH CHECK (auth.uid() = user_id);
+  ON public.user_video_progress FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
 CREATE POLICY "Users can update own video progress"
-  ON public.user_video_progress FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own video progress"
-  ON public.user_video_progress FOR DELETE USING (auth.uid() = user_id);
+  ON public.user_video_progress FOR UPDATE
+  USING (auth.uid() = user_id);
 
 -- 6.7 Video Notes
 CREATE POLICY "Users can view own notes"
-  ON public.video_notes FOR SELECT USING (auth.uid() = user_id);
+  ON public.video_notes FOR SELECT
+  USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can insert own notes"
-  ON public.video_notes FOR INSERT WITH CHECK (auth.uid() = user_id);
+  ON public.video_notes FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
 CREATE POLICY "Users can update own notes"
-  ON public.video_notes FOR UPDATE USING (auth.uid() = user_id);
+  ON public.video_notes FOR UPDATE
+  USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can delete own notes"
-  ON public.video_notes FOR DELETE USING (auth.uid() = user_id);
+  ON public.video_notes FOR DELETE
+  USING (auth.uid() = user_id);
 
 -- 6.8 Materials (público leitura)
 CREATE POLICY "Anyone can view materials"
-  ON public.materials FOR SELECT USING (TRUE);
+  ON public.materials FOR SELECT
+  USING (TRUE);
 
 -- 6.9 User Material Progress
 CREATE POLICY "Users can view own material progress"
-  ON public.user_material_progress FOR SELECT USING (auth.uid() = user_id);
+  ON public.user_material_progress FOR SELECT
+  USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can insert own material progress"
-  ON public.user_material_progress FOR INSERT WITH CHECK (auth.uid() = user_id);
+  ON public.user_material_progress FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
 CREATE POLICY "Users can update own material progress"
-  ON public.user_material_progress FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own material progress"
-  ON public.user_material_progress FOR DELETE USING (auth.uid() = user_id);
+  ON public.user_material_progress FOR UPDATE
+  USING (auth.uid() = user_id);
 
 -- 6.10 Challenges (público leitura)
 CREATE POLICY "Anyone can view challenges"
-  ON public.challenges FOR SELECT USING (active = TRUE);
+  ON public.challenges FOR SELECT
+  USING (active = TRUE);
 
 -- 6.11 User Challenge Results
 CREATE POLICY "Users can view own results"
-  ON public.user_challenge_results FOR SELECT USING (auth.uid() = user_id);
+  ON public.user_challenge_results FOR SELECT
+  USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can insert own results"
-  ON public.user_challenge_results FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can delete own results"
-  ON public.user_challenge_results FOR DELETE USING (auth.uid() = user_id);
+  ON public.user_challenge_results FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
 
 -- 6.12 Spaced Repetition Queue
 CREATE POLICY "Users can view own SR queue"
-  ON public.spaced_repetition_queue FOR SELECT USING (auth.uid() = user_id);
+  ON public.spaced_repetition_queue FOR SELECT
+  USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can insert own SR queue"
-  ON public.spaced_repetition_queue FOR INSERT WITH CHECK (auth.uid() = user_id);
+  ON public.spaced_repetition_queue FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
 CREATE POLICY "Users can update own SR queue"
-  ON public.spaced_repetition_queue FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own SR queue"
-  ON public.spaced_repetition_queue FOR DELETE USING (auth.uid() = user_id);
+  ON public.spaced_repetition_queue FOR UPDATE
+  USING (auth.uid() = user_id);
 
 -- 6.13 Dungeons (público leitura)
 CREATE POLICY "Anyone can view dungeons"
-  ON public.dungeons FOR SELECT USING (active = TRUE);
+  ON public.dungeons FOR SELECT
+  USING (active = TRUE);
 
 -- 6.14 Dungeon Rooms (público leitura)
 CREATE POLICY "Anyone can view dungeon rooms"
-  ON public.dungeon_rooms FOR SELECT USING (TRUE);
+  ON public.dungeon_rooms FOR SELECT
+  USING (TRUE);
 
 -- 6.15 User Dungeon Sessions
 CREATE POLICY "Users can view own sessions"
-  ON public.user_dungeon_sessions FOR SELECT USING (auth.uid() = user_id);
+  ON public.user_dungeon_sessions FOR SELECT
+  USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can insert own sessions"
-  ON public.user_dungeon_sessions FOR INSERT WITH CHECK (auth.uid() = user_id);
+  ON public.user_dungeon_sessions FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
 CREATE POLICY "Users can update own sessions"
-  ON public.user_dungeon_sessions FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own sessions"
-  ON public.user_dungeon_sessions FOR DELETE USING (auth.uid() = user_id);
+  ON public.user_dungeon_sessions FOR UPDATE
+  USING (auth.uid() = user_id);
 
 -- 6.16 User Dungeon Room Results
 CREATE POLICY "Users can view own room results"
   ON public.user_dungeon_room_results FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM public.user_dungeon_sessions
-    WHERE id = session_id AND user_id = auth.uid()
-  ));
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.user_dungeon_sessions
+      WHERE id = session_id AND user_id = auth.uid()
+    )
+  );
+
 CREATE POLICY "Users can insert own room results"
   ON public.user_dungeon_room_results FOR INSERT
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM public.user_dungeon_sessions
-    WHERE id = session_id AND user_id = auth.uid()
-  ));
-CREATE POLICY "Users can delete own room results"
-  ON public.user_dungeon_room_results FOR DELETE
-  USING (EXISTS (
-    SELECT 1 FROM public.user_dungeon_sessions
-    WHERE id = session_id AND user_id = auth.uid()
-  ));
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.user_dungeon_sessions
+      WHERE id = session_id AND user_id = auth.uid()
+    )
+  );
 
 -- 6.17 Notifications
 CREATE POLICY "Users can view own notifications"
-  ON public.user_notifications FOR SELECT USING (auth.uid() = user_id);
+  ON public.user_notifications FOR SELECT
+  USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can insert own notifications"
-  ON public.user_notifications FOR INSERT WITH CHECK (auth.uid() = user_id);
+  ON public.user_notifications FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
 CREATE POLICY "Users can update own notifications"
-  ON public.user_notifications FOR UPDATE USING (auth.uid() = user_id);
+  ON public.user_notifications FOR UPDATE
+  USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can delete own notifications"
-  ON public.user_notifications FOR DELETE USING (auth.uid() = user_id);
+  ON public.user_notifications FOR DELETE
+  USING (auth.uid() = user_id);
 
 -- 6.18 User Stats
 CREATE POLICY "Users can view own stats"
-  ON public.user_stats FOR SELECT USING (auth.uid() = user_id);
+  ON public.user_stats FOR SELECT
+  USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can insert own stats"
-  ON public.user_stats FOR INSERT WITH CHECK (auth.uid() = user_id);
+  ON public.user_stats FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
 CREATE POLICY "Users can update own stats"
-  ON public.user_stats FOR UPDATE USING (auth.uid() = user_id);
+  ON public.user_stats FOR UPDATE
+  USING (auth.uid() = user_id);
 
 -- 6.19 User Sessions
-CREATE POLICY "Users can view own user sessions"
-  ON public.user_sessions FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own user sessions"
-  ON public.user_sessions FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own user sessions"
-  ON public.user_sessions FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own user sessions"
-  ON public.user_sessions FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own sessions"
+  ON public.user_sessions FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own sessions"
+  ON public.user_sessions FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own sessions"
+  ON public.user_sessions FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own sessions"
+  ON public.user_sessions FOR DELETE
+  USING (auth.uid() = user_id);
 
 -- ============================================================
 -- 7. DADOS INICIAIS (SEEDS)
 -- ============================================================
 
+-- 7.1 Avatares padrão
 INSERT INTO public.avatars (name, image_url, description, hero_class_recommended, sort_order) VALUES
   ('Cavaleiro Sombrio', '/assets/avatars/knight.svg', 'Um guerreiro destemido forjado nas trevas', 'guerreiro', 1),
   ('Arqueiro Lunar', '/assets/avatars/archer.svg', 'Flechas certeiras sob a luz da lua', 'arqueiro', 2),
-  ('Mago Arcano', '/assets/avatars/mage.svg', 'Domina as forcas arcanas do universo', 'mago', 3),
-  ('Ladino das Sombras', '/assets/avatars/rogue.svg', 'Mestre do sigilo e da astucia', 'ladino', 4),
+  ('Mago Arcano', '/assets/avatars/mage.svg', 'Domina as forças arcanas do universo', 'mago', 3),
+  ('Ladino das Sombras', '/assets/avatars/rogue.svg', 'Mestre do sigilo e da astúcia', 'ladino', 4),
   ('Sacerdotisa da Luz', '/assets/avatars/healer.svg', 'Canaliza a energia curadora divina', 'curandeiro', 5),
-  ('Paladino Sagrado', '/assets/avatars/paladin.svg', 'Guerreiro sagrado com fe inabalavel', 'paladino', 6);
+  ('Paladino Sagrado', '/assets/avatars/paladin.svg', 'Guerreiro sagrado com fé inabalável', 'paladino', 6);
 
 -- ============================================================
 -- FIM DO SCHEMA

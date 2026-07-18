@@ -1,33 +1,35 @@
 /* ============================================================
    AUTH CONTROLLER - ENEM STUDY
+   Controlador da tela de autenticação
    ============================================================ */
 
 const AuthController = (() => {
+  let currentView = 'login'; // login | register
   let registrationStep = 0;
-  const totalSteps = 4;
   let registrationData = {};
 
   const AVATARS = [
-    { id: 'knight', icon: '\u2694', name: 'Cavaleiro' },
-    { id: 'archer', icon: '\uD83C\uDFF9', name: 'Arqueiro' },
-    { id: 'mage', icon: '\uD83D\uDD2E', name: 'Mago' },
-    { id: 'rogue', icon: '\uD83D\uDDE1', name: 'Ladino' },
-    { id: 'healer', icon: '\u2727', name: 'Sacerdotisa' },
-    { id: 'paladin', icon: '\u26D6', name: 'Paladino' }
+    { id: 'knight', icon: '⚔', name: 'Cavaleiro' },
+    { id: 'archer', icon: '🏹', name: 'Arqueiro' },
+    { id: 'mage', icon: '🔮', name: 'Mago' },
+    { id: 'rogue', icon: '🗡', name: 'Ladino' },
+    { id: 'healer', icon: '✧', name: 'Sacerdotisa' },
+    { id: 'paladin', icon: '⛊', name: 'Paladino' }
   ];
 
   const HERO_CLASSES = [
-    { id: 'guerreiro', icon: '\u2694', name: 'Guerreiro', desc: 'Biologia' },
-    { id: 'arqueiro', icon: '\uD83C\uDFF9', name: 'Arqueiro', desc: 'Matematica' },
-    { id: 'mago', icon: '\uD83D\uDD2E', name: 'Mago', desc: 'Quimica' },
-    { id: 'ladino', icon: '\uD83D\uDDE1', name: 'Ladino', desc: 'Linguagens' },
-    { id: 'curandeiro', icon: '\u2727', name: 'Curandeiro', desc: 'Humanas' },
-    { id: 'paladino', icon: '\u26D6', name: 'Paladino', desc: 'Fisica' }
+    { id: 'guerreiro', icon: '⚔', name: 'Guerreiro', desc: 'Biologia' },
+    { id: 'arqueiro', icon: '🏹', name: 'Arqueiro', desc: 'Matemática' },
+    { id: 'mago', icon: '🔮', name: 'Mago', desc: 'Química' },
+    { id: 'ladino', icon: '🗡', name: 'Ladino', desc: 'Linguagens' },
+    { id: 'curandeiro', icon: '✧', name: 'Curandeiro', desc: 'Humanas' },
+    { id: 'paladino', icon: '⛊', name: 'Paladino', desc: 'Física' }
   ];
 
   function init() {
     bindLoginForm();
-    bindRegisterButtons();
+    bindRegisterForm();
+    bindNavigation();
     bindAvatarSelection();
     bindClassSelection();
     checkExistingSession();
@@ -35,7 +37,9 @@ const AuthController = (() => {
 
   function checkExistingSession() {
     const session = SessionManager.getSavedSession();
-    if (session && session.user) navigateToApp(session.user);
+    if (session && session.user) {
+      navigateToApp(session.user);
+    }
   }
 
   // ---- Login ----
@@ -51,7 +55,10 @@ const AuthController = (() => {
       const loadingEl = document.getElementById('login-loading');
       const submitBtn = document.getElementById('login-submit');
 
-      if (!email || !password) { showAuthError(errorEl, 'Preencha todos os campos, aventureiro!'); return; }
+      if (!email || !password) {
+        showAuthError(errorEl, 'Preencha todos os campos, aventureiro!');
+        return;
+      }
 
       loadingEl.classList.add('visible');
       submitBtn.style.display = 'none';
@@ -66,76 +73,85 @@ const AuthController = (() => {
         showImpactBurst('READY');
         setTimeout(() => navigateToApp(result.user), 800);
       } else {
-        showAuthError(errorEl, result.error || 'Falha ao entrar.');
+        showAuthError(errorEl, result.error || 'Falha ao entrar. Tente novamente.');
       }
     });
   }
 
-  // ---- Register Steps ----
-  function bindRegisterButtons() {
-    const prevBtn = document.getElementById('reg-prev');
-    const nextBtn = document.getElementById('reg-next');
+  // ---- Register ----
+  function bindRegisterForm() {
+    const nextBtns = document.querySelectorAll('[data-register-next]');
+    const prevBtns = document.querySelectorAll('[data-register-prev]');
     const submitBtn = document.getElementById('register-submit');
-    const toRegister = document.getElementById('toggle-to-register');
-    const toLogin = document.getElementById('toggle-to-login');
 
-    if (nextBtn) nextBtn.addEventListener('click', () => {
-      if (validateCurrentStep()) { registrationStep++; updateRegistrationView(); }
+    nextBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (validateCurrentStep()) {
+          registrationStep++;
+          updateRegistrationView();
+        }
+      });
     });
 
-    if (prevBtn) prevBtn.addEventListener('click', () => {
-      if (registrationStep > 0) { registrationStep--; updateRegistrationView(); }
+    prevBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        registrationStep--;
+        updateRegistrationView();
+      });
     });
 
-    if (submitBtn) submitBtn.addEventListener('click', async () => {
-      if (!validateCurrentStep()) return;
-      await completeRegistration();
-    });
-
-    if (toRegister) toRegister.addEventListener('click', (e) => {
-      e.preventDefault();
-      document.querySelector('.auth-panel--login').classList.add('shifted');
-      document.querySelector('.auth-panel--register').classList.add('active');
-      registrationStep = 0;
-      updateRegistrationView();
-    });
-
-    if (toLogin) toLogin.addEventListener('click', (e) => {
-      e.preventDefault();
-      document.querySelector('.auth-panel--register').classList.remove('active');
-      document.querySelector('.auth-panel--login').classList.remove('shifted');
-    });
+    if (submitBtn) {
+      submitBtn.addEventListener('click', async () => {
+        if (!validateCurrentStep()) return;
+        await completeRegistration();
+      });
+    }
   }
 
   function validateCurrentStep() {
     const errorEl = document.getElementById('register-error');
-    errorEl.classList.remove('visible');
 
     switch (registrationStep) {
       case 0: {
         const email = document.getElementById('reg-email')?.value.trim();
         const password = document.getElementById('reg-password')?.value;
-        if (!email || !password) { showAuthError(errorEl, 'Preencha e-mail e senha!'); return false; }
-        if (password.length < 6) { showAuthError(errorEl, 'A senha deve ter pelo menos 6 caracteres!'); return false; }
+        if (!email || !password) {
+          showAuthError(errorEl, 'Preencha e-mail e senha!');
+          return false;
+        }
+        if (password.length < 6) {
+          showAuthError(errorEl, 'A senha deve ter pelo menos 6 caracteres!');
+          return false;
+        }
         registrationData.email = email;
         registrationData.password = password;
         return true;
       }
       case 1: {
         const name = document.getElementById('reg-name')?.value.trim();
-        if (!name || name.length < 3) { showAuthError(errorEl, 'Escolha um nome com pelo menos 3 letras!'); return false; }
+        if (!name || name.length < 3) {
+          showAuthError(errorEl, 'Escolha um nome com pelo menos 3 letras!');
+          return false;
+        }
         registrationData.adventurerName = name;
         return true;
       }
       case 2: {
-        if (!registrationData.avatar) { showAuthError(errorEl, 'Selecione um avatar!'); return false; }
+        if (!registrationData.avatar) {
+          showAuthError(errorEl, 'Selecione um avatar!');
+          return false;
+        }
         return true;
       }
       case 3: {
-        if (!registrationData.heroClass) { showAuthError(errorEl, 'Escolha sua classe de heroi!'); return false; }
+        if (!registrationData.heroClass) {
+          showAuthError(errorEl, 'Escolha sua classe de herói!');
+          return false;
+        }
         return true;
       }
-      default: return true;
+      default:
+        return true;
     }
   }
 
@@ -170,22 +186,21 @@ const AuthController = (() => {
   }
 
   function updateRegistrationView() {
-    document.querySelectorAll('.creation-step').forEach((el, i) => el.classList.toggle('active', i === registrationStep));
+    document.querySelectorAll('.creation-step').forEach((el, i) => {
+      el.classList.toggle('active', i === registrationStep);
+    });
+
     document.querySelectorAll('.step-dot').forEach((dot, i) => {
       dot.classList.toggle('active', i === registrationStep);
       dot.classList.toggle('completed', i < registrationStep);
     });
-    const prevBtn = document.getElementById('reg-prev');
-    const nextBtn = document.getElementById('reg-next');
-    const submitBtn = document.getElementById('register-submit');
-    if (prevBtn) prevBtn.style.display = registrationStep > 0 ? '' : 'none';
-    if (nextBtn) nextBtn.style.display = registrationStep < totalSteps - 1 ? '' : 'none';
-    if (submitBtn) submitBtn.style.display = registrationStep === totalSteps - 1 ? '' : 'none';
   }
 
+  // ---- Avatar Selection ----
   function bindAvatarSelection() {
     const grid = document.getElementById('avatar-grid');
     if (!grid) return;
+
     AVATARS.forEach(av => {
       const btn = document.createElement('button');
       btn.className = 'avatar-option';
@@ -201,9 +216,11 @@ const AuthController = (() => {
     });
   }
 
+  // ---- Class Selection ----
   function bindClassSelection() {
     const grid = document.getElementById('class-grid');
     if (!grid) return;
+
     HERO_CLASSES.forEach(cls => {
       const btn = document.createElement('button');
       btn.className = 'hero-class-card';
@@ -222,6 +239,33 @@ const AuthController = (() => {
     });
   }
 
+  // ---- Navigation ----
+  function bindNavigation() {
+    const toRegister = document.getElementById('toggle-to-register');
+    const toLogin = document.getElementById('toggle-to-login');
+    const loginPanel = document.querySelector('.auth-panel--login');
+    const registerPanel = document.querySelector('.auth-panel--register');
+
+    if (toRegister) {
+      toRegister.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginPanel.classList.add('shifted');
+        registerPanel.classList.add('active');
+        registrationStep = 0;
+        updateRegistrationView();
+      });
+    }
+
+    if (toLogin) {
+      toLogin.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerPanel.classList.remove('active');
+        loginPanel.classList.remove('shifted');
+      });
+    }
+  }
+
+  // ---- Helpers ----
   function showAuthError(el, msg) {
     if (!el) return;
     el.textContent = msg;

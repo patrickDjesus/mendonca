@@ -1,5 +1,6 @@
 /* ============================================================
    WIDGET CSS - ENEM STUDY
+   Pergaminho (notas) + Ábaco (calculadora)
    ============================================================ */
 
 .widget-trigger {
@@ -21,7 +22,10 @@
   animation: float 3s ease-in-out infinite;
 }
 
-.widget-trigger:hover { transform: translateY(-4px) scale(1.05); box-shadow: var(--shadow-manga-xl); }
+.widget-trigger:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: var(--shadow-manga-xl);
+}
 
 .widget-panel {
   position: fixed;
@@ -38,9 +42,15 @@
   overflow: hidden;
 }
 
-.widget-panel.active { display: flex; animation: fadeInScale 0.3s ease; }
+.widget-panel.active {
+  display: flex;
+  animation: fadeInScale 0.3s ease;
+}
 
-.widget-panel__tabs { display: flex; border-bottom: var(--border-thick); }
+.widget-panel__tabs {
+  display: flex;
+  border-bottom: var(--border-thick);
+}
 
 .widget-tab {
   flex: 1;
@@ -56,18 +66,35 @@
   transition: all var(--transition-fast);
 }
 
-.widget-tab.active { background: var(--color-black); color: var(--color-white); }
-.widget-tab:not(.active):hover { background: var(--color-gray-100); }
+.widget-tab.active {
+  background: var(--color-black);
+  color: var(--color-white);
+}
 
+.widget-tab:not(.active):hover {
+  background: var(--color-gray-100);
+}
+
+/* ---- Notepad (Pergaminho) ---- */
 .widget-notepad {
   display: none;
   flex-direction: column;
   flex: 1;
   padding: var(--space-4);
-  background: repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(0,0,0,0.05) 28px, rgba(0,0,0,0.05) 29px);
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 28px,
+      rgba(0,0,0,0.05) 28px,
+      rgba(0,0,0,0.05) 29px
+    ),
+    linear-gradient(to right, rgba(200,180,140,0.1), transparent);
 }
 
-.widget-notepad.active { display: flex; }
+.widget-notepad.active {
+  display: flex;
+}
 
 .widget-notepad__title {
   font-family: var(--font-manga);
@@ -91,10 +118,22 @@
   background: transparent;
 }
 
-.widget-notepad__actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
+.widget-notepad__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
 
-.widget-calculator { display: none; flex-direction: column; padding: var(--space-4); }
-.widget-calculator.active { display: flex; }
+/* ---- Calculator (Ábaco) ---- */
+.widget-calculator {
+  display: none;
+  flex-direction: column;
+  padding: var(--space-4);
+}
+
+.widget-calculator.active {
+  display: flex;
+}
 
 .widget-calc__display {
   width: 100%;
@@ -107,7 +146,11 @@
   margin-bottom: var(--space-3);
 }
 
-.widget-calc__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+.widget-calc__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
 
 .widget-calc__btn {
   padding: var(--space-3);
@@ -120,13 +163,33 @@
   text-align: center;
 }
 
-.widget-calc__btn:hover { background: var(--color-black); color: var(--color-white); transform: translate(-1px, -1px); box-shadow: var(--shadow-manga-sm); }
-.widget-calc__btn:active { transform: translate(1px, 1px); box-shadow: none; }
-.widget-calc__btn--op { background: var(--color-gray-200); }
-.widget-calc__btn--eq { background: var(--color-black); color: var(--color-white); grid-column: span 2; }
+.widget-calc__btn:hover {
+  background: var(--color-black);
+  color: var(--color-white);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-manga-sm);
+}
+
+.widget-calc__btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+
+.widget-calc__btn--op {
+  background: var(--color-gray-200);
+}
+
+.widget-calc__btn--eq {
+  background: var(--color-black);
+  color: var(--color-white);
+  grid-column: span 2;
+}
 
 @media (max-width: 768px) {
-  .widget-trigger { bottom: calc(80px + var(--space-4)); }
+  .widget-trigger {
+    bottom: calc(80px + var(--space-4));
+  }
+
   .widget-panel {
     right: var(--space-3);
     left: var(--space-3);
