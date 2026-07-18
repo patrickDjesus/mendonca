@@ -13,7 +13,7 @@ const VideoController = (() => {
 
   async function render() {
     const root = document.getElementById('app-root');
-    root.innerHTML = '<div class="page-section"><div style="text-align:center;padding:var(--space-8);font-family:var(--font-comic)">Carregando videos...</div></div>';
+    root.innerHTML = '<div class="page-section"><div style="text-align:center;padding:var(--space-8);font-family:var(--font-body)">Carregando videos...</div></div>';
 
     const session = SessionManager.getSavedSession();
     if (!session?.user) return;
@@ -108,7 +108,7 @@ const VideoController = (() => {
     if (!v) return;
 
     let html = '<div class="page-section">';
-    html += '<button class="manga-btn manga-btn--sm video-back-btn" id="video-back">\u2190 Voltar</button>';
+    html += '<button class="rpg-btn rpg-btn--sm video-back-btn" id="video-back">\u2190 Voltar</button>';
 
     html += '<div class="video-player-view">';
     html += '<div class="video-main">';
@@ -132,7 +132,7 @@ const VideoController = (() => {
 
     html += '<div class="notes-list" id="notes-list">';
     if (notes.length === 0) {
-      html += '<div style="text-align:center;padding:var(--space-4);font-family:var(--font-comic);color:var(--color-gray-400);font-size:var(--text-sm)">Nenhuma anotacao ainda.</div>';
+      html += '<div style="text-align:center;padding:var(--space-4);font-family:var(--font-body);color:var(--text-muted);font-size:var(--text-sm)">Nenhuma anotacao ainda.</div>';
     } else {
       notes.forEach(n => {
         html += '<div class="note-item" data-note-id="' + n.id + '">';
@@ -146,12 +146,12 @@ const VideoController = (() => {
 
     html += '<div class="note-input">';
     html += '<textarea class="note-input__field" id="note-text" placeholder="Escreva uma anotacao..."></textarea>';
-    html += '<button class="manga-btn manga-btn--sm" id="note-add">Salvar</button>';
+    html += '<button class="rpg-btn rpg-btn--sm" id="note-add">Salvar</button>';
     html += '</div>';
     html += '</div>';
 
-    html += '<div class="manga-card" style="margin-top:var(--space-3)">';
-    html += '<div class="manga-card__title" style="font-size:var(--text-sm)">Seu Progresso</div>';
+    html += '<div class="rpg-card" style="margin-top:var(--space-3)">';
+    html += '<div class="rpg-card__title" style="font-size:var(--text-sm)">Seu Progresso</div>';
     const prog = videoProgress[v.id];
     const pct = prog ? Math.min(100, Math.round((prog.current_time_seconds / Math.max(1, v.duration_seconds)) * 100)) : 0;
     html += '<div class="xp-bar"><div class="xp-bar__fill" style="width:' + pct + '%"></div>';

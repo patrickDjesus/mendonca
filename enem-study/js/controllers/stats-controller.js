@@ -20,7 +20,7 @@ const StatsController = (() => {
 
   async function render() {
     const root = document.getElementById('app-root');
-    root.innerHTML = '<div class="page-section"><div style="text-align:center;padding:var(--space-8);font-family:var(--font-comic)">Carregando grimorio...</div></div>';
+    root.innerHTML = '<div class="page-section"><div style="text-align:center;padding:var(--space-8);font-family:var(--font-body)">Carregando grimorio...</div></div>';
 
     const session = SessionManager.getSavedSession();
     if (!session?.user) return;
@@ -162,7 +162,7 @@ const StatsController = (() => {
     });
 
     if (!hasData) {
-      html += '<div style="text-align:center;padding:var(--space-6);font-family:var(--font-comic);color:var(--color-gray-400)">Complete desafios para ver suas estatisticas por materia.</div>';
+      html += '<div style="text-align:center;padding:var(--space-6);font-family:var(--font-body);color:var(--text-muted)">Complete desafios para ver suas estatisticas por materia.</div>';
     }
 
     html += '</div>';

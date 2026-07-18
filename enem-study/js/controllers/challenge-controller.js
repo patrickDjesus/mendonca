@@ -28,7 +28,7 @@ const ChallengeController = (() => {
 
   async function render() {
     const root = document.getElementById('app-root');
-    root.innerHTML = '<div class="page-section"><div style="text-align:center;padding:var(--space-8);font-family:var(--font-comic)">Carregando desafios...</div></div>';
+    root.innerHTML = '<div class="page-section"><div style="text-align:center;padding:var(--space-8);font-family:var(--font-body)">Carregando desafios...</div></div>';
 
     const session = SessionManager.getSavedSession();
     if (!session?.user) return;
@@ -81,7 +81,7 @@ const ChallengeController = (() => {
     }
 
     html += '<div style="margin-top:var(--space-8);text-align:center">';
-    html += '<button class="manga-btn manga-btn--dark" id="challenge-start-random" style="font-size:var(--text-base);padding:var(--space-3) var(--space-8)">Sorteio Aleatorio x5</button>';
+    html += '<button class="rpg-btn rpg-btn--dark" id="challenge-start-random" style="font-size:var(--text-base);padding:var(--space-3) var(--space-8)">Sorteio Aleatorio x5</button>';
     html += '</div>';
 
     html += '</div>';
@@ -126,7 +126,7 @@ const ChallengeController = (() => {
     const c = activeChallenge;
 
     let html = '<div class="page-section challenge-active">';
-    html += '<button class="manga-btn manga-btn--sm video-back-btn" id="challenge-abort">\u2190 Sair</button>';
+    html += '<button class="rpg-btn rpg-btn--sm video-back-btn" id="challenge-abort">\u2190 Sair</button>';
 
     html += '<div class="challenge-active__header">';
     html += '<div class="challenge-active__progress">Desafio ' + (activeIndex + 1) + ' / ' + challengeSet.length + '</div>';
@@ -147,13 +147,13 @@ const ChallengeController = (() => {
         html += '</button>';
       });
     } else {
-      html += '<textarea class="note-input__field" id="challenge-text-answer" placeholder="Sua resposta..." style="width:100%;min-height:80px;border:var(--border-medium);padding:var(--space-3);font-family:var(--font-comic)"></textarea>';
+      html += '<textarea class="note-input__field" id="challenge-text-answer" placeholder="Sua resposta..." style="width:100%;min-height:80px;border:var(--border-medium);padding:var(--space-3);font-family:var(--font-body)"></textarea>';
     }
 
     html += '</div></div>';
 
     html += '<div style="text-align:center">';
-    html += '<button class="manga-btn manga-btn--dark" id="challenge-submit" style="font-size:var(--text-base);padding:var(--space-3) var(--space-8)">Responder</button>';
+    html += '<button class="rpg-btn rpg-btn--dark" id="challenge-submit" style="font-size:var(--text-base);padding:var(--space-3) var(--space-8)">Responder</button>';
     html += '</div>';
 
     html += '<div id="challenge-result-container"></div>';
@@ -246,7 +246,7 @@ const ChallengeController = (() => {
         rHtml += c.explanation;
         rHtml += '</div>';
       }
-      rHtml += '<button class="manga-btn" id="challenge-next">' + (activeIndex < challengeSet.length - 1 ? 'Proximo \u2192' : 'Ver Resultado') + '</button>';
+      rHtml += '<button class="rpg-btn" id="challenge-next">' + (activeIndex < challengeSet.length - 1 ? 'Proximo \u2192' : 'Ver Resultado') + '</button>';
       rHtml += '</div>';
       resultContainer.innerHTML = rHtml;
 
@@ -272,12 +272,12 @@ const ChallengeController = (() => {
     html += '<div class="challenge-result__icon">\uD83C\uDFC6</div>';
     html += '<div class="challenge-result__title">Batalha Concluida!</div>';
     html += '<div class="challenge-result__xp">+ ' + score + ' XP Total</div>';
-    html += '<div style="font-family:var(--font-comic);margin:var(--space-4) 0;color:var(--color-gray-500)">' + total + ' desafios concluidos</div>';
+    html += '<div style="font-family:var(--font-body);margin:var(--space-4) 0;color:var(--color-gray-500)">' + total + ' desafios concluidos</div>';
     html += '<div class="xp-bar" style="margin:var(--space-6) 0"><div class="xp-bar__fill" style="width:' + Math.min(100, pct) + '%"></div>';
     html += '<div class="xp-bar__text">' + Math.min(100, pct) + '%</div></div>';
     html += '<div style="display:flex;gap:var(--space-3);justify-content:center">';
-    html += '<button class="manga-btn" id="results-retry">Jogar Novamente</button>';
-    html += '<button class="manga-btn manga-btn--dark" id="results-back">Voltar</button>';
+    html += '<button class="rpg-btn" id="results-retry">Jogar Novamente</button>';
+    html += '<button class="rpg-btn rpg-btn--dark" id="results-back">Voltar</button>';
     html += '</div></div></div>';
 
     root.innerHTML = html;

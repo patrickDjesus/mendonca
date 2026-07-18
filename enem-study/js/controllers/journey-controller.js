@@ -26,7 +26,7 @@ const JourneyController = (() => {
 
   async function render() {
     const root = document.getElementById('app-root');
-    root.innerHTML = '<div class="page-section" id="journey-page"><div style="text-align:center;padding:var(--space-8);font-family:var(--font-comic)">Carregando jornada...</div></div>';
+    root.innerHTML = '<div class="page-section" id="journey-page"><div style="text-align:center;padding:var(--space-8);font-family:var(--font-body)">Carregando jornada...</div></div>';
 
     const session = SessionManager.getSavedSession();
     if (!session?.user) return;
@@ -143,13 +143,13 @@ const JourneyController = (() => {
     html += '<div class="node-modal__actions">';
 
     if (node.material_type === 'video') {
-      html += '<button class="manga-btn" id="node-action-videos">Assistir Videos</button>';
+      html += '<button class="rpg-btn" id="node-action-videos">Assistir Videos</button>';
     } else if (node.material_type === 'desafio') {
-      html += '<button class="manga-btn" id="node-action-challenges">Enfrentar Desafios</button>';
+      html += '<button class="rpg-btn" id="node-action-challenges">Enfrentar Desafios</button>';
     } else if (node.material_type === 'simulado') {
-      html += '<button class="manga-btn" id="node-action-dungeon">Entrar na Masmorra</button>';
+      html += '<button class="rpg-btn" id="node-action-dungeon">Entrar na Masmorra</button>';
     } else {
-      html += '<button class="manga-btn" id="node-action-materials">Ver Materiais</button>';
+      html += '<button class="rpg-btn" id="node-action-materials">Ver Materiais</button>';
     }
 
     html += '</div></div></div>';

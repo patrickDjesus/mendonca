@@ -28,7 +28,7 @@ const DungeonController = (() => {
 
   async function render() {
     const root = document.getElementById('app-root');
-    root.innerHTML = '<div class="page-section"><div style="text-align:center;padding:var(--space-8);font-family:var(--font-comic)">Carregando masmorras...</div></div>';
+    root.innerHTML = '<div class="page-section"><div style="text-align:center;padding:var(--space-8);font-family:var(--font-body)">Carregando masmorras...</div></div>';
 
     const session = SessionManager.getSavedSession();
     if (!session?.user) return;
@@ -125,7 +125,7 @@ const DungeonController = (() => {
     startTime = Date.now();
 
     let html = '<div class="page-section dungeon-active">';
-    html += '<button class="manga-btn manga-btn--sm video-back-btn" id="dungeon-flee">\u2190 Fugir</button>';
+    html += '<button class="rpg-btn rpg-btn--sm video-back-btn" id="dungeon-flee">\u2190 Fugir</button>';
 
     html += '<div class="dungeon-hud">';
     html += '<div class="dungeon-hp">';
@@ -167,12 +167,12 @@ const DungeonController = (() => {
         html += '</button>';
       });
     } else {
-      html += '<textarea class="note-input__field" id="dungeon-text-answer" placeholder="Sua resposta..." style="width:100%;min-height:80px;border:var(--border-medium);padding:var(--space-3);font-family:var(--font-comic)"></textarea>';
+      html += '<textarea class="note-input__field" id="dungeon-text-answer" placeholder="Sua resposta..." style="width:100%;min-height:80px;border:var(--border-medium);padding:var(--space-3);font-family:var(--font-body)"></textarea>';
     }
 
     html += '</div></div>';
     html += '<div style="text-align:center;margin-top:var(--space-4)">';
-    html += '<button class="manga-btn manga-btn--dark" id="dungeon-attack" style="font-size:var(--text-base);padding:var(--space-3) var(--space-8)">Atacar!</button>';
+    html += '<button class="rpg-btn rpg-btn--dark" id="dungeon-attack" style="font-size:var(--text-base);padding:var(--space-3) var(--space-8)">Atacar!</button>';
     html += '</div>';
     html += '<div id="dungeon-result-container"></div>';
     html += '</div></div>';
@@ -251,9 +251,9 @@ const DungeonController = (() => {
       let rHtml = '<div class="challenge-result" style="margin-top:var(--space-4)">';
       rHtml += '<div class="challenge-result__icon" style="font-size:3rem">' + (isCorrect ? '\u2694' : '\uD83D\uDCA5') + '</div>';
       rHtml += '<div class="challenge-result__title">' + (isCorrect ? 'Golpe Certeiro!' : 'Dano Recebido!') + '</div>';
-      if (!isCorrect) rHtml += '<div style="font-family:var(--font-comic);color:var(--color-gray-500)">-' + damage + ' HP</div>';
+      if (!isCorrect) rHtml += '<div style="font-family:var(--font-body);color:var(--color-gray-500)">-' + damage + ' HP</div>';
       if (scoreGain > 0) rHtml += '<div class="challenge-result__xp">+' + scoreGain + ' pontos</div>';
-      rHtml += '<button class="manga-btn" id="dungeon-next" style="margin-top:var(--space-4)">' +
+      rHtml += '<button class="rpg-btn" id="dungeon-next" style="margin-top:var(--space-4)">' +
         (currentRoomIndex < rooms.length - 1 ? 'Proxima Sala \u2192' : 'Ver Resultado') + '</button>';
       rHtml += '</div>';
       resultContainer.innerHTML = rHtml;
@@ -286,14 +286,14 @@ const DungeonController = (() => {
     html += '<div class="challenge-result animate-stamp">';
     html += '<div class="challenge-result__icon">' + (completed ? '\uD83C\uDFC6' : '\uD83D\uDCA8') + '</div>';
     html += '<div class="challenge-result__title">' + (completed ? 'Masmorra Conquistada!' : 'Fugiu da Masmorra...') + '</div>';
-    html += '<div style="font-family:var(--font-comic);color:var(--color-gray-500);margin:var(--space-3) 0">';
+    html += '<div style="font-family:var(--font-body);color:var(--color-gray-500);margin:var(--space-3) 0">';
     html += 'Pontuacao: ' + (activeSession.score || 0) + ' \u2022 HP Restante: ' + (activeSession.hp || 0) + '</div>';
     if (titleEarned) {
-      html += '<div style="font-family:var(--font-manga);font-size:var(--text-lg);margin:var(--space-4) 0">Titulo Conquistado: ' + titleEarned + '</div>';
+      html += '<div style="font-family:var(--font-display);font-size:var(--text-lg);margin:var(--space-4) 0">Titulo Conquistado: ' + titleEarned + '</div>';
     }
     html += '<div style="display:flex;gap:var(--space-3);justify-content:center;margin-top:var(--space-6)">';
-    html += '<button class="manga-btn" id="dungeon-retry">Tentar Novamente</button>';
-    html += '<button class="manga-btn manga-btn--dark" id="dungeon-back">Voltar</button>';
+    html += '<button class="rpg-btn" id="dungeon-retry">Tentar Novamente</button>';
+    html += '<button class="rpg-btn rpg-btn--dark" id="dungeon-back">Voltar</button>';
     html += '</div></div></div>';
 
     root.innerHTML = html;

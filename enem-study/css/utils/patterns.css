@@ -1,138 +1,286 @@
 /* ============================================================
-   PATTERNS & UTILITIES — ENEM STUDY
-   Glassmorphism, Glow, System UI Effects
+   ENEM STUDY — PATTERNS & UTILITIES
+   Medieval Textures, Scrollbar, Loaders, Cursors
    ============================================================ */
 
-/* ---- Glassmorphism Panels ---- */
-.glass {
-  background: var(--bg-glass);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--border-panel);
+/* ── STONE / PARCHMENT PANELS ────────────────────────────── */
+.stone-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md), var(--shadow-emboss);
 }
 
-.glass-strong {
-  background: rgba(11, 17, 32, 0.85);
-  backdrop-filter: var(--glass-blur-heavy);
-  -webkit-backdrop-filter: var(--glass-blur-heavy);
-  border: var(--border-glow);
+.stone-panel--heavy {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
 }
 
-/* ---- Glow Borders ---- */
-.glow-border {
-  border: 1px solid rgba(0, 229, 255, 0.2);
-  box-shadow: inset 0 0 20px rgba(0, 229, 255, 0.03), var(--glow-sm);
+/* ── GOLD EMBOSS BORDERS ─────────────────────────────────── */
+.rune-border {
+  border: 1px solid var(--border-emboss);
+  box-shadow: inset 0 1px 0 rgba(212,175,55,0.08), 0 1px 3px rgba(0,0,0,0.4);
 }
 
-.glow-border-strong {
-  border: 1px solid rgba(0, 229, 255, 0.4);
-  box-shadow: inset 0 0 30px rgba(0, 229, 255, 0.06), var(--glow-md);
+.rune-border--heavy {
+  border: 2px solid var(--border-strong);
+  box-shadow: inset 0 1px 0 rgba(212,175,55,0.12), 0 2px 8px rgba(0,0,0,0.5);
 }
 
-/* ---- Subtle Grid Background ---- */
-.grid-bg {
+/* ── STONE TEXTURE BACKGROUNDS ────────────────────────────── */
+.stone-texture {
   background-image:
-    linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
+    repeating-linear-gradient(
+      0deg,
+      rgba(80,70,55,0.04) 0px,
+      rgba(80,70,55,0.01) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(80,70,55,0.03) 0px,
+      rgba(80,70,55,0.01) 1px,
+      transparent 1px,
+      transparent 6px
+    );
 }
 
-.grid-bg-fine {
+.stone-texture--fine {
   background-image:
-    linear-gradient(rgba(0, 229, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 229, 255, 0.02) 1px, transparent 1px);
-  background-size: 20px 20px;
+    repeating-linear-gradient(
+      0deg,
+      rgba(80,70,55,0.03) 0px,
+      transparent 1px,
+      transparent 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(80,70,55,0.02) 0px,
+      transparent 1px,
+      transparent 4px
+    );
 }
 
-/* ---- Scanline Effect ---- */
-.scanlines::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.05) 2px,
-    rgba(0, 0, 0, 0.05) 4px
-  );
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* ---- Holographic Shimmer ---- */
-.holo-shimmer {
+/* ── PARCHMENT SHIMMER (warm, not holographic) ────────────── */
+.parchment-shimmer {
   position: relative;
   overflow: hidden;
 }
-.holo-shimmer::before {
+.parchment-shimmer::after {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    rgba(0, 229, 255, 0.04) 60deg,
-    transparent 120deg,
-    rgba(168, 85, 247, 0.03) 180deg,
-    transparent 240deg,
-    rgba(0, 229, 255, 0.04) 300deg,
-    transparent 360deg
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(212,175,55,0.04) 45%,
+    rgba(212,175,55,0.06) 50%,
+    rgba(212,175,55,0.04) 55%,
+    transparent 70%
   );
-  animation: holoRotate 20s linear infinite;
+  animation: parchmentSweep 6s ease-in-out infinite;
   pointer-events: none;
-  z-index: 0;
 }
 
-@keyframes holoRotate {
-  to { transform: rotate(360deg); }
-}
-
-/* ---- Neon Text Glow ---- */
-.neon-text {
+/* ── EMBER TEXT GLOW ──────────────────────────────────────── */
+.ember-text {
   color: var(--accent);
-  text-shadow: 0 0 8px var(--accent-glow), 0 0 20px rgba(0, 229, 255, 0.15);
+  text-shadow: 0 0 8px rgba(212,175,55,0.3), 0 1px 2px rgba(0,0,0,0.5);
 }
 
-.neon-text-purple {
-  color: var(--accent-arcane);
-  text-shadow: 0 0 8px var(--accent-arcane-glow), 0 0 20px rgba(168, 85, 247, 0.15);
+.blood-text {
+  color: var(--accent-blood);
+  text-shadow: 0 0 8px rgba(139,0,0,0.3), 0 1px 2px rgba(0,0,0,0.5);
 }
 
-/* ---- Focus Mode ---- */
+/* ── FOCUS OVERLAY (tavern dim) ───────────────────────────── */
 .focus-overlay {
   position: fixed;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 30%, rgba(4, 6, 12, 0.9) 100%);
-  pointer-events: none;
+  background: rgba(8,6,4,0.85);
   z-index: var(--z-overlay);
+  pointer-events: none;
   opacity: 0;
-  transition: opacity 0.5s ease;
+  transition: opacity var(--duration-normal) var(--ease-out);
 }
-
 body.focus-mode .focus-overlay {
   opacity: 1;
 }
-
 body.focus-mode .sidebar,
+body.focus-mode .mobile-nav,
 body.focus-mode .widget-trigger,
-body.focus-mode .widget-panel,
-body.focus-mode .mobile-nav {
-  opacity: 0.08;
+body.focus-mode .fab-trigger {
+  opacity: 0.15;
   pointer-events: none;
-  transition: opacity 0.4s ease;
 }
 
-/* ---- Cut Corner Utility ---- */
-.cut-corner {
-  clip-path: var(--cut-corner);
+/* ── QUILL CURSOR (for text areas) ────────────────────────── */
+.cursor-quill {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M3 21l1.5-4.5L17.5 1.5c.8-.8 2-.8 2.8 0l.2.2c.8.8.8 2 0 2.8L7.5 19.5z' fill='%23D4AF37' stroke='%231A1614' stroke-width='1'/%3E%3Cpath d='M14 5l5 5' stroke='%231A1614' stroke-width='1'/%3E%3C/svg%3E") 3 21, text;
 }
-.cut-corner-sm {
-  clip-path: var(--cut-corner-sm);
+
+/* ── SWORD CURSOR (for buttons) ───────────────────────────── */
+.cursor-sword {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M4 20L10 14M10 14L20 4M20 4l-2 2M10 14l2-6' stroke='%23D4AF37' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='16' r='1.5' fill='%23D4AF37'/%3E%3C/svg%3E") 4 4, pointer;
 }
-.cut-corner-lg {
-  clip-path: var(--cut-corner-lg);
+
+/* ── HOURGLASS LOADER ─────────────────────────────────────── */
+.loader-hourglass {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  position: relative;
+}
+.loader-hourglass::before,
+.loader-hourglass::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 16px;
+  border: 2px solid var(--accent-dim);
+  border-radius: 2px;
+}
+.loader-hourglass::before {
+  top: 2px;
+  clip-path: polygon(10% 0%, 90% 0%, 60% 100%, 40% 100%);
+  animation: hourglassTop 1.5s ease-in-out infinite;
+}
+.loader-hourglass::after {
+  bottom: 2px;
+  clip-path: polygon(40% 0%, 60% 0%, 90% 100%, 10% 100%);
+  animation: hourglassBottom 1.5s ease-in-out infinite;
+}
+
+/* ── CANDLE LOADER ────────────────────────────────────────── */
+.loader-candle {
+  display: inline-block;
+  width: 20px;
+  height: 40px;
+  position: relative;
+}
+.loader-candle::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 24px;
+  background: linear-gradient(180deg, #E8DFD0 0%, #C4A96A 100%);
+  border-radius: 2px;
+  border: 1px solid rgba(90,80,70,0.3);
+}
+.loader-candle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 14px;
+  background: radial-gradient(ellipse at center, #F0C848 0%, #D4AF37 40%, #8B4513 80%, transparent 100%);
+  border-radius: 50% 50% 40% 40%;
+  animation: candleFlicker 0.8s ease-in-out infinite alternate;
+}
+
+/* ── CAULDRON LOADER ──────────────────────────────────────── */
+.loader-cauldron {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  position: relative;
+}
+.loader-cauldron::before {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 22px;
+  background: #3A3228;
+  border-radius: 0 0 50% 50%;
+  border: 2px solid #5A4A3A;
+  border-top: none;
+}
+.loader-cauldron::after {
+  content: '';
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 12px;
+  background: radial-gradient(circle, rgba(45,90,61,0.8) 0%, rgba(45,90,61,0.3) 60%, transparent 100%);
+  border-radius: 50%;
+  animation: cauldronBubble 1.2s ease-in-out infinite;
+}
+
+/* ── LOADING SCREEN ───────────────────────────────────────── */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-deep);
+  z-index: 9999;
+  transition: opacity 0.5s var(--ease-out);
+}
+.loading-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.loading-screen__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(212,175,55,0.3), 0 2px 4px rgba(0,0,0,0.6);
+  margin-bottom: var(--space-6);
+  letter-spacing: 0.08em;
+}
+.loading-bar {
+  width: 240px;
+  height: 6px;
+  background: var(--bg-surface);
+  border-radius: 3px;
+  border: 1px solid var(--border-medium);
+  overflow: hidden;
+}
+.loading-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent), var(--accent-bright));
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.3s var(--ease-out);
+}
+
+/* ── SCREEN EFFECTS (for dungeon battles) ─────────────────── */
+.damage-flash {
+  animation: damageFlash 0.4s ease-out;
+}
+.heal-flash {
+  animation: healFlash 0.4s ease-out;
+}
+.slash-effect {
+  animation: slashCut 0.3s ease-out;
+}
+
+/* ── HIDDEN UTILITY ───────────────────────────────────────── */
+.hidden {
+  display: none !important;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
 }

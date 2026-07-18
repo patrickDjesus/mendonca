@@ -1,103 +1,193 @@
 /* ============================================================
-   ANIMATIONS — ENEM STUDY
-   Modern Dark Fantasy RPG
+   ENEM STUDY — ANIMATIONS
+   Medieval Dark Fantasy Keyframes & Utilities
    ============================================================ */
 
+/* ── EMBER PULSE (torchlight flicker) ─────────────────────── */
+@keyframes emberPulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(212,175,55,0.15); }
+  33%      { box-shadow: 0 0 12px rgba(212,175,55,0.25); }
+  66%      { box-shadow: 0 0 8px rgba(212,175,55,0.18); }
+}
+
+@keyframes emberTextPulse {
+  0%, 100% { text-shadow: 0 0 6px rgba(212,175,55,0.2); }
+  50%      { text-shadow: 0 0 14px rgba(212,175,55,0.35); }
+}
+
+@keyframes borderFlicker {
+  0%, 100% { border-color: rgba(212,175,55,0.15); }
+  50%      { border-color: rgba(212,175,55,0.3); }
+}
+
+/* ── PARCHMENT SWEEP ──────────────────────────────────────── */
+@keyframes parchmentSweep {
+  0%   { transform: translateX(-100%); }
+  50%  { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* ── FADE MIST (rustic fade-in) ───────────────────────────── */
+@keyframes fadeMist {
+  0%   { opacity: 0; filter: blur(4px); transform: translateY(8px); }
+  100% { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes fadeOut {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
 }
 
-@keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.92); }
-  to { opacity: 1; transform: scale(1); }
+/* ── SCROLL UNROLL ────────────────────────────────────────── */
+@keyframes scrollUnroll {
+  0%   { max-height: 0; opacity: 0; transform: scaleY(0); transform-origin: top; }
+  100% { max-height: 600px; opacity: 1; transform: scaleY(1); transform-origin: top; }
 }
 
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(30px); }
-  to { opacity: 1; transform: translateX(0); }
+@keyframes scrollSlideRight {
+  0%   { opacity: 0; transform: translateX(30px); }
+  100% { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-30px); }
-  to { opacity: 1; transform: translateX(0); }
+/* ── SLIDE ANIMATIONS ─────────────────────────────────────── */
+@keyframes slideUp {
+  0%   { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 10px var(--accent-glow); }
-  50% { box-shadow: 0 0 25px var(--accent-glow-strong), 0 0 50px rgba(0, 229, 255, 0.15); }
+@keyframes slideDown {
+  0%   { opacity: 0; transform: translateY(-20px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes glowPulseText {
-  0%, 100% { text-shadow: 0 0 8px var(--accent-glow); }
-  50% { text-shadow: 0 0 16px var(--accent-glow-strong), 0 0 32px rgba(0, 229, 255, 0.2); }
+@keyframes slideRight {
+  0%   { opacity: 0; transform: translateX(-20px); }
+  100% { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes borderGlow {
-  0%, 100% { border-color: rgba(0, 229, 255, 0.2); }
-  50% { border-color: rgba(0, 229, 255, 0.5); }
+/* ── SCALE ────────────────────────────────────────────────── */
+@keyframes scaleIn {
+  0%   { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-}
-
-@keyframes scanLine {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
-}
-
+/* ── STAMP SLAM (RPG impact) ──────────────────────────────── */
 @keyframes stampSlam {
-  0% { transform: scale(3) rotate(-8deg); opacity: 0; }
-  50% { transform: scale(0.95) rotate(0deg); opacity: 1; }
-  70% { transform: scale(1.03); }
-  100% { transform: scale(1); }
+  0%   { transform: scale(2.5) rotate(-8deg); opacity: 0; }
+  60%  { transform: scale(0.95) rotate(1deg); opacity: 1; }
+  80%  { transform: scale(1.02) rotate(-0.5deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
-@keyframes glitch {
-  0%, 100% { transform: translate(0); }
-  10% { transform: translate(-2px, 1px); }
-  20% { transform: translate(2px, -1px); }
-  30% { transform: translate(-1px, 2px); }
-  40% { transform: translate(1px, -2px); }
-  50% { transform: translate(-2px, 0); }
-  60% { transform: translate(2px, 1px); }
-  70% { transform: translate(0, -1px); }
-  80% { transform: translate(-1px, 0); }
-  90% { transform: translate(1px, 2px); }
+/* ── SHAKE (error) ────────────────────────────────────────── */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
 }
 
-@keyframes dataStream {
-  0% { background-position: 0% 0%; }
-  100% { background-position: 0% -200%; }
+/* ── FLOAT (idle hover) ───────────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
 }
 
+/* ── SPIN ─────────────────────────────────────────────────── */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
-  20%, 40%, 60%, 80% { transform: translateX(3px); }
+/* ── HOURGLASS ────────────────────────────────────────────── */
+@keyframes hourglassTop {
+  0%, 40%  { transform: translateX(-50%) rotate(0deg); opacity: 1; }
+  50%, 90% { transform: translateX(-50%) rotate(180deg); opacity: 1; }
+  45%, 95% { opacity: 0.3; }
 }
 
-/* ---- Utility Classes ---- */
-.animate-fade-in { animation: fadeIn 0.3s ease forwards; }
-.animate-fade-up { animation: fadeInUp 0.4s ease forwards; }
-.animate-fade-scale { animation: fadeInScale 0.3s ease forwards; }
-.animate-slide-right { animation: slideInRight 0.4s ease forwards; }
-.animate-slide-left { animation: slideInLeft 0.4s ease forwards; }
-.animate-glow-pulse { animation: glowPulse 2s ease-in-out infinite; }
-.animate-glow-text { animation: glowPulseText 2s ease-in-out infinite; }
-.animate-float { animation: float 3s ease-in-out infinite; }
-.animate-stamp { animation: stampSlam 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-.animate-glitch { animation: glitch 0.3s ease; }
-.animate-shake { animation: shake 0.4s ease; }
-.animate-spin { animation: spin 0.8s linear infinite; }
+@keyframes hourglassBottom {
+  0%, 40%  { transform: translateX(-50%) rotate(0deg); opacity: 1; }
+  50%, 90% { transform: translateX(-50%) rotate(180deg); opacity: 1; }
+  45%, 95% { opacity: 0.3; }
+}
+
+/* ── CANDLE FLICKER ───────────────────────────────────────── */
+@keyframes candleFlicker {
+  0%   { opacity: 0.8; transform: translateX(-50%) scale(1); }
+  25%  { opacity: 1;   transform: translateX(-48%) scale(1.05); }
+  50%  { opacity: 0.7; transform: translateX(-52%) scale(0.98); }
+  75%  { opacity: 0.9; transform: translateX(-50%) scale(1.02); }
+  100% { opacity: 0.85;transform: translateX(-50%) scale(1); }
+}
+
+/* ── CAULDRON BUBBLE ──────────────────────────────────────── */
+@keyframes cauldronBubble {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.5; }
+  50%      { transform: translateX(-50%) scale(1.2); opacity: 0.8; }
+}
+
+/* ── DAMAGE / HEAL FLASHES (dungeon) ──────────────────────── */
+@keyframes damageFlash {
+  0%   { background-color: rgba(139,0,0,0.4); }
+  100% { background-color: transparent; }
+}
+
+@keyframes healFlash {
+  0%   { background-color: rgba(45,90,61,0.3); }
+  100% { background-color: transparent; }
+}
+
+@keyframes slashCut {
+  0%   { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); opacity: 1; }
+  50%  { clip-path: polygon(20% 20%, 80% 0, 100% 80%, 0 100%); opacity: 0.8; }
+  100% { clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%); opacity: 0; }
+}
+
+/* ── TREASURE CHEST ───────────────────────────────────────── */
+@keyframes chestOpen {
+  0%   { transform: scale(1) rotateY(0deg); }
+  40%  { transform: scale(1.1) rotateY(0deg); }
+  70%  { transform: scale(1.15) rotateY(-20deg); }
+  100% { transform: scale(1.1) rotateY(-30deg); }
+}
+
+/* ── UTILITY CLASSES ──────────────────────────────────────── */
+.animate-ember-pulse {
+  animation: emberPulse 3s ease-in-out infinite;
+}
+
+.animate-ember-text {
+  animation: emberTextPulse 3s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-stamp {
+  animation: stampSlam 0.5s var(--ease-bounce) forwards;
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeMist 0.4s var(--ease-out) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s var(--ease-out) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s var(--ease-bounce) forwards;
+}
+
+.animate-scroll {
+  animation: scrollUnroll 0.5s var(--ease-out) forwards;
+}
