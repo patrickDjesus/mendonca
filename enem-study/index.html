@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ENEM Study — Forje Seu Destino</title>
-  <meta name="description" content="Plataforma de estudo para o ENEM com estetica Manga RPG">
-  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Plataforma de estudo para o ENEM com sistema RPG">
+  <meta name="theme-color" content="#060a12">
 
   <!-- Fonts (single load point) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- CSS Modular -->
   <link rel="stylesheet" href="css/utils/variables.css">
@@ -83,8 +83,8 @@
       <div class="auth-decoration auth-decoration--crosshatch"></div>
 
       <div class="auth-logo">
-        <h1 class="auth-logo__title" style="color:#fff">Crie Seu Heroi</h1>
-        <p class="auth-logo__subtitle" style="color:rgba(255,255,255,0.5)">A jornada comeca aqui</p>
+        <h1 class="auth-logo__title">Crie Seu Heroi</h1>
+        <p class="auth-logo__subtitle">A jornada comeca aqui</p>
       </div>
 
       <div class="auth-error" id="register-error" role="alert"></div>
@@ -93,24 +93,24 @@
 
         <!-- Step 0: Credentials -->
         <div class="creation-step active" data-step="0">
-          <h2 class="creation-step__title" style="color:#fff">1 — Credenciais</h2>
+          <h2 class="creation-step__title">1 — Credenciais</h2>
           <div class="auth-form__group">
-            <label class="auth-form__label" for="reg-email" style="color:rgba(255,255,255,0.7)">Email</label>
+            <label class="auth-form__label" for="reg-email">Email</label>
             <input class="auth-form__input" type="email" id="reg-email" placeholder="seu@email.com" required autocomplete="email">
           </div>
           <div class="auth-form__group">
-            <label class="auth-form__label" for="reg-password" style="color:rgba(255,255,255,0.7)">Senha</label>
+            <label class="auth-form__label" for="reg-password">Senha</label>
             <input class="auth-form__input" type="password" id="reg-password" placeholder="Minimo 6 caracteres" required minlength="6" autocomplete="new-password">
           </div>
         </div>
 
         <!-- Step 1: Adventurer Name -->
         <div class="creation-step" data-step="1">
-          <h2 class="creation-step__title" style="color:#fff">2 — Nome do Aventureiro</h2>
+          <h2 class="creation-step__title">2 — Nome do Aventureiro</h2>
           <div class="auth-form__group">
-            <label class="auth-form__label" for="reg-name" style="color:rgba(255,255,255,0.7)">Qual sera seu nome na guilda?</label>
+            <label class="auth-form__label" for="reg-name">Qual sera seu nome na guilda?</label>
             <input class="auth-form__input" type="text" id="reg-name" placeholder="Ex: Sombra de Kael" maxlength="30" minlength="3">
-            <p style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:8px;font-family:var(--font-comic)">
+            <p style="font-size:12px;color:var(--text-muted);margin-top:8px;font-family:var(--font-body)">
               3 a 30 caracteres. Seu nome ecoara nos corredores da guilda.
             </p>
           </div>
@@ -118,8 +118,8 @@
 
         <!-- Step 2: Avatar -->
         <div class="creation-step" data-step="2">
-          <h2 class="creation-step__title" style="color:#fff">3 — Escolha Seu Avatar</h2>
-          <p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:16px;font-family:var(--font-comic)">
+          <h2 class="creation-step__title">3 — Escolha Seu Avatar</h2>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;font-family:var(--font-body)">
             Selecione a aparencia que representara sua jornada.
           </p>
           <div class="avatar-grid" id="avatar-grid"></div>
@@ -127,8 +127,8 @@
 
         <!-- Step 3: Hero Class -->
         <div class="creation-step" data-step="3">
-          <h2 class="creation-step__title" style="color:#fff">4 — Classe do Heroi</h2>
-          <p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:16px;font-family:var(--font-comic)">
+          <h2 class="creation-step__title">4 — Classe do Heroi</h2>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;font-family:var(--font-body)">
             Sua classe define seu foco de estudos e habilidades especiais.
           </p>
           <div class="hero-class-grid" id="class-grid"></div>
@@ -159,7 +159,7 @@
       </div>
 
       <div class="auth-toggle" style="margin-top:32px;">
-        <a class="auth-toggle__link" id="toggle-to-login" href="#" style="color:rgba(255,255,255,0.7)">Voltar ao Login</a>
+        <a class="auth-toggle__link" id="toggle-to-login" href="#">Voltar ao Login</a>
       </div>
     </section>
 

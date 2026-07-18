@@ -1,87 +1,116 @@
 /* ============================================================
-   PATTERNS & FOCUS MODE
-   Retículas, Hachuras, Efeitos Visuais HQ
+   PATTERNS & UTILITIES — ENEM STUDY
+   Glassmorphism, Glow, System UI Effects
    ============================================================ */
 
-.halftone-bg {
-  background-image: radial-gradient(circle, var(--color-black) 1px, transparent 1px);
-  background-size: 8px 8px;
+/* ---- Glassmorphism Panels ---- */
+.glass {
+  background: var(--bg-glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--border-panel);
 }
 
-.halftone-bg-lg {
-  background-image: radial-gradient(circle, var(--color-black) 1.5px, transparent 1.5px);
-  background-size: 12px 12px;
+.glass-strong {
+  background: rgba(11, 17, 32, 0.85);
+  backdrop-filter: var(--glass-blur-heavy);
+  -webkit-backdrop-filter: var(--glass-blur-heavy);
+  border: var(--border-glow);
 }
 
-.halftone-bg-sm {
-  background-image: radial-gradient(circle, var(--color-black) 0.8px, transparent 0.8px);
-  background-size: 5px 5px;
+/* ---- Glow Borders ---- */
+.glow-border {
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  box-shadow: inset 0 0 20px rgba(0, 229, 255, 0.03), var(--glow-sm);
 }
 
-.diagonal-lines {
-  background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, var(--color-black) 4px, var(--color-black) 5px);
+.glow-border-strong {
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  box-shadow: inset 0 0 30px rgba(0, 229, 255, 0.06), var(--glow-md);
 }
 
-.diagonal-lines-reverse {
-  background-image: repeating-linear-gradient(-45deg, transparent, transparent 4px, var(--color-black) 4px, var(--color-black) 5px);
-}
-
-.crosshatch {
+/* ---- Subtle Grid Background ---- */
+.grid-bg {
   background-image:
-    repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(0,0,0,0.1) 4px, rgba(0,0,0,0.1) 5px),
-    repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(0,0,0,0.1) 4px, rgba(0,0,0,0.1) 5px);
+    linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
-.vertical-lines {
-  background-image: repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(0,0,0,0.08) 6px, rgba(0,0,0,0.08) 7px);
+.grid-bg-fine {
+  background-image:
+    linear-gradient(rgba(0, 229, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.02) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-.horizontal-lines {
-  background-image: repeating-linear-gradient(0deg, transparent, transparent 6px, rgba(0,0,0,0.08) 6px, rgba(0,0,0,0.08) 7px);
-}
-
-.manga-panel {
-  border: var(--border-bold);
-  position: relative;
-  background: var(--color-white);
-}
-
-.manga-panel::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 2px solid var(--color-black);
-  pointer-events: none;
-}
-
-.ink-border {
-  border: var(--border-heavy);
-  box-shadow: inset 0 0 0 2px var(--color-white), inset 0 0 0 4px var(--color-black), var(--shadow-manga);
-}
-
-.halftone-overlay {
-  position: relative;
-}
-
-.halftone-overlay::after {
+/* ---- Scanline Effect ---- */
+.scanlines::after {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle, var(--color-black) 1px, transparent 1px);
-  background-size: 6px 6px;
-  opacity: 0.05;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.05) 2px,
+    rgba(0, 0, 0, 0.05) 4px
+  );
   pointer-events: none;
+  z-index: 1;
 }
 
-/* ---- FOCUS MODE ---- */
+/* ---- Holographic Shimmer ---- */
+.holo-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.holo-shimmer::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(0, 229, 255, 0.04) 60deg,
+    transparent 120deg,
+    rgba(168, 85, 247, 0.03) 180deg,
+    transparent 240deg,
+    rgba(0, 229, 255, 0.04) 300deg,
+    transparent 360deg
+  );
+  animation: holoRotate 20s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes holoRotate {
+  to { transform: rotate(360deg); }
+}
+
+/* ---- Neon Text Glow ---- */
+.neon-text {
+  color: var(--accent);
+  text-shadow: 0 0 8px var(--accent-glow), 0 0 20px rgba(0, 229, 255, 0.15);
+}
+
+.neon-text-purple {
+  color: var(--accent-arcane);
+  text-shadow: 0 0 8px var(--accent-arcane-glow), 0 0 20px rgba(168, 85, 247, 0.15);
+}
+
+/* ---- Focus Mode ---- */
 .focus-overlay {
   position: fixed;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%);
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(4, 6, 12, 0.9) 100%);
   pointer-events: none;
   z-index: var(--z-overlay);
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.5s ease;
 }
 
 body.focus-mode .focus-overlay {
@@ -92,7 +121,18 @@ body.focus-mode .sidebar,
 body.focus-mode .widget-trigger,
 body.focus-mode .widget-panel,
 body.focus-mode .mobile-nav {
-  opacity: 0.12;
+  opacity: 0.08;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.4s ease;
+}
+
+/* ---- Cut Corner Utility ---- */
+.cut-corner {
+  clip-path: var(--cut-corner);
+}
+.cut-corner-sm {
+  clip-path: var(--cut-corner-sm);
+}
+.cut-corner-lg {
+  clip-path: var(--cut-corner-lg);
 }

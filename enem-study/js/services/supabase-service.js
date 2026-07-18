@@ -393,6 +393,33 @@ const SupabaseService = (() => {
     return [];
   }
 
+  // ---- Profile Fallback (se trigger falhar) ----
+  async function ensureProfile(userId, metadata = {}) {
+    const sb = getClient();
+    if (!sb) return false;
+    try {
+      const { data: existing } = await sb.from('profiles').select('id').eq('id', userId).maybeSingle();
+      if (existing) return true;
+
+      const { error: insertErr } = await sb.from('profiles').insert({
+        id: userId,
+        adventurer_name: metadata.adventurer_name || 'Aventureiro',
+        avatar_url: metadata.avatar_url || '/assets/avatars/default.svg',
+        hero_class: metadata.hero_class || 'guerreiro'
+      });
+      if (insertErr) {
+        console.warn('[Supabase] ensureProfile insert error:', insertErr.message);
+        return false;
+      }
+
+      await sb.from('user_stats').insert({ user_id: userId });
+      return true;
+    } catch (e) {
+      console.warn('[Supabase] ensureProfile exception:', e.message);
+      return false;
+    }
+  }
+
   // ---- Streak ----
   async function updateStreak(userId) {
     const sb = getClient();
@@ -416,6 +443,6 @@ const SupabaseService = (() => {
     getChallenges, submitChallengeResult, getReviewChallenges,
     getUserStats, getDungeons, getDungeonRooms,
     createDungeonSession, updateDungeonSession,
-    getNotifications, updateStreak, recordStudyTime
+    getNotifications, updateStreak, recordStudyTime, ensureProfile
   };
 })();

@@ -181,6 +181,12 @@ const AuthController = (() => {
       if (result.needsConfirmation) {
         showAuthError(errorEl, 'Conta criada! Verifique seu email para confirmar o cadastro. Apos confirmar, faca login.');
       } else {
+        const profileMeta = {
+          adventurer_name: registrationData.adventurerName,
+          avatar_url: `/assets/avatars/${registrationData.avatar}.svg`,
+          hero_class: registrationData.heroClass
+        };
+        await SupabaseService.ensureProfile(result.user.id, profileMeta);
         showImpactBurst('QUEST\nBEGIN');
         setTimeout(() => navigateToApp(result.user), 1000);
       }

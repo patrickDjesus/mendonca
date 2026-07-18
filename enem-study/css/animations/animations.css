@@ -1,46 +1,46 @@
 /* ============================================================
-   ANIMATIONS - ENEM STUDY
+   ANIMATIONS — ENEM STUDY
+   Modern Dark Fantasy RPG
    ============================================================ */
 
-@keyframes screenFlash {
-  0% { opacity: 1; } 50% { opacity: 0; background: var(--color-white); } 100% { opacity: 1; }
-}
-
-@keyframes inkSplash {
-  0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; }
-}
-
-@keyframes slashReveal {
-  0% { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
-  100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
-}
-
-@keyframes panelShake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-  20%, 40%, 60%, 80% { transform: translateX(4px); }
-}
-
-@keyframes stampSlam {
-  0% { transform: scale(4) rotate(-15deg); opacity: 0; }
-  60% { transform: scale(0.9) rotate(0deg); opacity: 1; }
-  80% { transform: scale(1.05) rotate(0deg); }
-  100% { transform: scale(1) rotate(0deg); }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes fadeInUp {
-  0% { opacity: 0; transform: translateY(30px); }
-  100% { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fadeInScale {
-  0% { opacity: 0; transform: scale(0.8); }
-  100% { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-@keyframes pulseDark {
-  0%, 100% { box-shadow: var(--shadow-manga); }
-  50% { box-shadow: var(--shadow-manga-xl); }
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 10px var(--accent-glow); }
+  50% { box-shadow: 0 0 25px var(--accent-glow-strong), 0 0 50px rgba(0, 229, 255, 0.15); }
+}
+
+@keyframes glowPulseText {
+  0%, 100% { text-shadow: 0 0 8px var(--accent-glow); }
+  50% { text-shadow: 0 0 16px var(--accent-glow-strong), 0 0 32px rgba(0, 229, 255, 0.2); }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: rgba(0, 229, 255, 0.2); }
+  50% { border-color: rgba(0, 229, 255, 0.5); }
 }
 
 @keyframes float {
@@ -48,31 +48,56 @@
   50% { transform: translateY(-6px); }
 }
 
-@keyframes glitch {
-  0% { transform: translate(0); } 20% { transform: translate(-3px, 3px); }
-  40% { transform: translate(-3px, -3px); } 60% { transform: translate(3px, 3px); }
-  80% { transform: translate(3px, -3px); } 100% { transform: translate(0); }
+@keyframes scanLine {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
 }
 
-@keyframes screenTear {
-  0% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
-  25% { clip-path: polygon(5% 2%, 100% 0, 98% 95%, 0 100%); }
-  50% { clip-path: polygon(0 0, 95% 5%, 100% 100%, 3% 97%); }
-  100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+@keyframes stampSlam {
+  0% { transform: scale(3) rotate(-8deg); opacity: 0; }
+  50% { transform: scale(0.95) rotate(0deg); opacity: 1; }
+  70% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  10% { transform: translate(-2px, 1px); }
+  20% { transform: translate(2px, -1px); }
+  30% { transform: translate(-1px, 2px); }
+  40% { transform: translate(1px, -2px); }
+  50% { transform: translate(-2px, 0); }
+  60% { transform: translate(2px, 1px); }
+  70% { transform: translate(0, -1px); }
+  80% { transform: translate(-1px, 0); }
+  90% { transform: translate(1px, 2px); }
+}
+
+@keyframes dataStream {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 0% -200%; }
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-.animate-flash { animation: screenFlash 0.3s ease; }
-.animate-splash { animation: inkSplash 0.5s ease forwards; }
-.animate-slash { animation: slashReveal 0.6s ease forwards; }
-.animate-shake { animation: panelShake 0.5s ease; }
-.animate-stamp { animation: stampSlam 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+  20%, 40%, 60%, 80% { transform: translateX(3px); }
+}
+
+/* ---- Utility Classes ---- */
+.animate-fade-in { animation: fadeIn 0.3s ease forwards; }
 .animate-fade-up { animation: fadeInUp 0.4s ease forwards; }
 .animate-fade-scale { animation: fadeInScale 0.3s ease forwards; }
-.animate-pulse { animation: pulseDark 2s ease infinite; }
+.animate-slide-right { animation: slideInRight 0.4s ease forwards; }
+.animate-slide-left { animation: slideInLeft 0.4s ease forwards; }
+.animate-glow-pulse { animation: glowPulse 2s ease-in-out infinite; }
+.animate-glow-text { animation: glowPulseText 2s ease-in-out infinite; }
 .animate-float { animation: float 3s ease-in-out infinite; }
+.animate-stamp { animation: stampSlam 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 .animate-glitch { animation: glitch 0.3s ease; }
-.animate-tear { animation: screenTear 0.5s ease forwards; }
+.animate-shake { animation: shake 0.4s ease; }
+.animate-spin { animation: spin 0.8s linear infinite; }

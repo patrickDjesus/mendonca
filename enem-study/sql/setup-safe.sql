@@ -324,18 +324,28 @@ CREATE TRIGGER set_video_notes_updated_at BEFORE UPDATE ON public.video_notes FO
 DROP TRIGGER IF EXISTS set_user_stats_updated_at ON public.user_stats;
 CREATE TRIGGER set_user_stats_updated_at BEFORE UPDATE ON public.user_stats FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
--- Auto-criar profile ao registrar
+-- Auto-criar profile ao registrar (resiliente — nao quebra o signup)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, adventurer_name, avatar_url, hero_class)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'adventurer_name', 'Aventureiro'),
-    COALESCE(NEW.raw_user_meta_data->>'avatar_url', '/assets/avatars/default.svg'),
-    COALESCE(NEW.raw_user_meta_data->>'hero_class', 'guerreiro')::hero_class
-  );
-  INSERT INTO public.user_stats (user_id) VALUES (NEW.id);
+  BEGIN
+    INSERT INTO public.profiles (id, adventurer_name, avatar_url, hero_class)
+    VALUES (
+      NEW.id,
+      COALESCE(NEW.raw_user_meta_data->>'adventurer_name', 'Aventureiro'),
+      COALESCE(NEW.raw_user_meta_data->>'avatar_url', '/assets/avatars/default.svg'),
+      COALESCE(NEW.raw_user_meta_data->>'hero_class', 'guerreiro')::hero_class
+    );
+  EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING 'handle_new_user: falha ao criar profile — %', SQLERRM;
+  END;
+
+  BEGIN
+    INSERT INTO public.user_stats (user_id) VALUES (NEW.id);
+  EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING 'handle_new_user: falha ao criar user_stats — %', SQLERRM;
+  END;
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
