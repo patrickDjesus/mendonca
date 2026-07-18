@@ -17,7 +17,14 @@ const ToastManager = (() => {
     ensureContainer();
     const toast = document.createElement('div');
     toast.className = 'toast';
-    toast.innerHTML = `<div class="toast__title">${title}</div><div class="toast__message">${message}</div>`;
+    const titleEl = document.createElement('div');
+    titleEl.className = 'toast__title';
+    titleEl.textContent = title;
+    const msgEl = document.createElement('div');
+    msgEl.className = 'toast__message';
+    msgEl.textContent = message;
+    toast.appendChild(titleEl);
+    toast.appendChild(msgEl);
     container.appendChild(toast);
     requestAnimationFrame(() => toast.classList.add('visible'));
     setTimeout(() => {

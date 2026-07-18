@@ -242,7 +242,7 @@ const AuthController = (() => {
 
   function navigateToApp(user) {
     SessionManager.setCurrentUser(user);
-    window.location.href = 'pages/dashboard.html';
+    window.location.href = window.location.pathname.replace(/index\.html$/, '').replace(/\/$/, '') + '/pages/dashboard.html';
   }
 
   return { init };

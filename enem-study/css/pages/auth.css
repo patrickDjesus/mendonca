@@ -218,6 +218,71 @@
 .auth-btn--white { background: var(--color-white); color: var(--color-black); box-shadow: var(--shadow-manga); }
 .auth-btn--white:hover { transform: translate(-3px, -3px); box-shadow: var(--shadow-manga-lg); }
 
+/* ---- Register Panel Overrides (black bg fixes) ---- */
+.auth-panel--register .avatar-option {
+  border-color: var(--color-white);
+}
+.auth-panel--register .avatar-option:hover {
+  box-shadow: 4px 4px 0px var(--color-white);
+}
+.auth-panel--register .avatar-option.selected {
+  box-shadow: 6px 6px 0px var(--color-white);
+}
+
+.auth-panel--register .hero-class-card {
+  border-color: var(--color-white);
+}
+.auth-panel--register .hero-class-card:hover {
+  box-shadow: 4px 4px 0px var(--color-white);
+}
+.auth-panel--register .hero-class-card.selected {
+  box-shadow: 6px 6px 0px var(--color-white);
+}
+
+.auth-panel--register .auth-loading__spinner {
+  border-color: var(--color-white);
+  border-top-color: transparent;
+}
+.auth-panel--register .auth-loading__spinner::after {
+  border-color: var(--color-white);
+  border-top-color: transparent;
+}
+
+.auth-panel--register .auth-loading__text {
+  animation: none;
+  color: var(--color-white);
+}
+
+.auth-panel--register .auth-logo__title::after {
+  background: var(--color-white);
+}
+
+.auth-panel--register .auth-btn--white {
+  background: transparent;
+  color: var(--color-white);
+  border-color: var(--color-white);
+  box-shadow: 4px 4px 0px var(--color-white);
+}
+.auth-panel--register .auth-btn--white:hover {
+  background: var(--color-white);
+  color: var(--color-black);
+  box-shadow: 6px 6px 0px var(--color-white);
+}
+
+.auth-panel--register .auth-error {
+  border-color: var(--color-white);
+}
+
+.auth-panel--register .auth-toggle__link {
+  color: var(--color-white);
+}
+
+.auth-panel--register .auth-decoration--crosshatch {
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.06) 4px, rgba(255,255,255,0.06) 5px),
+    repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(255,255,255,0.06) 4px, rgba(255,255,255,0.06) 5px);
+}
+
 .auth-btn::before {
   content: '';
   position: absolute;

@@ -37,14 +37,6 @@ const BreakNotifier = (() => {
       new Notification(`ENEM Study - ${title}`, { body: message });
     }
     if (typeof ToastManager !== 'undefined') ToastManager.show(title, message, 'info', 8000);
-    if (userId) {
-      try {
-        SupabaseService.getNotifications(userId).then(() => {
-          const sb = SupabaseService.getClient ? SupabaseService.getClient() : null;
-          if (sb) sb.from('user_notifications').insert({ user_id: userId, type: 'break_reminder', title, message });
-        });
-      } catch (e) { /* offline */ }
-    }
   }
 
   function requestPermission() {

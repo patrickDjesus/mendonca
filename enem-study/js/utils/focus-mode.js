@@ -4,16 +4,12 @@
 
 const FocusMode = (() => {
   let active = false;
-  let overlay = null;
-
-  function createOverlay() {
-    overlay = document.createElement('div');
-    overlay.className = 'focus-overlay';
-    document.body.appendChild(overlay);
-  }
 
   function toggle() {
-    if (!overlay) createOverlay();
+    const existing = document.getElementById('focus-overlay');
+    if (existing) {
+      overlay = existing;
+    }
     active = !active;
     document.body.classList.toggle('focus-mode', active);
     if (active && typeof ToastManager !== 'undefined') {

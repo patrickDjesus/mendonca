@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ENEM Study — Dashboard</title>
+  <meta name="theme-color" content="#000000">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,6 +15,7 @@
   <link rel="stylesheet" href="../css/components/components.css">
   <link rel="stylesheet" href="../css/layouts/navigation.css">
   <link rel="stylesheet" href="../css/layouts/widget.css">
+  <link rel="stylesheet" href="../css/pages/dashboard.css">
 </head>
 <body>
 
@@ -43,9 +45,9 @@
         <span class="sidebar__link-icon">&#9733;</span>
         Grimorio
       </a>
-      <a class="sidebar__link" href="#/materials" data-nav="materials">
-        <span class="sidebar__link-icon">&#9998;</span>
-        Materiais
+      <a class="sidebar__link" id="sidebar-logout" href="#" data-nav="logout">
+        <span class="sidebar__link-icon">&#10140;</span>
+        Sair
       </a>
     </div>
     <div class="sidebar__user" id="sidebar-user">
@@ -63,7 +65,7 @@
       <a class="mobile-nav__link active" href="#/"><span class="mobile-nav__link-icon">&#9671;</span>Jornada</a>
       <a class="mobile-nav__link" href="#/videos"><span class="mobile-nav__link-icon">&#9654;</span>Videos</a>
       <a class="mobile-nav__link" href="#/challenges"><span class="mobile-nav__link-icon">&#9876;</span>Desafios</a>
-      <a class="mobile-nav__link" href="#/dungeons"><span class="mobile-nav__link-icon">&#9783;</span>Dungeon</a>
+      <a class="mobile-nav__link" href="#/dungeons"><span class="mobile-nav__link-icon">&#9783;</span>Masmorras</a>
       <a class="mobile-nav__link" href="#/stats"><span class="mobile-nav__link-icon">&#9733;</span>Grimorio</a>
     </div>
   </nav>
@@ -114,8 +116,7 @@
   <!-- Main Content -->
   <main class="main-content" id="main-content">
     <div id="app-root">
-      <h1 style="font-family:var(--font-manga);font-size:var(--text-3xl);margin-bottom:var(--space-6);">Mapa da Jornada</h1>
-      <p style="font-family:var(--font-comic);opacity:0.7;">Selecione um ponto no mapa para comecar sua aventura.</p>
+      <div class="page-section"><div style="text-align:center;padding:var(--space-8);font-family:var(--font-comic)">Carregando...</div></div>
     </div>
   </main>
 
@@ -132,6 +133,11 @@
   <script src="../js/utils/break-notifier.js"></script>
   <script src="../js/routers/router.js"></script>
   <script src="../js/controllers/auth-controller.js"></script>
+  <script src="../js/controllers/journey-controller.js"></script>
+  <script src="../js/controllers/video-controller.js"></script>
+  <script src="../js/controllers/challenge-controller.js"></script>
+  <script src="../js/controllers/dungeon-controller.js"></script>
+  <script src="../js/controllers/stats-controller.js"></script>
   <script src="../js/app.js"></script>
 
   <script>
@@ -143,6 +149,46 @@
         return;
       }
       SessionManager.setCurrentUser(session.user);
+
+      // Sidebar active state management
+      function setActiveNav(route) {
+        document.querySelectorAll('.sidebar__link').forEach(function(l) { l.classList.remove('active'); });
+        document.querySelectorAll('.mobile-nav__link').forEach(function(l) { l.classList.remove('active'); });
+        var nav = route === '/' ? 'dashboard' : route.replace('/', '');
+        var sidebarLink = document.querySelector('.sidebar__link[data-nav="' + nav + '"]');
+        var mobileLink = document.querySelector('.mobile-nav__link[href="#' + route + '"]');
+        if (sidebarLink) sidebarLink.classList.add('active');
+        if (mobileLink) mobileLink.classList.add('active');
+      }
+
+      // Router setup
+      Router.register('/', function() {
+        setActiveNav('/');
+        JourneyController.render();
+      });
+      Router.register('/videos', function() {
+        setActiveNav('/videos');
+        VideoController.render();
+      });
+      Router.register('/challenges', function() {
+        setActiveNav('/challenges');
+        ChallengeController.render();
+      });
+      Router.register('/dungeons', function() {
+        setActiveNav('/dungeons');
+        DungeonController.render();
+      });
+      Router.register('/stats', function() {
+        setActiveNav('/stats');
+        StatsController.render();
+      });
+
+      Router.register('*', function() {
+        setActiveNav('/');
+        JourneyController.render();
+      });
+
+      Router.init();
 
       // Widget toggle
       var trigger = document.getElementById('widget-trigger');
@@ -183,27 +229,29 @@
       textarea.value = localStorage.getItem(notepadKey) || '';
       document.getElementById('notepad-save').addEventListener('click', function() {
         localStorage.setItem(notepadKey, textarea.value);
-        ToastManager.show('Salvo', 'Anotacoes salvas no pergaminho', 'info');
+        if (typeof ToastManager !== 'undefined') ToastManager.show('Salvo', 'Anotacoes salvas no pergaminho', 'info');
       });
       document.getElementById('notepad-clear').addEventListener('click', function() {
         textarea.value = '';
         localStorage.removeItem(notepadKey);
       });
 
-      // Sidebar active state
-      document.querySelectorAll('.sidebar__link, .mobile-nav__link').forEach(function(link) {
-        link.addEventListener('click', function() {
-          document.querySelectorAll('.sidebar__link').forEach(function(l) { l.classList.remove('active'); });
-          document.querySelectorAll('.mobile-nav__link').forEach(function(l) { l.classList.remove('active'); });
-          link.classList.add('active');
+      // Logout
+      document.getElementById('sidebar-logout').addEventListener('click', function(e) {
+        e.preventDefault();
+        SupabaseService.signOut().then(function() {
+          window.location.href = '../index.html';
         });
       });
 
-      // Load user info
+      // Load user profile
       SupabaseService.getProfile(session.user.id).then(function(profile) {
         if (profile) {
           document.getElementById('sidebar-name').textContent = profile.adventurer_name || 'Aventureiro';
           document.getElementById('sidebar-level').textContent = 'Nivel ' + (profile.level || 1);
+          if (profile.avatar_url) {
+            document.getElementById('sidebar-avatar').innerHTML = '<img src="' + profile.avatar_url + '" style="width:100%;height:100%;object-fit:cover" alt="avatar">';
+          }
         }
       });
     })();
