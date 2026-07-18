@@ -17,12 +17,12 @@ const AuthController = (() => {
   ];
 
   const HERO_CLASSES = [
-    { id: 'guerreiro', icon: '\u2694', name: 'Guerreiro', desc: 'Biologia' },
-    { id: 'arqueiro', icon: '\uD83C\uDFF9', name: 'Arqueiro', desc: 'Matematica' },
-    { id: 'mago', icon: '\uD83D\uDD2E', name: 'Mago', desc: 'Quimica' },
-    { id: 'ladino', icon: '\uD83D\uDDE1', name: 'Ladino', desc: 'Linguagens' },
-    { id: 'curandeiro', icon: '\u2727', name: 'Curandeiro', desc: 'Humanas' },
-    { id: 'paladino', icon: '\u26D6', name: 'Paladino', desc: 'Fisica' }
+    { id: 'guerreiro', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M15 21l6-6"/></svg>', name: 'Guerreiro', desc: 'Biologia' },
+    { id: 'arqueiro', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>', name: 'Arqueiro', desc: 'Matematica' },
+    { id: 'mago', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>', name: 'Mago', desc: 'Quimica' },
+    { id: 'ladino', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M20 16l-4 4"/></svg>', name: 'Ladino', desc: 'Linguagens' },
+    { id: 'curandeiro', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/><path d="M12 8v8M8 12h8"/></svg>', name: 'Curandeiro', desc: 'Humanas' },
+    { id: 'paladino', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/><circle cx="12" cy="12" r="3"/></svg>', name: 'Paladino', desc: 'Fisica' }
   ];
 
   function init() {
@@ -31,6 +31,22 @@ const AuthController = (() => {
     bindAvatarSelection();
     bindClassSelection();
     checkExistingSession();
+    testConnection();
+  }
+
+  async function testConnection() {
+    try {
+      const session = await SupabaseService.getSession();
+      if (!session) {
+        console.log('[Auth] Conexao Supabase testada — sem sessao ativa.');
+      }
+    } catch (e) {
+      console.error('[Auth] Falha ao conectar com Supabase:', e.message);
+      const loginError = document.getElementById('login-error');
+      if (loginError) {
+        showAuthError(loginError, 'Aviso: nao foi possivel conectar ao servidor. Verifique a chave API no console.');
+      }
+    }
   }
 
   function checkExistingSession() {
@@ -162,8 +178,12 @@ const AuthController = (() => {
     submitBtn.style.display = '';
 
     if (result.success) {
-      showImpactBurst('QUEST\nBEGIN');
-      setTimeout(() => navigateToApp(result.user), 1000);
+      if (result.needsConfirmation) {
+        showAuthError(errorEl, 'Conta criada! Verifique seu email para confirmar o cadastro. Apos confirmar, faca login.');
+      } else {
+        showImpactBurst('QUEST\nBEGIN');
+        setTimeout(() => navigateToApp(result.user), 1000);
+      }
     } else {
       showAuthError(errorEl, result.error || 'Falha ao criar conta.');
     }

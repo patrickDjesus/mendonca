@@ -4,15 +4,24 @@
 
 const SupabaseService = (() => {
   const SUPABASE_URL = 'https://pymtagngzrzupbvbarrl.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_zapw9ov_DxM2BnJU5wG58A_Y8eVZphO';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5bXRhZ25nenJ6dXBidmJhcnJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMzQyOTAsImV4cCI6MjA5OTgxMDI5MH0.BZECOEeTP8Aepjn0sWpSyVr_v-YVJYhdmHb9wrWLkgY';
 
   let _client = null;
 
   function getClient() {
     if (_client) return _client;
     if (typeof window.supabase === 'undefined') {
-      console.error('Supabase JS library not loaded');
+      console.error('[Supabase] Biblioteca JS nao carregada. Verifique a conexao.');
       return null;
+    }
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      console.error('[Supabase] URL ou chave anon nao configurada.');
+      return null;
+    }
+    if (!SUPABASE_ANON_KEY.startsWith('eyJ')) {
+      console.error('[Supabase] A chave anon nao parece ser uma JWT valida.');
+      console.error('[Supabase] Chave atual:', SUPABASE_ANON_KEY.substring(0, 20) + '...');
+      console.error('[Supabase] A chave deve comecar com "eyJ" (formato JWT). Va em Supabase > Settings > API e copie a "anon public" key.');
     }
     _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     return _client;
@@ -21,33 +30,72 @@ const SupabaseService = (() => {
   // ---- Auth ----
   async function signUp(email, password, metadata = {}) {
     const sb = getClient();
-    if (!sb) return OfflineService.signUpOffline(email, password, metadata);
+    if (!sb) return { success: false, error: 'Biblioteca Supabase nao disponivel. Verifique sua conexao.' };
+
     try {
       const { data, error } = await sb.auth.signUp({
         email, password,
         options: { data: metadata }
       });
-      if (error) throw error;
-      if (data.session) SessionManager.saveSession(data.session);
-      return { success: true, user: data.user, session: data.session };
+
+      if (error) {
+        console.error('[Supabase] signUp error:', error.message);
+        return { success: false, error: traduzirErro(error.message) };
+      }
+
+      if (data.session) {
+        SessionManager.saveSession(data.session);
+        return { success: true, user: data.user, session: data.session };
+      }
+
+      if (data.user && !data.session) {
+        if (data.user.identities && data.user.identities.length === 0) {
+          return { success: false, error: 'Este email ja esta cadastrado.' };
+        }
+        return { success: true, user: data.user, session: null, needsConfirmation: true };
+      }
+
+      return { success: false, error: 'Resposta inesperada do servidor.' };
     } catch (err) {
-      console.warn('Supabase offline, falling back:', err.message);
-      return OfflineService.signUpOffline(email, password, metadata);
+      console.error('[Supabase] signUp exception:', err);
+      if (err.message && err.message.includes('Failed to fetch')) {
+        return { success: false, error: 'Falha na conexao. Verifique sua internet e a URL do Supabase.' };
+      }
+      return { success: false, error: 'Erro ao criar conta: ' + (err.message || 'desconhecido') };
     }
   }
 
   async function signIn(email, password) {
     const sb = getClient();
-    if (!sb) return OfflineService.signInOffline(email, password);
+    if (!sb) return { success: false, error: 'Biblioteca Supabase nao disponivel. Verifique sua conexao.' };
+
     try {
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      if (error) {
+        console.error('[Supabase] signIn error:', error.message);
+        return { success: false, error: traduzirErro(error.message) };
+      }
       SessionManager.saveSession(data.session);
       return { success: true, user: data.user, session: data.session };
     } catch (err) {
-      console.warn('Supabase offline, falling back:', err.message);
-      return OfflineService.signInOffline(email, password);
+      console.error('[Supabase] signIn exception:', err);
+      if (err.message && err.message.includes('Failed to fetch')) {
+        return { success: false, error: 'Falha na conexao. Verifique sua internet e a URL do Supabase.' };
+      }
+      return { success: false, error: 'Erro ao entrar: ' + (err.message || 'desconhecido') };
     }
+  }
+
+  function traduzirErro(msg) {
+    if (!msg) return 'Erro desconhecido.';
+    if (msg.includes('Invalid login credentials')) return 'Email ou senha incorretos.';
+    if (msg.includes('User already registered')) return 'Este email ja esta cadastrado.';
+    if (msg.includes('Password should be at least')) return 'A senha deve ter pelo menos 6 caracteres.';
+    if (msg.includes('Unable to validate email address')) return 'Email invalido.';
+    if (msg.includes('Email not confirmed')) return 'Email nao confirmado. Verifique sua caixa de entrada.';
+    if (msg.includes('Invalid API key')) return 'Chave de API invalida. Verifique a configuracao do Supabase.';
+    if (msg.includes('rate limit')) return 'Muitas tentativas. Aguarde alguns minutos.';
+    return msg;
   }
 
   async function signOut() {

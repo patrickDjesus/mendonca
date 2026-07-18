@@ -172,7 +172,8 @@
 
 .hero-class-card:hover { background: rgba(255,255,255,0.1); transform: translate(-2px, -2px); box-shadow: var(--shadow-manga-sm); }
 .hero-class-card.selected { background: var(--color-white); color: var(--color-black); box-shadow: var(--shadow-manga); }
-.hero-class-card__icon { font-size: var(--text-2xl); margin-bottom: var(--space-1); display: block; }
+.hero-class-card__icon { font-size: var(--text-2xl); margin-bottom: var(--space-1); display: block; width: 36px; height: 36px; margin-left: auto; margin-right: auto; }
+.hero-class-card__icon svg { width: 100%; height: 100%; }
 .hero-class-card__name { font-family: var(--font-manga); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 1px; }
 
 .avatar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin: var(--space-4) 0; }
