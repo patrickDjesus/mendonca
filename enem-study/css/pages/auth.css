@@ -1,0 +1,591 @@
+/* ============================================================
+   AUTH PAGE - Tela de Login/Registro Diagonal Mangá
+   ENEM STUDY
+   ============================================================ */
+
+/* ---- Layout Diagonal Split ---- */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-white);
+}
+
+/* Left Panel - Login */
+.auth-panel {
+  width: 50%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-10);
+  position: relative;
+  z-index: var(--z-base);
+}
+
+.auth-panel--login {
+  background: var(--color-white);
+  clip-path: polygon(0 0, 85% 0, 70% 100%, 0 100%);
+}
+
+.auth-panel--register {
+  background: var(--color-black);
+  color: var(--color-white);
+  clip-path: polygon(30% 0, 100% 0, 100% 100%, 15% 100%);
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 55%;
+  transform: translateX(100%);
+  transition: transform var(--transition-slow);
+}
+
+.auth-panel--register.active {
+  transform: translateX(0);
+}
+
+.auth-panel--login.shifted {
+  transform: translateX(-100%);
+}
+
+/* Diagonal Divider Line */
+.auth-diagonal-divider {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 8px;
+  height: 120%;
+  background: var(--color-black);
+  transform: rotate(12deg);
+  transform-origin: top center;
+  z-index: var(--z-base);
+  display: block;
+}
+
+.auth-diagonal-divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12px;
+  width: 4px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--color-black) 0px,
+    var(--color-black) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+}
+
+/* ---- Logo / Título ---- */
+.auth-logo {
+  text-align: center;
+  margin-bottom: var(--space-10);
+}
+
+.auth-logo__title {
+  font-family: var(--font-manga);
+  font-size: var(--text-5xl);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  line-height: 1;
+  position: relative;
+  display: inline-block;
+}
+
+.auth-logo__title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--color-black);
+}
+
+.auth-logo__subtitle {
+  font-family: var(--font-comic);
+  font-size: var(--text-lg);
+  margin-top: var(--space-4);
+  letter-spacing: 2px;
+  opacity: 0.7;
+}
+
+.auth-panel--register .auth-logo__subtitle {
+  opacity: 0.6;
+}
+
+/* ---- Manga Decorations ---- */
+.auth-decoration {
+  position: absolute;
+  pointer-events: none;
+}
+
+.auth-decoration--dots {
+  bottom: 10%;
+  left: 5%;
+  width: 120px;
+  height: 120px;
+  background-image: radial-gradient(circle, var(--color-black) 1.5px, transparent 1.5px);
+  background-size: 8px 8px;
+  opacity: 0.15;
+  border-radius: 50%;
+}
+
+.auth-decoration--lines {
+  top: 8%;
+  right: 15%;
+  width: 80px;
+  height: 200px;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 4px,
+    rgba(0,0,0,0.08) 4px,
+    rgba(0,0,0,0.08) 5px
+  );
+  transform: rotate(-15deg);
+}
+
+.auth-decoration--crosshatch {
+  bottom: 20%;
+  right: 5%;
+  width: 150px;
+  height: 100px;
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(0,0,0,0.06) 4px, rgba(0,0,0,0.06) 5px),
+    repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(0,0,0,0.06) 4px, rgba(0,0,0,0.06) 5px);
+}
+
+/* ---- Formulário ---- */
+.auth-form {
+  width: 100%;
+  max-width: 380px;
+}
+
+.auth-form__group {
+  margin-bottom: var(--space-5);
+  position: relative;
+}
+
+.auth-form__label {
+  display: block;
+  font-family: var(--font-manga);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: var(--space-2);
+}
+
+.auth-form__input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-thick);
+  background: var(--color-white);
+  font-size: var(--text-base);
+  font-family: var(--font-body);
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-manga-sm);
+}
+
+.auth-form__input:focus {
+  box-shadow: var(--shadow-manga);
+  transform: translate(-1px, -1px);
+}
+
+.auth-panel--register .auth-form__input {
+  background: var(--color-gray-900);
+  color: var(--color-white);
+  border-color: var(--color-white);
+}
+
+.auth-panel--register .auth-form__input::placeholder {
+  color: var(--color-gray-500);
+}
+
+.auth-panel--register .auth-form__input:focus {
+  box-shadow: 4px 4px 0px var(--color-white);
+}
+
+/* ---- Hero Class Selection (Registro) ---- */
+.hero-class-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+.hero-class-card {
+  border: var(--border-medium);
+  padding: var(--space-3);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+  background: transparent;
+}
+
+.hero-class-card:hover {
+  background: rgba(255,255,255,0.1);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-manga-sm);
+}
+
+.hero-class-card.selected {
+  background: var(--color-white);
+  color: var(--color-black);
+  box-shadow: var(--shadow-manga);
+}
+
+.hero-class-card__icon {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-1);
+  display: block;
+}
+
+.hero-class-card__name {
+  font-family: var(--font-manga);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ---- Avatar Selection ---- */
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+.avatar-option {
+  width: 70px;
+  height: 70px;
+  border: var(--border-thick);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  font-size: var(--text-3xl);
+}
+
+.avatar-option:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-manga);
+}
+
+.avatar-option.selected {
+  background: var(--color-white);
+  color: var(--color-black);
+  box-shadow: var(--shadow-manga-lg);
+  border-width: 4px;
+}
+
+/* ---- Botões ---- */
+.auth-btn {
+  display: block;
+  width: 100%;
+  padding: var(--space-4) var(--space-6);
+  font-family: var(--font-manga);
+  font-size: var(--text-xl);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  border: var(--border-bold);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-btn--primary {
+  background: var(--color-black);
+  color: var(--color-white);
+  box-shadow: var(--shadow-manga);
+}
+
+.auth-btn--primary:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: var(--shadow-manga-lg);
+}
+
+.auth-btn--primary:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.auth-btn--ghost {
+  background: transparent;
+  color: var(--color-black);
+}
+
+.auth-btn--ghost:hover {
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.auth-btn--white {
+  background: var(--color-white);
+  color: var(--color-black);
+  box-shadow: var(--shadow-manga);
+}
+
+.auth-btn--white:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: var(--shadow-manga-lg);
+}
+
+/* Button Speed Lines Effect */
+.auth-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.2),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.auth-btn:hover::before {
+  left: 100%;
+}
+
+/* ---- Toggle Link ---- */
+.auth-toggle {
+  text-align: center;
+  margin-top: var(--space-6);
+  font-family: var(--font-comic);
+}
+
+.auth-toggle__text {
+  font-size: var(--text-sm);
+}
+
+.auth-toggle__link {
+  font-family: var(--font-manga);
+  font-size: var(--text-base);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+  letter-spacing: 1px;
+}
+
+.auth-toggle__link:hover {
+  opacity: 0.7;
+}
+
+/* ---- Character Creation Steps ---- */
+.character-creation {
+  display: none;
+}
+
+.character-creation.active {
+  display: block;
+  animation: fadeInUp 0.4s ease;
+}
+
+.creation-step {
+  display: none;
+}
+
+.creation-step.active {
+  display: block;
+  animation: fadeInUp 0.3s ease;
+}
+
+.creation-step__title {
+  font-family: var(--font-manga);
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-4);
+  text-align: center;
+}
+
+/* ---- Step Navigation ---- */
+.step-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.step-nav__dots {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.step-dot {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--color-white);
+  background: transparent;
+}
+
+.step-dot.active {
+  background: var(--color-white);
+}
+
+.step-dot.completed {
+  background: var(--color-white);
+  opacity: 0.5;
+}
+
+/* ---- Error Messages ---- */
+.auth-error {
+  background: var(--color-white);
+  color: var(--color-black);
+  border: var(--border-thick);
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-comic);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-4);
+  display: none;
+  position: relative;
+}
+
+.auth-error.visible {
+  display: block;
+  animation: panelShake 0.4s ease;
+}
+
+.auth-error::before {
+  content: '⚠';
+  margin-right: var(--space-2);
+  font-size: var(--text-lg);
+}
+
+/* ---- Loading Spinner Manga ---- */
+.auth-loading {
+  display: none;
+  text-align: center;
+  padding: var(--space-6);
+}
+
+.auth-loading.visible {
+  display: block;
+}
+
+.auth-loading__spinner {
+  width: 50px;
+  height: 50px;
+  border: var(--border-bold);
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto var(--space-4);
+  position: relative;
+}
+
+.auth-loading__spinner::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 2px dashed var(--color-black);
+  border-top-color: transparent;
+  animation: spin 1.2s linear infinite reverse;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.auth-loading__text {
+  font-family: var(--font-manga);
+  font-size: var(--text-lg);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  animation: pulseDark 1.5s ease infinite;
+}
+
+/* ---- Manga Impact Burst ---- */
+.impact-burst {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-white);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.impact-burst.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.impact-burst__text {
+  font-family: var(--font-manga);
+  font-size: 120px;
+  color: var(--color-black);
+  text-shadow: 6px 6px 0 var(--color-gray-300);
+  animation: stampSlam 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+/* ---- Mobile Responsive ---- */
+@media (max-width: 768px) {
+  .auth-container {
+    flex-direction: column;
+  }
+
+  .auth-panel {
+    width: 100%;
+    min-height: 100vh;
+    clip-path: none;
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .auth-panel--login {
+    clip-path: none;
+  }
+
+  .auth-panel--register {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    clip-path: none;
+    transform: translateX(100%);
+    z-index: var(--z-modal);
+  }
+
+  .auth-panel--register.active {
+    transform: translateX(0);
+  }
+
+  .auth-panel--login.shifted {
+    transform: translateX(0);
+    display: none;
+  }
+
+  .auth-diagonal-divider {
+    display: none;
+  }
+
+  .auth-logo__title {
+    font-size: var(--text-3xl);
+  }
+
+  .hero-class-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .avatar-grid {
+    grid-template-columns: repeat(3, 1fr);
+    justify-content: center;
+  }
+}

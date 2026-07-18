@@ -1,0 +1,124 @@
+/* ============================================================
+   ANIMATIONS - ENEM STUDY
+   Mangá RPG Black & White
+   ============================================================ */
+
+/* Screen Flash - Manga Impact */
+@keyframes screenFlash {
+  0% { opacity: 1; }
+  50% { opacity: 0; background: var(--color-white); }
+  100% { opacity: 1; }
+}
+
+/* Ink Splash - Tinta Jorrando */
+@keyframes inkSplash {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Slash Effect - Efeito de Corte */
+@keyframes slashReveal {
+  0% { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
+  100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+}
+
+/* Speed Lines - Linhas de Velocidade */
+@keyframes speedLines {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Panel Shake - Sacudir Painel (erro) */
+@keyframes panelShake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+/* Stamp Slam - Carimbo Batendo */
+@keyframes stampSlam {
+  0% { transform: scale(4) rotate(-15deg); opacity: 0; }
+  60% { transform: scale(0.9) rotate(0deg); opacity: 1; }
+  80% { transform: scale(1.05) rotate(0deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Fade In Up */
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Fade In Scale */
+@keyframes fadeInScale {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Pulse Glow - Pulse preto */
+@keyframes pulseDark {
+  0%, 100% { box-shadow: var(--shadow-manga); }
+  50% { box-shadow: var(--shadow-manga-xl); }
+}
+
+/* Float - Widget */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Manga Panel Slide */
+@keyframes panelSlideIn {
+  0% { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
+  100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+}
+
+/* Ink Drip */
+@keyframes inkDrip {
+  0% { height: 0; }
+  100% { height: 100%; }
+}
+
+/* Glitch Effect - Para erros */
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-3px, 3px); }
+  40% { transform: translate(-3px, -3px); }
+  60% { transform: translate(3px, 3px); }
+  80% { transform: translate(3px, -3px); }
+  100% { transform: translate(0); }
+}
+
+/* Screen Tear - Rasgar tela (golpe certo) */
+@keyframes screenTear {
+  0% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+  25% { clip-path: polygon(5% 2%, 100% 0, 98% 95%, 0 100%); }
+  50% { clip-path: polygon(0 0, 95% 5%, 100% 100%, 3% 97%); }
+  100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+}
+
+/* Boss Battle Invert */
+@keyframes bossInvert {
+  0% { filter: invert(0); }
+  100% { filter: invert(1); }
+}
+
+/* Diagonal Slide Auth */
+@keyframes diagonalReveal {
+  0% { clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%); }
+  100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+}
+
+/* Utility Classes */
+.animate-flash { animation: screenFlash 0.3s ease; }
+.animate-splash { animation: inkSplash 0.5s ease forwards; }
+.animate-slash { animation: slashReveal 0.6s ease forwards; }
+.animate-shake { animation: panelShake 0.5s ease; }
+.animate-stamp { animation: stampSlam 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards; }
+.animate-fade-up { animation: fadeInUp 0.4s ease forwards; }
+.animate-fade-scale { animation: fadeInScale 0.3s ease forwards; }
+.animate-pulse { animation: pulseDark 2s ease infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-glitch { animation: glitch 0.3s ease; }
+.animate-tear { animation: screenTear 0.5s ease forwards; }

@@ -1,0 +1,170 @@
+/* ============================================================
+   HALFTONE & MANGA PATTERNS
+   Retículas, Hachuras, Efeitos Visuais HQ
+   ============================================================ */
+
+/* Halftone Dot Pattern */
+.halftone-bg {
+  background-image: radial-gradient(circle, var(--color-black) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+
+.halftone-bg-lg {
+  background-image: radial-gradient(circle, var(--color-black) 1.5px, transparent 1.5px);
+  background-size: 12px 12px;
+}
+
+.halftone-bg-sm {
+  background-image: radial-gradient(circle, var(--color-black) 0.8px, transparent 0.8px);
+  background-size: 5px 5px;
+}
+
+/* Diagonal Lines Pattern */
+.diagonal-lines {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    var(--color-black) 4px,
+    var(--color-black) 5px
+  );
+}
+
+.diagonal-lines-reverse {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 4px,
+    var(--color-black) 4px,
+    var(--color-black) 5px
+  );
+}
+
+/* Cross Hatch Pattern */
+.crosshatch {
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 4px,
+      rgba(0,0,0,0.1) 4px,
+      rgba(0,0,0,0.1) 5px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 4px,
+      rgba(0,0,0,0.1) 4px,
+      rgba(0,0,0,0.1) 5px
+    );
+}
+
+/* Vertical Lines */
+.vertical-lines {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 6px,
+    rgba(0,0,0,0.08) 6px,
+    rgba(0,0,0,0.08) 7px
+  );
+}
+
+/* Horizontal Lines */
+.horizontal-lines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 6px,
+    rgba(0,0,0,0.08) 6px,
+    rgba(0,0,0,0.08) 7px
+  );
+}
+
+/* Speed Lines Background */
+.speed-lines-bg {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 20px,
+      rgba(0,0,0,0.03) 20px,
+      rgba(0,0,0,0.03) 21px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 20px,
+      rgba(0,0,0,0.03) 20px,
+      rgba(0,0,0,0.03) 21px
+    );
+}
+
+/* Manga Panel Border */
+.manga-panel {
+  border: var(--border-bold);
+  position: relative;
+  background: var(--color-white);
+}
+
+.manga-panel::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid var(--color-black);
+  pointer-events: none;
+}
+
+/* Heavy Ink Border */
+.ink-border {
+  border: var(--border-heavy);
+  box-shadow:
+    inset 0 0 0 2px var(--color-white),
+    inset 0 0 0 4px var(--color-black),
+    var(--shadow-manga);
+}
+
+/* Dotted Border (Manga style) */
+.dot-border {
+  border: 3px dotted var(--color-black);
+}
+
+/* Rough Edge Effect */
+.rough-edge {
+  border: var(--border-thick);
+  border-image: repeating-linear-gradient(
+    45deg,
+    var(--color-black) 0px,
+    var(--color-black) 2px,
+    transparent 2px,
+    transparent 4px
+  ) 6;
+}
+
+/* Halftone Overlay */
+.halftone-overlay {
+  position: relative;
+}
+
+.halftone-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--color-black) 1px, transparent 1px);
+  background-size: 6px 6px;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+/* Focus Mode Overlay */
+.focus-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(0,0,0,0.85) 100%
+  );
+  pointer-events: none;
+  z-index: var(--z-overlay);
+}

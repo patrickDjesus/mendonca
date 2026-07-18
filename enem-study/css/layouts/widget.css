@@ -1,0 +1,199 @@
+/* ============================================================
+   WIDGET CSS - ENEM STUDY
+   Pergaminho (notas) + Ábaco (calculadora)
+   ============================================================ */
+
+.widget-trigger {
+  position: fixed;
+  bottom: var(--space-6);
+  right: var(--space-6);
+  width: var(--widget-size);
+  height: var(--widget-size);
+  border: var(--border-bold);
+  background: var(--color-white);
+  box-shadow: var(--shadow-manga-lg);
+  z-index: var(--z-widget);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-2xl);
+  transition: all var(--transition-fast);
+  animation: float 3s ease-in-out infinite;
+}
+
+.widget-trigger:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: var(--shadow-manga-xl);
+}
+
+.widget-panel {
+  position: fixed;
+  bottom: calc(var(--space-6) + var(--widget-size) + var(--space-3));
+  right: var(--space-6);
+  width: 360px;
+  max-height: 500px;
+  background: var(--color-white);
+  border: var(--border-bold);
+  box-shadow: var(--shadow-manga-xl);
+  z-index: var(--z-widget);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.widget-panel.active {
+  display: flex;
+  animation: fadeInScale 0.3s ease;
+}
+
+.widget-panel__tabs {
+  display: flex;
+  border-bottom: var(--border-thick);
+}
+
+.widget-tab {
+  flex: 1;
+  padding: var(--space-3);
+  font-family: var(--font-manga);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all var(--transition-fast);
+}
+
+.widget-tab.active {
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.widget-tab:not(.active):hover {
+  background: var(--color-gray-100);
+}
+
+/* ---- Notepad (Pergaminho) ---- */
+.widget-notepad {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  padding: var(--space-4);
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 28px,
+      rgba(0,0,0,0.05) 28px,
+      rgba(0,0,0,0.05) 29px
+    ),
+    linear-gradient(to right, rgba(200,180,140,0.1), transparent);
+}
+
+.widget-notepad.active {
+  display: flex;
+}
+
+.widget-notepad__title {
+  font-family: var(--font-manga);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: var(--border-thin);
+}
+
+.widget-notepad__textarea {
+  flex: 1;
+  min-height: 200px;
+  resize: none;
+  border: var(--border-thin);
+  padding: var(--space-3);
+  font-family: var(--font-comic);
+  font-size: var(--text-sm);
+  line-height: 29px;
+  background: transparent;
+}
+
+.widget-notepad__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+/* ---- Calculator (Ábaco) ---- */
+.widget-calculator {
+  display: none;
+  flex-direction: column;
+  padding: var(--space-4);
+}
+
+.widget-calculator.active {
+  display: flex;
+}
+
+.widget-calc__display {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-thick);
+  background: var(--color-gray-100);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  text-align: right;
+  margin-bottom: var(--space-3);
+}
+
+.widget-calc__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
+
+.widget-calc__btn {
+  padding: var(--space-3);
+  border: var(--border-medium);
+  font-family: var(--font-manga);
+  font-size: var(--text-lg);
+  background: var(--color-white);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.widget-calc__btn:hover {
+  background: var(--color-black);
+  color: var(--color-white);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-manga-sm);
+}
+
+.widget-calc__btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+
+.widget-calc__btn--op {
+  background: var(--color-gray-200);
+}
+
+.widget-calc__btn--eq {
+  background: var(--color-black);
+  color: var(--color-white);
+  grid-column: span 2;
+}
+
+@media (max-width: 768px) {
+  .widget-trigger {
+    bottom: calc(80px + var(--space-4));
+  }
+
+  .widget-panel {
+    right: var(--space-3);
+    left: var(--space-3);
+    width: auto;
+    bottom: calc(80px + var(--space-4) + var(--widget-size) + var(--space-3));
+  }
+}
