@@ -39,8 +39,9 @@ const SupabaseService = (() => {
       });
 
       if (error) {
-        console.error('[Supabase] signUp error:', error.message);
-        return { success: false, error: traduzirErro(error.message) };
+        console.error('[Supabase] signUp error:', JSON.stringify(error));
+        const msg = error.message || error.error_description || error.msg || 'Erro desconhecido';
+        return { success: false, error: traduzirErro(msg) };
       }
 
       if (data.session) {
@@ -72,8 +73,9 @@ const SupabaseService = (() => {
     try {
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
       if (error) {
-        console.error('[Supabase] signIn error:', error.message);
-        return { success: false, error: traduzirErro(error.message) };
+        console.error('[Supabase] signIn error:', JSON.stringify(error));
+        const msg = error.message || error.error_description || error.msg || 'Erro desconhecido';
+        return { success: false, error: traduzirErro(msg) };
       }
       SessionManager.saveSession(data.session);
       return { success: true, user: data.user, session: data.session };

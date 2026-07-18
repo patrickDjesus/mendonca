@@ -161,20 +161,26 @@
 .hero-class-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin: var(--space-4) 0; }
 
 .hero-class-card {
-  border: var(--border-medium);
+  border-color: var(--color-white);
+  border-width: 2px;
+  border-style: solid;
   padding: var(--space-3);
   text-align: center;
   cursor: pointer;
   transition: all var(--transition-fast);
   position: relative;
   background: transparent;
+  color: var(--color-white);
 }
 
-.hero-class-card:hover { background: rgba(255,255,255,0.1); transform: translate(-2px, -2px); box-shadow: var(--shadow-manga-sm); }
-.hero-class-card.selected { background: var(--color-white); color: var(--color-black); box-shadow: var(--shadow-manga); }
-.hero-class-card__icon { font-size: var(--text-2xl); margin-bottom: var(--space-1); display: block; width: 36px; height: 36px; margin-left: auto; margin-right: auto; }
+.hero-class-card:hover { background: rgba(255,255,255,0.1); transform: translate(-2px, -2px); box-shadow: 4px 4px 0px var(--color-white); }
+.hero-class-card.selected { background: var(--color-white); color: var(--color-black); box-shadow: 6px 6px 0px var(--color-white); }
+.hero-class-card.selected .hero-class-card__desc { color: var(--color-gray-600); }
+.hero-class-card__icon { font-size: var(--text-2xl); margin-bottom: var(--space-1); display: block; width: 36px; height: 36px; margin-left: auto; margin-right: auto; color: var(--color-white); }
+.hero-class-card.selected .hero-class-card__icon { color: var(--color-black); }
 .hero-class-card__icon svg { width: 100%; height: 100%; }
 .hero-class-card__name { font-family: var(--font-manga); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 1px; }
+.hero-class-card__desc { font-size: 11px; opacity: 0.7; display: block; margin-top: 2px; }
 
 .avatar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin: var(--space-4) 0; }
 
@@ -182,17 +188,19 @@
   width: 70px;
   height: 70px;
   border: var(--border-thick);
+  border-color: var(--color-white);
   cursor: pointer;
   transition: all var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
+  color: var(--color-white);
   font-size: var(--text-3xl);
 }
 
-.avatar-option:hover { transform: scale(1.1); box-shadow: var(--shadow-manga); }
-.avatar-option.selected { background: var(--color-white); color: var(--color-black); box-shadow: var(--shadow-manga-lg); border-width: 4px; }
+.avatar-option:hover { transform: scale(1.1); box-shadow: 4px 4px 0px var(--color-white); }
+.avatar-option.selected { background: var(--color-white); color: var(--color-black); box-shadow: 6px 6px 0px var(--color-white); border-width: 4px; }
 
 .auth-btn {
   display: block;
