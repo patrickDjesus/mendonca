@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS public.user_journey_progress (
 
 CREATE TABLE IF NOT EXISTS public.videos (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  node_id UUID NOT NULL REFERENCES public.journey_nodes(id) ON DELETE CASCADE,
+  node_id UUID REFERENCES public.journey_nodes(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
   description TEXT,
   url TEXT NOT NULL,

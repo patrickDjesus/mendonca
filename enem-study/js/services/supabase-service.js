@@ -434,6 +434,86 @@ const SupabaseService = (() => {
     }
   }
 
+  // ---- Add Content ----
+  async function addVideo(videoData) {
+    const sb = getClient();
+    if (!sb) return { success: false, error: 'Biblioteca Supabase nao disponivel.' };
+
+    try {
+      const { data, error } = await sb.from('videos').insert({
+        title: videoData.title,
+        subject: videoData.subject,
+        url: videoData.url,
+        description: videoData.description || '',
+        node_id: videoData.node_id || null,
+        thumbnail_url: videoData.thumbnail_url || '',
+        duration_seconds: videoData.duration_seconds || 0
+      }).select().single();
+
+      if (error) {
+        console.error('[Supabase] addVideo error:', error.message);
+        return { success: false, error: error.message };
+      }
+      return { success: true, data };
+    } catch (err) {
+      console.error('[Supabase] addVideo exception:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  async function addMaterial(materialData) {
+    const sb = getClient();
+    if (!sb) return { success: false, error: 'Biblioteca Supabase nao disponivel.' };
+
+    try {
+      const { data, error } = await sb.from('materials').insert({
+        title: materialData.title,
+        subject: materialData.subject,
+        file_url: materialData.url,
+        description: materialData.description || '',
+        node_id: materialData.node_id || null
+      }).select().single();
+
+      if (error) {
+        console.error('[Supabase] addMaterial error:', error.message);
+        return { success: false, error: error.message };
+      }
+      return { success: true, data };
+    } catch (err) {
+      console.error('[Supabase] addMaterial exception:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  async function addChallenge(challengeData) {
+    const sb = getClient();
+    if (!sb) return { success: false, error: 'Biblioteca Supabase nao disponivel.' };
+
+    try {
+      const { data, error } = await sb.from('challenges').insert({
+        title: challengeData.title,
+        subject: challengeData.subject,
+        challenge_type: challengeData.challenge_type,
+        question_text: challengeData.question_text,
+        options: challengeData.options || [],
+        correct_answer: challengeData.correct_answer,
+        difficulty: challengeData.difficulty || 3,
+        xp_reward: challengeData.xp_reward || 10,
+        node_id: challengeData.node_id || null,
+        explanation: challengeData.explanation || ''
+      }).select().single();
+
+      if (error) {
+        console.error('[Supabase] addChallenge error:', error.message);
+        return { success: false, error: error.message };
+      }
+      return { success: true, data };
+    } catch (err) {
+      console.error('[Supabase] addChallenge exception:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
   return {
     signUp, signIn, signOut, getSession, getUser,
     getProfile, updateProfile, getAvatars,
@@ -443,6 +523,7 @@ const SupabaseService = (() => {
     getChallenges, submitChallengeResult, getReviewChallenges,
     getUserStats, getDungeons, getDungeonRooms,
     createDungeonSession, updateDungeonSession,
-    getNotifications, updateStreak, recordStudyTime, ensureProfile
+    getNotifications, updateStreak, recordStudyTime, ensureProfile,
+    addVideo, addMaterial, addChallenge
   };
 })();

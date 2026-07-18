@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="../css/layouts/navigation.css">
   <link rel="stylesheet" href="../css/layouts/widget.css">
   <link rel="stylesheet" href="../css/pages/dashboard.css">
+  <link rel="stylesheet" href="../css/pages/content-creator.css">
 </head>
 <body>
 
@@ -123,6 +124,251 @@
   <!-- Focus Overlay -->
   <div class="focus-overlay" id="focus-overlay"></div>
 
+  <!-- FAB — Forjar Conteúdo -->
+  <button class="fab-trigger" id="forge-fab" aria-label="Forjar Conteudo">+</button>
+  <div class="fab-menu" id="fab-menu">
+    <button class="fab-menu__option" data-forge="video">
+      <span class="fab-menu__icon">&#9654;</span>
+      <span class="fab-menu__label">Video</span>
+    </button>
+    <button class="fab-menu__option" data-forge="document">
+      <span class="fab-menu__icon">&#9998;</span>
+      <span class="fab-menu__label">Documento</span>
+    </button>
+    <button class="fab-menu__option" data-forge="challenge">
+      <span class="fab-menu__icon">&#9876;</span>
+      <span class="fab-menu__label">Desafio</span>
+    </button>
+  </div>
+
+  <!-- Modal: Criar Video -->
+  <div class="forge-modal-overlay" id="forge-modal-video">
+    <div class="forge-modal forge-modal--video">
+      <div class="forge-modal__header">
+        <h2 class="forge-modal__title">Forjar Video</h2>
+        <button class="forge-modal__close" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="forge-modal__body">
+        <form id="form-video" novalidate>
+          <div class="forge-field">
+            <label class="forge-label" for="video-title">Titulo *</label>
+            <input class="forge-input" type="text" id="video-title" placeholder="Ex: Aula de Biologia - Celulas" required>
+            <div class="forge-error-text">Titulo e obrigatorio.</div>
+          </div>
+          <div class="forge-form-row">
+            <div class="forge-field">
+              <label class="forge-label" for="video-subject">Materia *</label>
+              <select class="forge-select" id="video-subject" required>
+                <option value="">Selecione...</option>
+                <option value="Biologia">Biologia</option>
+                <option value="Matematica">Matematica</option>
+                <option value="Quimica">Quimica</option>
+                <option value="Fisica">Fisica</option>
+                <option value="Linguagens">Linguagens</option>
+                <option value="Humanas">Humanas</option>
+              </select>
+              <div class="forge-error-text">Selecione uma materia.</div>
+            </div>
+            <div class="forge-field">
+              <label class="forge-label" for="video-node">No da Jornada</label>
+              <select class="forge-select" id="video-node">
+                <option value="">Nenhum (avulso)</option>
+              </select>
+            </div>
+          </div>
+          <div class="forge-field">
+            <label class="forge-label" for="video-url">URL do YouTube *</label>
+            <input class="forge-input" type="url" id="video-url" placeholder="https://youtube.com/watch?v=..." required>
+            <div class="forge-error-text">Insira uma URL valida.</div>
+          </div>
+          <div class="forge-field">
+            <label class="forge-label" for="video-desc">Descricao</label>
+            <textarea class="forge-textarea" id="video-desc" placeholder="Descreva o conteudo do video..." rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="forge-modal__footer">
+        <button class="forge-cancel" type="button">Cancelar</button>
+        <button class="forge-submit" type="button" data-form="video">
+          <span class="forge-submit__text">Forjar Video</span>
+          <span class="forge-submit__spinner"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Criar Documento -->
+  <div class="forge-modal-overlay" id="forge-modal-document">
+    <div class="forge-modal forge-modal--document">
+      <div class="forge-modal__header">
+        <h2 class="forge-modal__title">Forjar Documento</h2>
+        <button class="forge-modal__close" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="forge-modal__body">
+        <form id="form-document" novalidate>
+          <div class="forge-field">
+            <label class="forge-label" for="doc-title">Titulo *</label>
+            <input class="forge-input" type="text" id="doc-title" placeholder="Ex: Resumo - Revolucao Francesa" required>
+            <div class="forge-error-text">Titulo e obrigatorio.</div>
+          </div>
+          <div class="forge-form-row">
+            <div class="forge-field">
+              <label class="forge-label" for="doc-subject">Materia *</label>
+              <select class="forge-select" id="doc-subject" required>
+                <option value="">Selecione...</option>
+                <option value="Biologia">Biologia</option>
+                <option value="Matematica">Matematica</option>
+                <option value="Quimica">Quimica</option>
+                <option value="Fisica">Fisica</option>
+                <option value="Linguagens">Linguagens</option>
+                <option value="Humanas">Humanas</option>
+              </select>
+              <div class="forge-error-text">Selecione uma materia.</div>
+            </div>
+            <div class="forge-field">
+              <label class="forge-label" for="doc-node">No da Jornada</label>
+              <select class="forge-select" id="doc-node">
+                <option value="">Nenhum (avulso)</option>
+              </select>
+            </div>
+          </div>
+          <div class="forge-field">
+            <label class="forge-label" for="doc-url">URL do Arquivo *</label>
+            <input class="forge-input" type="url" id="doc-url" placeholder="https://exemplo.com/documento.pdf" required>
+            <div class="forge-error-text">Insira a URL do documento.</div>
+          </div>
+          <div class="forge-field">
+            <label class="forge-label" for="doc-desc">Descricao</label>
+            <textarea class="forge-textarea" id="doc-desc" placeholder="Descreva o conteudo do documento..." rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="forge-modal__footer">
+        <button class="forge-cancel" type="button">Cancelar</button>
+        <button class="forge-submit" type="button" data-form="document">
+          <span class="forge-submit__text">Forjar Documento</span>
+          <span class="forge-submit__spinner"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Criar Desafio -->
+  <div class="forge-modal-overlay" id="forge-modal-challenge">
+    <div class="forge-modal forge-modal--challenge">
+      <div class="forge-modal__header">
+        <h2 class="forge-modal__title">Forjar Desafio</h2>
+        <button class="forge-modal__close" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="forge-modal__body">
+        <form id="form-challenge" novalidate>
+          <div class="forge-field">
+            <label class="forge-label" for="ch-title">Titulo *</label>
+            <input class="forge-input" type="text" id="ch-title" placeholder="Ex: Quiz sobre Fosseis" required>
+            <div class="forge-error-text">Titulo e obrigatorio.</div>
+          </div>
+          <div class="forge-form-row">
+            <div class="forge-field">
+              <label class="forge-label" for="ch-subject">Materia *</label>
+              <select class="forge-select" id="ch-subject" required>
+                <option value="">Selecione...</option>
+                <option value="Biologia">Biologia</option>
+                <option value="Matematica">Matematica</option>
+                <option value="Quimica">Quimica</option>
+                <option value="Fisica">Fisica</option>
+                <option value="Linguagens">Linguagens</option>
+                <option value="Humanas">Humanas</option>
+              </select>
+              <div class="forge-error-text">Selecione uma materia.</div>
+            </div>
+            <div class="forge-field">
+              <label class="forge-label" for="ch-type">Tipo de Questao *</label>
+              <select class="forge-select" id="ch-type" required>
+                <option value="">Selecione...</option>
+                <option value="multipla_escolha">Multipla Escolha</option>
+                <option value="verdadeiro_falso">Verdadeiro ou Falso</option>
+                <option value="resposta_escrita">Resposta Escrita</option>
+                <option value="preencher_lacuna">Preencher Lacuna</option>
+              </select>
+              <div class="forge-error-text">Selecione o tipo.</div>
+            </div>
+          </div>
+          <div class="forge-field">
+            <label class="forge-label" for="ch-question">Enunciado *</label>
+            <textarea class="forge-textarea" id="ch-question" placeholder="Digite a pergunta do desafio..." rows="3" required></textarea>
+            <div class="forge-error-text">O enunciado e obrigatorio.</div>
+          </div>
+          <div class="forge-field" id="ch-options-field">
+            <label class="forge-label">Opcoes de Resposta *</label>
+            <div class="forge-options-list" id="challenge-options-container">
+              <div class="forge-option-item">
+                <span class="forge-option-letter">A</span>
+                <input class="forge-input forge-option-input" type="text" placeholder="Opcao A" data-idx="0">
+                <button type="button" class="forge-option-remove" title="Remover">&times;</button>
+              </div>
+              <div class="forge-option-item">
+                <span class="forge-option-letter">B</span>
+                <input class="forge-input forge-option-input" type="text" placeholder="Opcao B" data-idx="1">
+                <button type="button" class="forge-option-remove" title="Remover">&times;</button>
+              </div>
+              <div class="forge-option-item">
+                <span class="forge-option-letter">C</span>
+                <input class="forge-input forge-option-input" type="text" placeholder="Opcao C" data-idx="2">
+                <button type="button" class="forge-option-remove" title="Remover">&times;</button>
+              </div>
+              <div class="forge-option-item">
+                <span class="forge-option-letter">D</span>
+                <input class="forge-input forge-option-input" type="text" placeholder="Opcao D" data-idx="3">
+                <button type="button" class="forge-option-remove" title="Remover">&times;</button>
+              </div>
+            </div>
+            <button type="button" class="forge-option-add" id="add-option-btn">+ Adicionar Opcao</button>
+            <div class="forge-error-text" id="options-error">Adicione pelo menos 2 opcoes nao vazias.</div>
+          </div>
+          <div class="forge-field" id="ch-correct-field">
+            <label class="forge-label">Resposta Correta *</label>
+            <div class="forge-correct-selector" id="correct-answer-selector"></div>
+            <div class="forge-error-text" id="correct-error">Selecione a resposta correta.</div>
+          </div>
+          <div class="forge-form-row">
+            <div class="forge-field">
+              <label class="forge-label" for="ch-difficulty">Dificuldade (1-5) *</label>
+              <select class="forge-select" id="ch-difficulty" required>
+                <option value="1">1 - Facil</option>
+                <option value="2">2 - Medio</option>
+                <option value="3" selected>3 - Normal</option>
+                <option value="4">4 - Dificil</option>
+                <option value="5">5 - Elite</option>
+              </select>
+            </div>
+            <div class="forge-field">
+              <label class="forge-label" for="ch-xp">Recompensa XP *</label>
+              <input class="forge-input" type="number" id="ch-xp" value="50" min="10" max="500" step="10" required>
+              <div class="forge-error-text">XP deve ser entre 10 e 500.</div>
+            </div>
+          </div>
+          <div class="forge-field">
+            <label class="forge-label" for="ch-node">No da Jornada</label>
+            <select class="forge-select" id="ch-node">
+              <option value="">Nenhum (avulso)</option>
+            </select>
+          </div>
+          <div class="forge-field">
+            <label class="forge-label" for="ch-explanation">Explicacao (opcional)</label>
+            <textarea class="forge-textarea" id="ch-explanation" placeholder="Explique a resposta correta..." rows="2"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="forge-modal__footer">
+        <button class="forge-cancel" type="button">Cancelar</button>
+        <button class="forge-submit" type="button" data-form="challenge">
+          <span class="forge-submit__text">Forjar Desafio</span>
+          <span class="forge-submit__spinner"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/services/offline-service.js"></script>
@@ -138,6 +384,7 @@
   <script src="../js/controllers/challenge-controller.js"></script>
   <script src="../js/controllers/dungeon-controller.js"></script>
   <script src="../js/controllers/stats-controller.js"></script>
+  <script src="../js/controllers/content-creator-controller.js"></script>
   <script src="../js/app.js"></script>
 
   <script>
@@ -189,6 +436,11 @@
       });
 
       Router.init();
+
+      // Content Creator FAB
+      if (typeof ContentCreatorController !== 'undefined') {
+        ContentCreatorController.init();
+      }
 
       // Widget toggle
       var trigger = document.getElementById('widget-trigger');
