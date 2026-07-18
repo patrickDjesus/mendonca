@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS public.video_notes (
 
 CREATE TABLE IF NOT EXISTS public.materials (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  node_id UUID NOT NULL REFERENCES public.journey_nodes(id) ON DELETE CASCADE,
+  node_id UUID REFERENCES public.journey_nodes(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
   description TEXT,
   file_url TEXT NOT NULL,
@@ -151,7 +151,7 @@ CREATE TABLE IF NOT EXISTS public.user_material_progress (
 
 CREATE TABLE IF NOT EXISTS public.challenges (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  node_id UUID NOT NULL REFERENCES public.journey_nodes(id) ON DELETE CASCADE,
+  node_id UUID REFERENCES public.journey_nodes(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
   description TEXT,
   challenge_type challenge_type NOT NULL,
