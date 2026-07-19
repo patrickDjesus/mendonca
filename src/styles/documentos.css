@@ -1,0 +1,986 @@
+/* ================================
+   Documents Page
+   ================================ */
+.docs-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 70vh;
+}
+
+.docs-file-input {
+  display: none;
+}
+
+/* ================================
+   Header: Tabs + Search
+   ================================ */
+.docs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.docs-tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(200, 180, 140, 0.06);
+  border: 1px solid rgba(200, 180, 140, 0.1);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.docs-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: #8a7a6a;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.docs-tab svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.docs-tab:hover {
+  color: #c8b898;
+  background: rgba(200, 180, 140, 0.08);
+}
+
+.docs-tab.active {
+  background: rgba(200, 180, 140, 0.14);
+  color: #e8dcc8;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.docs-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(200, 180, 140, 0.06);
+  border: 1px solid rgba(200, 180, 140, 0.1);
+  border-radius: 10px;
+  padding: 0 14px;
+  min-width: 280px;
+  transition: border-color 0.2s ease;
+}
+
+.docs-search:focus-within {
+  border-color: rgba(220, 160, 60, 0.35);
+}
+
+.docs-search svg {
+  width: 16px;
+  height: 16px;
+  color: #6a5a4a;
+  flex-shrink: 0;
+}
+
+.docs-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 0;
+  font-size: 13px;
+  color: #e8dcc8;
+  font-family: inherit;
+  outline: none;
+}
+
+.docs-search-input::placeholder {
+  color: #5a4a3a;
+}
+
+/* ================================
+   Subject Filter Chips
+   ================================ */
+.docs-subjects {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-bottom: 4px;
+}
+
+.docs-subject-chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(200, 180, 140, 0.1);
+  background: rgba(200, 180, 140, 0.04);
+  color: #8a7a6a;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.docs-subject-chip:hover {
+  background: rgba(200, 180, 140, 0.1);
+  color: #c8b898;
+  border-color: rgba(200, 180, 140, 0.2);
+}
+
+.docs-subject-chip.active {
+  background: rgba(218, 160, 60, 0.15);
+  color: #daa03c;
+  border-color: rgba(218, 160, 60, 0.35);
+}
+
+/* ================================
+   Gallery Grid
+   ================================ */
+.docs-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* ================================
+   Document Card
+   ================================ */
+.doc-card {
+  background: rgba(200, 180, 140, 0.05);
+  border: 1px solid rgba(200, 180, 140, 0.1);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  font-family: inherit;
+  padding: 0;
+}
+
+.doc-card:hover {
+  background: rgba(200, 180, 140, 0.09);
+  border-color: rgba(200, 180, 140, 0.22);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* ================================
+   Card Preview Area
+   ================================ */
+.doc-card-preview {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: rgba(200, 180, 140, 0.04);
+  border-bottom: 1px solid rgba(200, 180, 140, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Paper notebook background for editor documents */
+.doc-card-preview.paper-bg {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 27px,
+      rgba(100, 140, 180, 0.1) 27px,
+      rgba(100, 140, 180, 0.1) 28px
+    ),
+    rgba(232, 226, 214, 0.06);
+  padding-left: 36px;
+  position: relative;
+}
+
+.doc-card-preview.paper-bg::before {
+  content: '';
+  position: absolute;
+  left: 28px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(200, 100, 100, 0.15);
+}
+
+.doc-card-preview.paper-bg::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(200, 180, 140, 0.12);
+}
+
+.doc-card-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.doc-card-thumb svg {
+  width: 40px;
+  height: 40px;
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+}
+
+.doc-card:hover .doc-card-thumb svg {
+  opacity: 0.5;
+}
+
+.doc-card-thumb.pdf svg {
+  color: #c85050;
+}
+
+.doc-card-thumb.editor svg {
+  color: #daa03c;
+}
+
+.doc-card-filetype {
+  font-size: 10px;
+  font-weight: 700;
+  color: #c85050;
+  background: rgba(200, 80, 80, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.08em;
+}
+
+.doc-card-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #508cc8;
+  background: rgba(80, 140, 200, 0.12);
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+}
+
+.doc-card-delete {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(200, 80, 80, 0.15);
+  color: #c87070;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: all 0.15s ease;
+  z-index: 5;
+}
+
+.doc-card:hover .doc-card-delete {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.doc-card-delete:hover {
+  background: rgba(200, 80, 80, 0.3);
+  color: #e08080;
+}
+
+.doc-card-delete svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ================================
+   Card Info Area
+   ================================ */
+.doc-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+}
+
+.doc-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8dcc8;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.doc-card-meta {
+  font-size: 11px;
+  color: #6a5a4a;
+}
+
+.doc-card-subject {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ================================
+   Add Document Card (+) — identical size
+   ================================ */
+.add-doc-wrapper {
+  position: relative;
+}
+
+.add-doc-card {
+  border-style: dashed;
+  border-color: rgba(218, 160, 60, 0.25);
+}
+
+.add-doc-card:hover {
+  border-color: rgba(218, 160, 60, 0.5);
+}
+
+.add-doc-preview {
+  background: rgba(218, 160, 60, 0.03) !important;
+}
+
+.add-doc-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(218, 160, 60, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+}
+
+.add-doc-card:hover .add-doc-icon {
+  background: rgba(218, 160, 60, 0.22);
+  transform: scale(1.08);
+}
+
+.add-doc-icon svg {
+  width: 26px;
+  height: 26px;
+  color: #daa03c;
+}
+
+/* ================================
+   Popover Menu
+   ================================ */
+.add-doc-popover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  min-width: 260px;
+  background: #2a2520;
+  border: 1px solid rgba(200, 180, 140, 0.15);
+  border-radius: 14px;
+  padding: 6px;
+  z-index: 50;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  animation: popoverIn 0.18s ease-out;
+}
+
+@keyframes popoverIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.add-doc-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: left;
+  font-family: inherit;
+}
+
+.add-doc-option:hover {
+  background: rgba(200, 180, 140, 0.08);
+}
+
+.add-doc-option-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.add-doc-option-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.add-doc-option-icon.upload {
+  background: rgba(80, 140, 200, 0.15);
+  color: #508cc8;
+}
+
+.add-doc-option-icon.create {
+  background: rgba(218, 160, 60, 0.15);
+  color: #daa03c;
+}
+
+.add-doc-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.add-doc-option-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8dcc8;
+}
+
+.add-doc-option-desc {
+  font-size: 11px;
+  color: #6a5a4a;
+}
+
+.add-doc-option-divider {
+  height: 1px;
+  background: rgba(200, 180, 140, 0.08);
+  margin: 4px 10px;
+}
+
+/* ================================
+   Empty State
+   ================================ */
+.docs-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.docs-empty svg {
+  width: 48px;
+  height: 48px;
+  color: #5a4a3a;
+  opacity: 0.5;
+}
+
+.docs-empty p {
+  font-size: 14px;
+  color: #6a5a4a;
+}
+
+/* ================================
+   Public Documents Footer
+   ================================ */
+.docs-public-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(80, 140, 200, 0.06);
+  border: 1px solid rgba(80, 140, 200, 0.12);
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+.docs-public-footer svg {
+  width: 16px;
+  height: 16px;
+  color: #508cc8;
+  flex-shrink: 0;
+}
+
+.docs-public-footer span {
+  font-size: 12px;
+  color: #7a9aba;
+}
+
+/* ================================
+   Editor Overlay
+   ================================ */
+.doc-editor-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #1a1612;
+  display: flex;
+  flex-direction: column;
+  animation: editorSlideIn 0.3s ease-out;
+}
+
+.doc-editor-loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #6a5a4a;
+}
+
+@keyframes editorSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================================
+   Editor Toolbar
+   ================================ */
+.doc-editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px;
+  background: rgba(200, 180, 140, 0.05);
+  border-bottom: 1px solid rgba(200, 180, 140, 0.1);
+  flex-shrink: 0;
+}
+
+.doc-editor-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #8a7a6a;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.doc-editor-back:hover {
+  background: rgba(200, 180, 140, 0.08);
+  color: #c8b898;
+}
+
+.doc-editor-back svg {
+  width: 18px;
+  height: 18px;
+}
+
+.doc-editor-title-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: 'Caveat', cursive;
+  font-size: 24px;
+  font-weight: 600;
+  color: #e8dcc8;
+  outline: none;
+  padding: 4px 0;
+}
+
+.doc-editor-title-input::placeholder {
+  color: #5a4a3a;
+}
+
+.doc-editor-save {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(218, 160, 60, 0.15);
+  color: #daa03c;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.doc-editor-save:hover {
+  background: rgba(218, 160, 60, 0.25);
+}
+
+.doc-editor-save svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ================================
+   Format Bar (Fixed above editor)
+   ================================ */
+.doc-format-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 24px;
+  background: rgba(200, 180, 140, 0.04);
+  border-bottom: 1px solid rgba(200, 180, 140, 0.08);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.doc-format-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.doc-toolbar-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #8a7a6a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.doc-toolbar-btn:hover {
+  background: rgba(200, 180, 140, 0.1);
+  color: #c8b898;
+}
+
+.doc-toolbar-btn.active {
+  background: rgba(218, 160, 60, 0.15);
+  color: #daa03c;
+}
+
+.doc-toolbar-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.doc-toolbar-label {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+}
+
+.doc-toolbar-sep {
+  width: 1px;
+  height: 20px;
+  background: rgba(200, 180, 140, 0.12);
+  margin: 0 6px;
+  flex-shrink: 0;
+}
+
+/* ================================
+   Editor Body — Paper Notebook
+   ================================ */
+.doc-editor-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  padding: 32px 24px 120px;
+}
+
+.doc-editor-paper {
+  width: 100%;
+  max-width: 800px;
+  position: relative;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 27px,
+      rgba(100, 140, 180, 0.1) 27px,
+      rgba(100, 140, 180, 0.1) 28px
+    );
+  background-position-y: 7px;
+  border: 1px solid rgba(200, 180, 140, 0.1);
+  border-radius: 4px;
+  padding: 0 24px 0 64px;
+  position: relative;
+}
+
+.doc-paper-margin {
+  position: absolute;
+  left: 48px;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: rgba(200, 100, 100, 0.18);
+}
+
+.doc-paper-holes {
+  position: absolute;
+  left: 14px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 40px;
+  gap: 0;
+}
+
+.doc-paper-holes span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(200, 180, 140, 0.12);
+  margin-bottom: 250px;
+  flex-shrink: 0;
+}
+
+.doc-paper-lines {
+  position: relative;
+}
+
+/* ================================
+   BlockNote Theme Overrides
+   ================================ */
+.doc-editor-paper [class*="bn-container"] {
+  background: transparent !important;
+}
+
+.doc-editor-paper .bn-editor {
+  background: transparent !important;
+  color: #e8dcc8 !important;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 28px;
+  padding: 7px 0 120px;
+}
+
+.doc-editor-paper .bn-editor > *:first-child {
+  margin-top: 0;
+}
+
+.doc-editor-paper [data-content-type="paragraph"] {
+  margin: 0;
+  line-height: 28px;
+  min-height: 28px;
+}
+
+.doc-editor-paper [data-content-type="heading"] {
+  line-height: 28px;
+  margin: 14px 0 7px;
+}
+
+.doc-editor-paper [data-content-type="bulletListItem"],
+.doc-editor-paper [data-content-type="numberedListItem"],
+.doc-editor-paper [data-content-type="checkListItem"] {
+  margin: 0;
+  line-height: 28px;
+  min-height: 28px;
+}
+
+.doc-editor-paper h1,
+.doc-editor-paper .bn-block-content[data-content-type="heading"][data-level="1"] {
+  font-family: 'Caveat', cursive !important;
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  color: #e8dcc8 !important;
+}
+
+.doc-editor-paper h2,
+.doc-editor-paper .bn-block-content[data-content-type="heading"][data-level="2"] {
+  font-family: 'Caveat', cursive !important;
+  font-size: 26px !important;
+  font-weight: 600 !important;
+  color: #d0c0a0 !important;
+}
+
+.doc-editor-paper h3,
+.doc-editor-paper .bn-block-content[data-content-type="heading"][data-level="3"] {
+  font-family: 'Caveat', cursive !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  color: #c8b898 !important;
+}
+
+.doc-editor-paper blockquote {
+  border-left: 3px solid rgba(218, 160, 60, 0.4) !important;
+  padding-left: 16px !important;
+  color: #a09080 !important;
+  font-style: italic !important;
+}
+
+.doc-editor-paper code {
+  background: rgba(200, 180, 140, 0.1) !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+  font-family: 'Fira Code', monospace !important;
+  font-size: 13px !important;
+  color: #daa03c !important;
+}
+
+.doc-editor-paper pre {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  overflow-x: auto !important;
+}
+
+.doc-editor-paper pre code {
+  background: none !important;
+  padding: 0 !important;
+  color: #c8b898 !important;
+}
+
+/* Formatting toolbar dark overrides */
+.doc-editor-paper [class*="FormattingToolbar"] {
+  background: #2a2520 !important;
+  border: 1px solid rgba(200, 180, 140, 0.15) !important;
+  border-radius: 10px !important;
+}
+
+/* Suggestion/slash menu dark overrides */
+.doc-editor-paper [class*="SuggestionMenu"] {
+  background: #2a2520 !important;
+  border: 1px solid rgba(200, 180, 140, 0.15) !important;
+  border-radius: 10px !important;
+}
+
+/* ================================
+   Responsive
+   ================================ */
+@media (max-width: 768px) {
+  .docs-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .docs-tabs {
+    align-self: flex-start;
+  }
+
+  .docs-search {
+    min-width: 0;
+  }
+
+  .docs-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px;
+  }
+
+  .add-doc-popover {
+    min-width: 230px;
+  }
+
+  .doc-format-bar {
+    padding: 6px 16px;
+  }
+
+  .doc-editor-paper {
+    padding: 20px 16px 20px 52px;
+  }
+
+  .doc-paper-margin {
+    left: 40px;
+  }
+
+  .doc-paper-holes {
+    left: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .docs-gallery {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .docs-tab {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .docs-tab svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .doc-editor-toolbar {
+    padding: 10px 16px;
+  }
+
+  .doc-editor-title-input {
+    font-size: 20px;
+  }
+
+  .doc-format-bar {
+    gap: 2px;
+    padding: 6px 12px;
+  }
+
+  .doc-toolbar-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .doc-toolbar-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .doc-toolbar-sep {
+    margin: 0 3px;
+  }
+
+  .doc-editor-paper {
+    padding: 16px 12px 16px 44px;
+  }
+
+  .doc-paper-margin {
+    left: 32px;
+  }
+
+  .doc-paper-holes {
+    left: 8px;
+  }
+}

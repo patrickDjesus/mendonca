@@ -8,8 +8,10 @@ export default function HomePage() {
   const [userName, setUserName] = useState('')
 
   useEffect(() => {
+    let mounted = true
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
+      if (!mounted) return
       if (!user) {
         navigate('/auth')
         return
@@ -17,6 +19,7 @@ export default function HomePage() {
       setUserName(user.user_metadata?.name || user.email || '')
     }
     getUser()
+    return () => { mounted = false }
   }, [navigate])
 
   const handleLogout = async () => {
@@ -28,12 +31,7 @@ export default function HomePage() {
     <div className="dashboard">
       <aside className="sidebar">
         <div className="sidebar-logo">
-          <svg viewBox="0 0 64 64" fill="none">
-            <path d="M32 16C18 16 6 28 6 32C6 36 18 52 32 52C46 52 58 36 58 32C58 28 46 16 32 16Z" stroke="currentColor" strokeWidth="2" fill="none" />
-            <circle cx="32" cy="32" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
-            <circle cx="32" cy="32" r="4" fill="currentColor" />
-          </svg>
-          <span>Mendonça</span>
+          <img src="/logo.png" alt="Mendonça" className="sidebar-logo-img" />
         </div>
 
         <nav className="sidebar-nav">

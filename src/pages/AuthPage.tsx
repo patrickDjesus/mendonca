@@ -23,9 +23,12 @@ export default function AuthPage() {
     confirmPassword: '',
   })
 
+  const toggleModeRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   useEffect(() => {
     return () => {
       if (navigateTimerRef.current) clearTimeout(navigateTimerRef.current)
+      if (toggleModeRef.current) clearTimeout(toggleModeRef.current)
     }
   }, [])
 
@@ -64,36 +67,35 @@ export default function AuthPage() {
 
       setShowLoading(true)
       navigateTimerRef.current = setTimeout(() => navigate('/home'), 2500)
-    } else {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      })
-
-      if (authError) {
-        setError(authError.message === 'Invalid login credentials'
-          ? 'Email ou senha incorretos.'
-          : authError.message)
-        setLoading(false)
-        return
-      }
-
-      setShowLoading(true)
-      navigateTimerRef.current = setTimeout(() => navigate('/home'), 2500)
+      return
     }
 
-    setLoading(false)
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password,
+    })
+
+    if (authError) {
+      setError(authError.message === 'Invalid login credentials'
+        ? 'Email ou senha incorretos.'
+        : authError.message)
+      setLoading(false)
+      return
+    }
+
+    setShowLoading(true)
+    navigateTimerRef.current = setTimeout(() => navigate('/home'), 2500)
   }
 
   const toggleMode = useCallback(() => {
     setAnimState('falling')
     setError('')
-    setTimeout(() => {
+    toggleModeRef.current = setTimeout(() => {
       setMode(prev => (prev === 'login' ? 'register' : 'login'))
       setFormData({ name: '', email: '', password: '', confirmPassword: '' })
       setShowPassword(false)
       setAnimState('landing')
-      setTimeout(() => setAnimState('idle'), 500)
+      toggleModeRef.current = setTimeout(() => setAnimState('idle'), 500)
     }, 400)
   }, [])
 
