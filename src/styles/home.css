@@ -453,12 +453,14 @@
   display: grid;
   grid-template-columns: 1fr 1.2fr;
   gap: 24px;
+  align-items: start;
 }
 
 .dash-row-2-right {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-height: 0;
 }
 
 /* ================================
@@ -467,15 +469,6 @@
 .card-activities {
   display: flex;
   flex-direction: column;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0px,
-      transparent 47px,
-      rgba(200, 180, 140, 0.08) 47px,
-      rgba(200, 180, 140, 0.08) 48px
-    ),
-    linear-gradient(135deg, rgba(200, 180, 140, 0.05), rgba(200, 180, 140, 0.02));
   border-color: rgba(200, 180, 140, 0.12);
   padding-left: 52px;
   position: relative;
@@ -495,30 +488,34 @@
   content: '';
   position: absolute;
   left: 14px;
-  top: 32px;
+  top: 76px;
   width: 10px;
   height: 10px;
   border-radius: 50%;
   border: 1.5px solid rgba(200, 180, 140, 0.15);
-  box-shadow:
-    0 calc(48px * 1) 0 0 rgba(200, 180, 140, 0),
-    0 calc(48px * 2) 0 0 rgba(200, 180, 140, 0),
-    0 calc(48px * 3) 0 0 rgba(200, 180, 140, 0),
-    0 calc(48px * 4) 0 0 rgba(200, 180, 140, 0);
 }
 
 .act-list {
   display: flex;
   flex-direction: column;
   flex: 1;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 47px,
+      rgba(200, 180, 140, 0.08) 47px,
+      rgba(200, 180, 140, 0.08) 48px
+    );
+  padding-top: 6px;
 }
 
 .act-item {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 14px 12px 0;
-  min-height: 48px;
+  height: 48px;
+  padding: 0 14px;
   transition: background 0.15s ease;
 }
 
@@ -527,8 +524,8 @@
 }
 
 .act-icon {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -537,8 +534,8 @@
 }
 
 .act-icon svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 .act-text {
@@ -548,6 +545,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1;
 }
 
 .act-time {
@@ -555,6 +553,7 @@
   color: #6a5a4a;
   white-space: nowrap;
   flex-shrink: 0;
+  line-height: 1;
 }
 
 /* ================================
@@ -618,7 +617,7 @@
    Goals Card
    ================================ */
 .card-goals {
-  max-height: 280px;
+  height: 280px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
