@@ -1,0 +1,607 @@
+/* ================================
+   Split Layout
+   ================================ */
+.auth-page {
+  display: flex;
+  min-height: 100vh;
+}
+
+.auth-left {
+  flex: 7;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-right {
+  flex: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ================================
+   Desk Surface
+   ================================ */
+.desk-wood {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 80px,
+      rgba(0, 0, 0, 0.03) 80px,
+      rgba(0, 0, 0, 0.03) 82px
+    ),
+    linear-gradient(180deg, #2a221c 0%, #241e18 50%, #1e1814 100%);
+  pointer-events: none;
+}
+
+.desk-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* ================================
+   Paper Card
+   ================================ */
+.auth-container {
+  width: 100%;
+  max-width: 440px;
+  position: relative;
+  z-index: 1;
+}
+
+.paper-card {
+  position: relative;
+  background: var(--bg-paper);
+  padding: 48px 44px 42px;
+  border-radius: 2px;
+  box-shadow:
+    3px 4px 16px rgba(0, 0, 0, 0.35),
+    1px 1px 3px rgba(0, 0, 0, 0.2);
+  transform: rotate(0.5deg);
+}
+
+/* Paper lines */
+.paper-lines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent,
+    transparent 27px,
+    rgba(100, 140, 180, 0.12) 27px,
+    rgba(100, 140, 180, 0.12) 28px
+  );
+  pointer-events: none;
+  border-radius: 2px;
+}
+
+/* Red margin */
+.paper-margin {
+  position: absolute;
+  left: 44px;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: rgba(200, 80, 80, 0.2);
+  pointer-events: none;
+}
+
+/* Tape */
+.tape {
+  position: absolute;
+  width: 60px;
+  height: 20px;
+  background: rgba(220, 210, 180, 0.5);
+  border: 1px solid rgba(200, 190, 160, 0.3);
+  z-index: 10;
+}
+
+.tape-1 {
+  top: -8px;
+  right: 30px;
+  transform: rotate(3deg);
+}
+
+/* Corner fold */
+.paper-fold {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, transparent 50%, #d8d2c5 50%);
+  box-shadow: -2px -2px 3px rgba(0, 0, 0, 0.08);
+  border-radius: 0 0 2px 0;
+}
+
+/* ================================
+   Pushpin
+   ================================ */
+.pushpin {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+}
+
+.pin-head {
+  width: 18px;
+  height: 18px;
+  background: radial-gradient(circle at 40% 40%, #c0392b, #962d22);
+  border-radius: 50%;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.2),
+    inset 0 2px 3px rgba(255, 255, 255, 0.15);
+}
+
+.pin-head::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 5px;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+}
+
+.pin-point {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 8px;
+  background: linear-gradient(180deg, #888, #666);
+  border-radius: 0 0 1px 1px;
+}
+
+/* ================================
+   Paper Animations
+   ================================ */
+@keyframes paperFall {
+  0% {
+    opacity: 1;
+    transform: rotate(0.5deg) translateY(0) scale(1);
+  }
+  30% {
+    opacity: 0.9;
+    transform: rotate(2deg) translateY(10px) scale(0.98);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(12deg) translateY(120vh) scale(0.7);
+  }
+}
+
+@keyframes paperLand {
+  0% {
+    opacity: 0;
+    transform: rotate(-8deg) translateY(-40px) scale(0.85);
+  }
+  40% {
+    opacity: 1;
+    transform: rotate(1.5deg) translateY(6px) scale(1.02);
+  }
+  70% {
+    transform: rotate(-0.5deg) translateY(-2px) scale(0.99);
+  }
+  100% {
+    transform: rotate(0.5deg) translateY(0) scale(1);
+  }
+}
+
+.paper-fall {
+  animation: paperFall 0.4s ease-in forwards;
+}
+
+.paper-land {
+  animation: paperLand 0.5s ease-out forwards;
+}
+
+/* ================================
+   Paper Content
+   ================================ */
+.paper-content {
+  position: relative;
+  z-index: 5;
+}
+
+/* ================================
+   Error Message
+   ================================ */
+.auth-error {
+  margin: 0 24px 8px;
+  padding: 10px 14px;
+  background: rgba(180, 50, 50, 0.08);
+  border: 1px solid rgba(180, 50, 50, 0.2);
+  border-radius: 4px;
+  font-family: 'Architects Daughter', cursive;
+  font-size: 15px;
+  color: #8a3030;
+  animation: fadeSlideUp 0.3s ease-out;
+}
+
+/* ================================
+   Header
+   ================================ */
+.auth-header {
+  margin-bottom: 32px;
+  padding-left: 24px;
+}
+
+.auth-title {
+  font-family: 'Caveat', cursive;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--text-ink);
+  margin-bottom: 6px;
+  animation: fadeSlideUp 0.5s ease-out 0.1s both;
+}
+
+.auth-subtitle {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 18px;
+  color: var(--text-secondary);
+  animation: fadeSlideUp 0.5s ease-out 0.2s both;
+}
+
+/* ================================
+   Form
+   ================================ */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Staggered entrance */
+.anim-in {
+  animation: fadeSlideUp 0.45s ease-out both;
+}
+
+.anim-in:nth-child(1) { animation-delay: 0.2s; }
+.anim-in:nth-child(2) { animation-delay: 0.28s; }
+.anim-in:nth-child(3) { animation-delay: 0.36s; }
+.anim-in:nth-child(4) { animation-delay: 0.44s; }
+.anim-in:nth-child(5) { animation-delay: 0.52s; }
+.anim-in:nth-child(6) { animation-delay: 0.60s; }
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================================
+   Form Groups & Inputs
+   ================================ */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 24px;
+}
+
+.form-group label {
+  font-family: 'Caveat', cursive;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.form-group:focus-within label {
+  color: var(--accent);
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-wrapper input {
+  width: 100%;
+  height: 46px;
+  padding: 0 36px 0 4px;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--border);
+  color: var(--text-ink);
+  font-family: 'Architects Daughter', cursive;
+  font-size: 18px;
+  outline: none;
+  transition: border-color 0.25s;
+}
+
+.input-wrapper input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.input-wrapper input:focus {
+  border-bottom-color: var(--accent);
+}
+
+.input-underline {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.input-wrapper:focus-within .input-underline {
+  width: 100%;
+}
+
+/* Password toggle */
+.toggle-password {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.toggle-password:hover {
+  color: var(--text-secondary);
+}
+
+/* ================================
+   Checkbox custom
+   ================================ */
+.form-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 24px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Architects Daughter', cursive;
+  font-size: 16px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  position: relative;
+}
+
+.checkbox-label input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkmark {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg-paper-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+
+.checkmark::after {
+  content: '';
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+  transform: rotate(-45deg) scale(0);
+  transition: transform 0.2s ease;
+  margin-top: -1px;
+}
+
+.checkbox-label input:checked + .checkmark {
+  background: var(--bg-paper);
+  border-color: var(--accent);
+}
+
+.checkbox-label input:checked + .checkmark::after {
+  transform: rotate(-45deg) scale(1);
+}
+
+.link-forgot {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 16px;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.link-forgot:hover {
+  color: var(--accent);
+}
+
+/* ================================
+   Button
+   ================================ */
+.btn-primary {
+  height: 50px;
+  margin-top: 8px;
+  margin-left: 24px;
+  margin-right: 24px;
+  background: var(--btn-primary);
+  color: var(--btn-primary-text);
+  border: none;
+  border-radius: 3px;
+  font-family: 'Caveat', cursive;
+  font-size: 22px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 2px 3px 10px rgba(0, 0, 0, 0.25);
+  background: #3a3530;
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.985);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary:disabled:hover {
+  transform: none;
+  box-shadow: none;
+  background: var(--btn-primary);
+}
+
+.btn-primary svg {
+  transition: transform 0.25s ease;
+}
+
+.btn-primary:hover svg {
+  transform: translateX(3px);
+}
+
+/* ================================
+   Footer
+   ================================ */
+.auth-footer {
+  margin-top: 28px;
+  text-align: center;
+  font-family: 'Architects Daughter', cursive;
+  font-size: 17px;
+  color: var(--text-secondary);
+  padding-left: 0;
+}
+
+.link-toggle {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-family: 'Caveat', cursive;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+}
+
+.link-toggle::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--accent);
+  transition: width 0.25s ease;
+}
+
+.link-toggle:hover::after {
+  width: 100%;
+}
+
+.link-toggle:hover {
+  text-decoration: none;
+}
+
+/* ================================
+   Desk Doodle
+   ================================ */
+.desk-doodle {
+  position: absolute;
+  bottom: -20px;
+  right: -10px;
+  opacity: 0.5;
+  transform: rotate(-15deg);
+}
+
+/* ================================
+   Responsive
+   ================================ */
+@media (max-width: 900px) {
+  .auth-page {
+    flex-direction: column;
+  }
+
+  .auth-left {
+    min-height: 240px;
+    flex: none;
+  }
+
+  .auth-right {
+    flex: 1;
+    padding: 32px 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-left {
+    min-height: 200px;
+  }
+
+  .auth-right {
+    padding: 24px 16px;
+  }
+
+  .auth-title {
+    font-size: 32px;
+  }
+
+  .paper-card {
+    padding: 32px 24px 28px;
+  }
+
+  .form-group,
+  .form-options,
+  .auth-header {
+    padding-left: 0;
+  }
+
+  .btn-primary {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .paper-margin {
+    left: 20px;
+  }
+}

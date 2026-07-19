@@ -1,0 +1,619 @@
+/* ================================
+   Bookshelf Scene
+   ================================ */
+.shelf-scene {
+  --mx: 50%;
+  --my: 50%;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: linear-gradient(180deg, #1a1410 0%, #15100c 40%, #100c08 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: crosshair;
+}
+
+/* ================================
+   Mouse Glow
+   ================================ */
+.mouse-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle 180px at var(--mx) var(--my),
+    rgba(220, 180, 100, 0.1) 0%,
+    rgba(200, 160, 80, 0.04) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 12;
+  transition: background 0.1s ease;
+}
+
+.mouse-glow::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  left: var(--mx);
+  top: var(--my);
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255, 220, 140, 0.25), transparent 70%);
+  border-radius: 50%;
+  filter: blur(4px);
+}
+
+/* ================================
+   Warm Light
+   ================================ */
+.shelf-light-cone {
+  position: absolute;
+  top: -15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 70%;
+  background: radial-gradient(
+    ellipse 70% 80% at 50% 0%,
+    rgba(220, 180, 100, 0.07) 0%,
+    rgba(200, 160, 80, 0.03) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 1;
+  animation: lightPulse 5s ease-in-out infinite;
+}
+
+@keyframes lightPulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+.shelf-ambient {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 50% 40% at 50% 30%,
+    rgba(180, 140, 60, 0.04) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ================================
+   Logo
+   ================================ */
+.shelf-logo {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.shelf-logo svg {
+  width: 36px;
+  height: 36px;
+  color: #a89878;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(180, 150, 100, 0.15));
+}
+
+.shelf-logo .eye-pupil { animation: eyePulse 3s ease-in-out infinite; }
+.shelf-logo .eye-glow { animation: eyeGlow 3s ease-in-out infinite; }
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #a89878;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(180, 150, 100, 0.1);
+}
+
+@keyframes eyePulse {
+  0%, 100% { r: 4; opacity: 1; }
+  50% { r: 5; opacity: 0.7; }
+}
+
+@keyframes eyeGlow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+/* ================================
+   Bookshelf
+   ================================ */
+.bookshelf {
+  position: relative;
+  z-index: 5;
+  width: 82%;
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ================================
+   Shelf
+   ================================ */
+.shelf {
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.shelf-board {
+  position: absolute;
+  bottom: 0;
+  left: -4px;
+  right: -4px;
+  height: 10px;
+  background: linear-gradient(180deg, #4a3a2a, #3e3020);
+  border-radius: 0 0 2px 2px;
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.shelf-board::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.shelf-board::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.25), transparent);
+}
+
+/* ================================
+   Books Row
+   ================================ */
+.books-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 0 8px;
+  min-height: 100px;
+}
+
+/* ================================
+   Individual Book
+   ================================ */
+.book {
+  width: var(--bw, 20px);
+  height: var(--bh, 90px);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--bc) 75%, black),
+    var(--bc) 30%,
+    var(--bc) 70%,
+    color-mix(in srgb, var(--bc) 65%, black)
+  );
+  border-radius: 1px 2px 2px 1px;
+  flex-shrink: 0;
+  position: relative;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  cursor: default;
+}
+
+.book:hover {
+  filter: brightness(1.2);
+}
+
+/* Spine highlight */
+.book::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8%;
+  bottom: 8%;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 1px;
+}
+
+/* Top page edge */
+.book::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 2px;
+  right: 2px;
+  height: 3px;
+  background: rgba(220, 210, 190, 0.15);
+  border-radius: 1px 1px 0 0;
+}
+
+/* Leaning book */
+.book-lean {
+  transform: rotate(-4deg);
+  transform-origin: bottom left;
+}
+
+.book-lean:hover {
+  transform: rotate(-8deg) translateY(-2px);
+}
+
+/* ================================
+   Horizontal Book Stack
+   ================================ */
+.book-stack-h {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 2px;
+}
+
+.book-h {
+  width: 38px;
+  height: 12px;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--bhc) 85%, black),
+    var(--bhc)
+  );
+  border-radius: 1px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.book-h::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 1px 1px 0 0;
+}
+
+/* ================================
+   Decorative Objects
+   ================================ */
+.shelf-obj {
+  flex-shrink: 0;
+  align-self: flex-end;
+  margin: 0 4px;
+}
+
+/* --- Candle --- */
+.shelf-candle {
+  width: 12px;
+  height: 32px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.candle-body {
+  width: 10px;
+  height: 22px;
+  background: linear-gradient(180deg, #e8dcc0, #d0c4a8);
+  border-radius: 1px 1px 3px 3px;
+  position: relative;
+}
+
+.candle-body::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 4px;
+  background: #333;
+}
+
+.candle-flame {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 10px;
+  background: radial-gradient(ellipse at 50% 80%, #f0c040, #e08020, transparent);
+  border-radius: 50% 50% 30% 30%;
+  animation: flameFlicker 0.8s ease-in-out infinite alternate;
+  filter: blur(0.5px);
+}
+
+.shelf-candle::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(circle, rgba(240, 180, 60, 0.1), transparent 70%);
+  pointer-events: none;
+  animation: flameGlow 2s ease-in-out infinite;
+}
+
+@keyframes flameFlicker {
+  0% { transform: translateX(-50%) scaleY(1) rotate(-2deg); }
+  25% { transform: translateX(-50%) scaleY(1.1) rotate(1deg); }
+  50% { transform: translateX(-50%) scaleY(0.9) rotate(-1deg); }
+  75% { transform: translateX(-50%) scaleY(1.05) rotate(2deg); }
+  100% { transform: translateX(-50%) scaleY(0.95) rotate(0deg); }
+}
+
+@keyframes flameGlow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* --- Globe --- */
+.shelf-globe {
+  width: 28px;
+  height: 34px;
+  position: relative;
+}
+
+.globe-ball {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #4a6a7a, #2a4a5a, #1a3a4a);
+  border: 1px solid rgba(100, 140, 160, 0.3);
+}
+
+.globe-ring {
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid rgba(160, 140, 100, 0.3);
+  border-radius: 50%;
+  perspective: 60px;
+  animation: globeSpin 12s linear infinite;
+}
+
+@keyframes globeSpin {
+  0% { transform: translateX(-50%) rotateY(0deg); }
+  100% { transform: translateX(-50%) rotateY(360deg); }
+}
+
+.globe-stand {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 8px;
+  background: linear-gradient(180deg, #6a5a3a, #4a3a2a);
+  border-radius: 2px 2px 4px 4px;
+}
+
+.globe-stand::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 5px;
+  background: #5a4a2a;
+}
+
+/* --- Hourglass --- */
+.shelf-hourglass {
+  width: 18px;
+  height: 30px;
+  position: relative;
+}
+
+.hg-top, .hg-bottom {
+  width: 16px;
+  height: 12px;
+  border: 1.5px solid rgba(180, 160, 120, 0.4);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.hg-top {
+  top: 0;
+  border-radius: 8px 8px 2px 2px;
+  border-bottom: none;
+  clip-path: polygon(10% 0%, 90% 0%, 60% 100%, 40% 100%);
+  background: rgba(200, 180, 120, 0.06);
+}
+
+.hg-bottom {
+  bottom: 0;
+  border-radius: 2px 2px 8px 8px;
+  border-top: none;
+  clip-path: polygon(40% 0%, 60% 0%, 90% 100%, 10% 100%);
+  background: rgba(200, 180, 120, 0.06);
+}
+
+.hg-mid {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
+  border: 1px solid rgba(180, 160, 120, 0.3);
+  border-radius: 50%;
+}
+
+.shelf-hourglass::before {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 10px;
+  background: linear-gradient(180deg, rgba(220, 200, 140, 0.3), rgba(220, 200, 140, 0.1));
+  animation: sandDrip 3s ease-in-out infinite;
+}
+
+@keyframes sandDrip {
+  0%, 100% { height: 10px; opacity: 0.4; }
+  50% { height: 6px; opacity: 0.6; }
+}
+
+/* --- Frame --- */
+.shelf-frame {
+  width: 30px;
+  height: 36px;
+  border: 2px solid #5a4a38;
+  background: linear-gradient(135deg, rgba(180,160,120,0.1), rgba(160,140,100,0.04));
+  box-shadow: 1px 1px 4px rgba(0,0,0,0.25);
+}
+
+/* --- Plant --- */
+.shelf-plant {
+  width: 24px;
+  height: 32px;
+  position: relative;
+}
+
+.plant-pot {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 14px;
+  background: linear-gradient(180deg, #8a6a48, #6a4a28);
+  border-radius: 2px 2px 4px 4px;
+}
+
+.plant-pot::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  height: 4px;
+  background: #8a6a48;
+  border-radius: 2px;
+}
+
+.plant-leaf {
+  position: absolute;
+  bottom: 14px;
+  width: 10px;
+  height: 14px;
+  background: #3a6a3a;
+  border-radius: 50% 0 50% 0;
+}
+
+.plant-l1 {
+  left: 6px;
+  --base-rot: -10deg;
+  transform: rotate(-10deg);
+  animation: leafSway 4s ease-in-out infinite;
+}
+
+.plant-l2 {
+  left: 2px;
+  --base-rot: -30deg;
+  transform: rotate(-30deg);
+  height: 12px;
+  width: 8px;
+  animation: leafSway 4s ease-in-out 0.5s infinite;
+}
+
+.plant-l3 {
+  left: 12px;
+  --base-rot: 20deg;
+  transform: rotate(20deg);
+  height: 11px;
+  width: 8px;
+  background: #4a7a4a;
+  animation: leafSway 4s ease-in-out 1s infinite;
+}
+
+@keyframes leafSway {
+  0%, 100% { transform: rotate(var(--base-rot, -10deg)); }
+  50% { transform: rotate(calc(var(--base-rot, -10deg) + 4deg)); }
+}
+
+/* --- Skull --- */
+.shelf-skull {
+  width: 16px;
+  height: 18px;
+  position: relative;
+}
+
+.shelf-skull::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 12px;
+  background: #c8bca8;
+  border-radius: 50% 50% 40% 40%;
+  box-shadow: inset 0 2px 3px rgba(0,0,0,0.1);
+}
+
+.shelf-skull::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 7px;
+  background: #b8ac98;
+  border-radius: 0 0 4px 4px;
+  clip-path: polygon(20% 0%, 40% 0%, 40% 100%, 0% 100%, 0% 0%, 20% 0%, 20% 100%, 40% 100%, 40% 0%, 60% 0%, 60% 100%, 80% 100%, 80% 0%, 100% 0%, 100% 100%, 80% 100%, 80% 0%);
+}
+
+/* ================================
+   Floating Dust
+   ================================ */
+.dust {
+  position: absolute;
+  background: rgba(220, 190, 140, 0.4);
+  border-radius: 50%;
+  z-index: 10;
+  pointer-events: none;
+  animation: dustFloat 6s ease-in-out infinite;
+}
+
+@keyframes dustFloat {
+  0%, 100% {
+    opacity: 0;
+    transform: translateY(0) translateX(0);
+  }
+  15% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.3;
+    transform: translateY(-20px) translateX(5px);
+  }
+  85% {
+    opacity: 0.4;
+  }
+}

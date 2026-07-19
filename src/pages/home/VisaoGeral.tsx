@@ -1,0 +1,238 @@
+import { useEffect, useState, type FormEvent } from 'react'
+import { useOutletContext } from 'react-router-dom'
+import philosophers from '../../data/philosophers.json'
+
+const ENEM_DATE = new Date('2026-11-08T13:30:00-03:00')
+
+const recentActivities = [
+  { icon: 'book', text: ' Apostila de Matemática — Cap. 3', time: 'há 2 dias', color: '#508cc8' },
+  { icon: 'video', text: ' Videoaula de Redação — Introdução', time: 'há 3 dias', color: '#c85050' },
+  { icon: 'challenge', text: ' Desafio de Ciências da Natureza', time: 'há 4 dias', color: '#b450b4' },
+  { icon: 'book', text: ' Notas de Literatura — Modernismo', time: 'há 5 dias', color: '#508cc8' },
+  { icon: 'video', text: ' Videoaula de História — Brasil Colônia', time: 'há 1 semana', color: '#c85050' },
+]
+
+interface Goal {
+  id: number
+  text: string
+  done: boolean
+}
+
+function getTimeLeft() {
+  const now = new Date()
+  const diff = ENEM_DATE.getTime() - now.getTime()
+  if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 }
+  return {
+    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+    minutes: Math.floor((diff / (1000 * 60)) % 60),
+    seconds: Math.floor((diff / 1000) % 60),
+  }
+}
+
+function ActivityIcon({ icon, color }: { icon: string; color: string }) {
+  if (icon === 'book') {
+    return (
+      <div className="act-icon" style={{ background: `${color}20`, color }}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+      </div>
+    )
+  }
+  if (icon === 'video') {
+    return (
+      <div className="act-icon" style={{ background: `${color}20`, color }}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="23 7 16 12 23 17 23 7" />
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+        </svg>
+      </div>
+    )
+  }
+  return (
+    <div className="act-icon" style={{ background: `${color}20`, color }}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
+    </div>
+  )
+}
+
+export default function VisaoGeral() {
+  const { userName } = useOutletContext<{ userName: string }>()
+  const [timeLeft, setTimeLeft] = useState(getTimeLeft)
+  const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * philosophers.length))
+  const [goals, setGoals] = useState<Goal[]>([])
+  const [goalInput, setGoalInput] = useState('')
+
+  useEffect(() => {
+    const timer = setInterval(() => setTimeLeft(getTimeLeft()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    const quoteTimer = setInterval(() => {
+      setQuoteIndex(prev => (prev + 1) % philosophers.length)
+    }, 15000)
+    return () => clearInterval(quoteTimer)
+  }, [])
+
+  const quote = philosophers[quoteIndex]
+
+  function addGoal(e: FormEvent) {
+    e.preventDefault()
+    const text = goalInput.trim()
+    if (!text) return
+    setGoals(prev => [...prev, { id: Date.now(), text, done: false }])
+    setGoalInput('')
+  }
+
+  function toggleGoal(id: number) {
+    setGoals(prev => prev.map(g => g.id === id ? { ...g, done: !g.done } : g))
+  }
+
+  return (
+    <div className="dash-grid">
+      {/* Header */}
+      <div className="dash-header">
+        <h1 className="dash-greeting">Olá, <span>{userName || 'estudante'}</span></h1>
+      </div>
+
+      {/* Row 1: ENEM countdown + Quote */}
+      <div className="dash-row-1">
+        <div className="card card-enem">
+          <div className="enem-top">
+            <div className="enem-flag">ENEM 2026</div>
+            <span className="enem-date">8 de novembro</span>
+          </div>
+          <div className="enem-countdown">
+            <div className="enem-unit">
+              <span className="enem-value">{String(timeLeft.days).padStart(2, '0')}</span>
+              <span className="enem-label">DIAS</span>
+            </div>
+            <span className="enem-sep">:</span>
+            <div className="enem-unit">
+              <span className="enem-value">{String(timeLeft.hours).padStart(2, '0')}</span>
+              <span className="enem-label">HORAS</span>
+            </div>
+            <span className="enem-sep">:</span>
+            <div className="enem-unit">
+              <span className="enem-value">{String(timeLeft.minutes).padStart(2, '0')}</span>
+              <span className="enem-label">MIN</span>
+            </div>
+            <span className="enem-sep">:</span>
+            <div className="enem-unit">
+              <span className="enem-value">{String(timeLeft.seconds).padStart(2, '0')}</span>
+              <span className="enem-label">SEG</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="card card-quote">
+          <div className="quote-image-wrap">
+            <img src={quote.url_foto} alt={quote.nome} className="quote-image" />
+          </div>
+          <div className="quote-content">
+            <p className="quote-text">"{quote.frase}"</p>
+            <p className="quote-author">{quote.nome}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Row 2: Activities (tall) + Stats & Goals (stacked) */}
+      <div className="dash-row-2">
+        <div className="card card-activities">
+          <h3 className="card-title">Atividades Recentes</h3>
+          <div className="act-list">
+            {recentActivities.map((act, i) => (
+              <div className="act-item" key={i}>
+                <ActivityIcon icon={act.icon} color={act.color} />
+                <span className="act-text">{act.text}</span>
+                <span className="act-time">{act.time}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="dash-row-2-right">
+          <div className="card card-stats">
+            <h3 className="card-title">Seu Progresso</h3>
+            <div className="stats-grid">
+              <div className="stat-box">
+                <div className="stat-icon-wrap" style={{ background: 'rgba(80,140,200,0.15)', color: '#508cc8' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                </div>
+                <div className="stat-num">0</div>
+                <div className="stat-desc">Documentos</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-icon-wrap" style={{ background: 'rgba(180,80,180,0.15)', color: '#b450b4' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                </div>
+                <div className="stat-num">0</div>
+                <div className="stat-desc">Desafios</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-icon-wrap" style={{ background: 'rgba(200,80,80,0.15)', color: '#c85050' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="23 7 16 12 23 17 23 7" />
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                  </svg>
+                </div>
+                <div className="stat-num">0</div>
+                <div className="stat-desc">Vídeos</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card card-goals">
+            <h3 className="card-title">Objetivos</h3>
+            <form className="goals-form" onSubmit={addGoal}>
+              <input
+                type="text"
+                className="goals-input"
+                placeholder="Adicionar uma meta..."
+                value={goalInput}
+                onChange={e => setGoalInput(e.target.value)}
+              />
+              <button type="submit" className="goals-add-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+            </form>
+            <div className="goals-list">
+              {goals.length === 0 && (
+                <p className="goals-empty">Nenhuma meta ainda. Adicione acima!</p>
+              )}
+              {goals.map(g => (
+                <label key={g.id} className={`goal-item ${g.done ? 'done' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={g.done}
+                    onChange={() => toggleGoal(g.id)}
+                    className="goal-check"
+                  />
+                  <span className="goal-checkmark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </span>
+                  <span className="goal-text">{g.text}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
