@@ -263,6 +263,30 @@
   padding: 28px;
   position: relative;
   overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.card:hover {
+  background: rgba(200, 180, 140, 0.09);
+  border-color: rgba(200, 180, 140, 0.22);
+  transform: scale(1.015);
+}
+
+.card-enem:hover {
+  background: linear-gradient(145deg, rgba(220, 160, 60, 0.16), rgba(220, 160, 60, 0.06));
+  border-color: rgba(220, 160, 60, 0.32);
+}
+
+.card-quote:hover {
+  background: rgba(200, 180, 140, 0.05);
+  border-color: rgba(200, 180, 140, 0.22);
+}
+
+.card-activities:hover,
+.card-stats:hover,
+.card-goals:hover {
+  background: rgba(200, 180, 140, 0.09);
+  border-color: rgba(200, 180, 140, 0.22);
 }
 
 .card-title {
@@ -281,7 +305,9 @@
   border-color: rgba(220, 160, 60, 0.18);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
 }
 
 .enem-top {
@@ -289,6 +315,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 28px;
+  width: 100%;
 }
 
 .enem-flag {
