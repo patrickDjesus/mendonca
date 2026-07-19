@@ -451,9 +451,9 @@
    ================================ */
 .dash-row-2 {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
+  grid-template-columns: 1fr 1fr;
   gap: 24px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .dash-row-2-right {
@@ -617,7 +617,7 @@
    Goals Card
    ================================ */
 .card-goals {
-  height: 280px;
+  height: 240px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
