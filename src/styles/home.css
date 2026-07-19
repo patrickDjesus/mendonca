@@ -36,6 +36,7 @@
 .sidebar-logo {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   padding: 8px 14px;
   margin-bottom: 24px;
@@ -49,10 +50,6 @@
   height: 28px;
   flex-shrink: 0;
   color: #a89878;
-  margin-left: 26px;
-}
-
-.sidebar:hover .sidebar-logo svg {
   margin-left: 0;
 }
 
@@ -75,7 +72,7 @@
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   width: 100%;
   padding: 0 8px;
   flex: 1;
@@ -87,8 +84,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 14px 8px;
+  gap: 16px;
+  padding: 16px 8px;
   border-radius: 12px;
   cursor: pointer;
   text-decoration: none;
@@ -97,7 +94,7 @@
   overflow: hidden;
   transition: all 0.15s ease;
   position: relative;
-  min-height: 64px;
+  min-height: 72px;
 }
 
 .sidebar-item:hover {
@@ -165,8 +162,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 14px 8px;
+  gap: 16px;
+  padding: 16px 8px;
   border-radius: 12px;
   cursor: pointer;
   background: none;
@@ -177,7 +174,7 @@
   transition: all 0.15s ease;
   width: 100%;
   font-family: inherit;
-  min-height: 64px;
+  min-height: 72px;
   position: relative;
 }
 
@@ -282,7 +279,6 @@
   border-color: rgba(200, 180, 140, 0.22);
 }
 
-.card-activities:hover,
 .card-stats:hover,
 .card-goals:hover {
   background: rgba(200, 180, 140, 0.09);
@@ -466,17 +462,54 @@
 }
 
 /* ================================
-   Activities Card
+   Activities Card — Notebook Style
    ================================ */
 .card-activities {
   display: flex;
   flex-direction: column;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 47px,
+      rgba(200, 180, 140, 0.08) 47px,
+      rgba(200, 180, 140, 0.08) 48px
+    ),
+    linear-gradient(135deg, rgba(200, 180, 140, 0.05), rgba(200, 180, 140, 0.02));
+  border-color: rgba(200, 180, 140, 0.12);
+  padding-left: 52px;
+  position: relative;
+}
+
+.card-activities::before {
+  content: '';
+  position: absolute;
+  left: 36px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(200, 100, 100, 0.18);
+}
+
+.card-activities::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 32px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(200, 180, 140, 0.15);
+  box-shadow:
+    0 calc(48px * 1) 0 0 rgba(200, 180, 140, 0),
+    0 calc(48px * 2) 0 0 rgba(200, 180, 140, 0),
+    0 calc(48px * 3) 0 0 rgba(200, 180, 140, 0),
+    0 calc(48px * 4) 0 0 rgba(200, 180, 140, 0);
 }
 
 .act-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   flex: 1;
 }
 
@@ -484,8 +517,8 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 14px;
-  border-radius: 10px;
+  padding: 12px 14px 12px 0;
+  min-height: 48px;
   transition: background 0.15s ease;
 }
 
@@ -585,7 +618,10 @@
    Goals Card
    ================================ */
 .card-goals {
-  flex: 1;
+  max-height: 280px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .goals-form {
@@ -644,7 +680,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-height: 200px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
