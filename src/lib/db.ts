@@ -209,10 +209,11 @@ export async function fetchAttempts(): Promise<ChallengeAttempt[]> {
 
 export async function createAttempt(a: ChallengeAttempt): Promise<ChallengeAttempt> {
   const userId = await getUserId()
+  const id = uid()
   const { error } = await supabase
     .from('challenge_attempts')
     .insert({
-      id: uid(),
+      id,
       user_id: userId,
       challenge_id: a.challengeId,
       answers: a.answers,
@@ -225,11 +226,12 @@ export async function createAttempt(a: ChallengeAttempt): Promise<ChallengeAttem
     })
 
   if (error) throw error
-  return a
+  return { ...a, id }
 }
 
 function rowToAttempt(row: Record<string, unknown>): ChallengeAttempt {
   return {
+    id: row.id as string,
     challengeId: row.challenge_id as string,
     answers: (row.answers as ChallengeAttempt['answers']) || [],
     totalTimeMs: row.total_time_ms as number,
@@ -334,6 +336,7 @@ function docToUpdateRow(d: DocMeta): Record<string, unknown> {
     file_url: d.fileUrl || null,
     file_size: d.fileSize || null,
     thumbnail: d.thumbnail || null,
+    paper_style: d.paperStyle || null,
     is_public: d.isPublic,
   }
 }
@@ -366,6 +369,7 @@ function rowToDoc(row: Record<string, unknown>): DocMeta {
     fileSize: (row.file_size as number) || undefined,
     thumbnail: (row.thumbnail as string) || undefined,
     isPublic: row.is_public as boolean,
+    paperStyle: (row.paper_style as DocMeta['paperStyle']) || undefined,
     authorName: undefined,
     createdAt: new Date(row.created_at as string).getTime(),
     updatedAt: new Date(row.updated_at as string).getTime(),
@@ -385,6 +389,7 @@ function docToRow(d: DocMeta, userId: string): Record<string, unknown> {
     file_url: d.fileUrl || null,
     file_size: d.fileSize || null,
     thumbnail: d.thumbnail || null,
+    paper_style: d.paperStyle || null,
     is_public: d.isPublic,
   }
 }

@@ -270,7 +270,6 @@
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  overflow: hidden;
 }
 
 .desafio-card:hover:not(.attempted) {
@@ -367,8 +366,11 @@
 .desafio-card-footer {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(200, 180, 140, 0.06);
 }
 
 .desafio-card-subject {
@@ -977,12 +979,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding-bottom: 20px;
   margin-bottom: 24px;
+  border-bottom: 1px solid rgba(200, 180, 140, 0.08);
 }
 
 .qb-title,
 .cb-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   color: #e8dcc8;
   margin: 0;
@@ -994,8 +998,32 @@
   gap: 10px;
 }
 
+.cb-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+  border-radius: 14px;
+  background: rgba(200, 180, 140, 0.03);
+  border: 1px solid rgba(200, 180, 140, 0.06);
+}
+
+.cb-question-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  border-radius: 14px;
+  background: rgba(200, 180, 140, 0.03);
+  border: 1px solid rgba(200, 180, 140, 0.06);
+  margin-top: 20px;
+}
+
 .qb-cancel-btn,
 .cb-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 9px 20px;
   border-radius: 10px;
   border: 1px solid rgba(200, 180, 140, 0.12);
@@ -1015,6 +1043,9 @@
 
 .qb-save-btn,
 .cb-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 9px 22px;
   border-radius: 10px;
   border: none;
@@ -1304,14 +1335,6 @@
    Challenge Builder (cb-*)
    ================================ */
 
-.cb-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(200, 180, 140, 0.06);
-}
-
 .cb-difficulty-row {
   display: flex;
   gap: 6px;
@@ -1319,14 +1342,14 @@
 
 .cb-diff-btn {
   flex: 1;
-  padding: 9px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(200, 180, 140, 0.1);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(200, 180, 140, 0.1);
   background: transparent;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .cb-diff-btn.diff-facil {
@@ -1362,20 +1385,20 @@
 
 .cb-cross-chips {
   display: flex;
-  gap: 5px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .cb-cross-chip {
-  padding: 5px 12px;
-  border-radius: 16px;
+  padding: 6px 14px;
+  border-radius: 20px;
   border: 1px solid rgba(200, 180, 140, 0.1);
   background: transparent;
   color: #7a6a5a;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .cb-cross-chip:hover {
@@ -1391,16 +1414,17 @@
 
 /* ── Question Picker ───────────────────────────────── */
 
-.cb-question-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 .cb-picker-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(200, 180, 140, 0.06);
+}
+
+.cb-picker-filter {
+  display: flex;
+  align-items: center;
 }
 
 .cb-picker-title {
@@ -2317,4 +2341,133 @@
   .qb-wizard-type-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Desafio Modals ─────────────────────────────── */
+
+.desafio-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 310;
+  background: rgba(10, 8, 6, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: desafioModalOverlayIn 0.2s ease both;
+}
+
+@keyframes desafioModalOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.desafio-modal {
+  width: 440px;
+  max-width: 92vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  border-radius: 16px;
+  background: #221f1b;
+  border: 1px solid rgba(200, 180, 140, 0.1);
+  padding: 28px;
+  animation: desafioModalIn 0.25s ease both;
+}
+
+@keyframes desafioModalIn {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.desafio-confirm-modal {
+  text-align: center;
+  padding: 32px;
+}
+
+.desafio-confirm-icon {
+  margin-bottom: 16px;
+}
+
+.desafio-confirm-icon svg {
+  width: 40px;
+  height: 40px;
+  color: #c85050;
+  opacity: 0.6;
+}
+
+.desafio-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e8dcc8;
+  margin: 0 0 12px;
+}
+
+.desafio-confirm-text {
+  font-size: 14px;
+  color: #8a7a6a;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.desafio-form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.desafio-form-cancel {
+  padding: 9px 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(200, 180, 140, 0.12);
+  background: transparent;
+  color: #8a7a6a;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.desafio-form-cancel:hover {
+  border-color: rgba(200, 80, 80, 0.3);
+  color: #c85050;
+}
+
+.desafio-form-confirm {
+  padding: 9px 22px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(100, 180, 120, 0.15);
+  color: #64b478;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.desafio-form-confirm:hover {
+  background: rgba(100, 180, 120, 0.25);
+}
+
+.desafio-form-delete {
+  background: rgba(200, 80, 80, 0.15);
+  color: #c85050;
+}
+
+.desafio-form-delete:hover {
+  background: rgba(200, 80, 80, 0.25);
+}
+
+/* ── Quiz Spinner ───────────────────────────────── */
+
+@keyframes quizSpinnerSpin {
+  to { transform: rotate(360deg); }
+}
+
+.quiz-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(200, 180, 140, 0.12);
+  border-top-color: #d4a843;
+  border-radius: 50%;
+  animation: quizSpinnerSpin 0.7s linear infinite;
+  margin: 40px auto;
 }

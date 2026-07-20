@@ -222,7 +222,7 @@ export default function Desafios() {
       const wrongCount = answers.length - correctCount
       const { score, xpEarned } = calculateScore(correctCount, wrongCount, totalTimeMs, activeChallenge.questionIds.length, activeChallenge.difficulty)
       const attempt: ChallengeAttempt = {
-        challengeId: activeChallenge.id, answers: [...answers], totalTimeMs,
+        id: crypto.randomUUID(), challengeId: activeChallenge.id, answers: [...answers], totalTimeMs,
         correctCount, wrongCount, score, xpEarned, completedAt: Date.now(),
       }
       setAttempts(prev => [...prev, attempt])
@@ -729,9 +729,9 @@ export default function Desafios() {
       </div>
 
       {deleteChallengeTarget && (
-        <div className="video-modal-overlay" onClick={() => setDeleteChallengeTarget(null)}>
-          <div className="video-modal video-confirm-modal" onClick={e => e.stopPropagation()}>
-            <div className="video-confirm-icon">
+        <div className="desafio-modal-overlay" onClick={() => setDeleteChallengeTarget(null)}>
+          <div className="desafio-modal desafio-confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="desafio-confirm-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="3 6 5 6 21 6" />
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -739,18 +739,18 @@ export default function Desafios() {
                 <line x1="14" y1="11" x2="14" y2="17" />
               </svg>
             </div>
-            <h3 className="video-modal-title">Deletar desafio?</h3>
-            <p className="video-confirm-text">"{deleteChallengeTarget.title}" será removido permanentemente.</p>
-            <div className="video-form-actions">
-              <button className="video-form-cancel" onClick={() => setDeleteChallengeTarget(null)} type="button">Cancelar</button>
-              <button className="video-form-confirm video-form-delete" onClick={handleDeleteChallenge} type="button">Deletar</button>
+            <h3 className="desafio-modal-title">Deletar desafio?</h3>
+            <p className="desafio-confirm-text">"{deleteChallengeTarget.title}" será removido permanentemente.</p>
+            <div className="desafio-form-actions">
+              <button className="desafio-form-cancel" onClick={() => setDeleteChallengeTarget(null)} type="button">Cancelar</button>
+              <button className="desafio-form-confirm desafio-form-delete" onClick={handleDeleteChallenge} type="button">Deletar</button>
             </div>
           </div>
         </div>
       )}
 
       {viewingQuestionsChallenge && (
-        <div className="video-modal-overlay" onClick={() => setViewingQuestionsChallenge(null)}>
+        <div className="desafio-modal-overlay" onClick={() => setViewingQuestionsChallenge(null)}>
           <div className="qb-container questions-view-modal" onClick={e => e.stopPropagation()}>
             <div className="qb-header">
               <div>
@@ -800,9 +800,9 @@ export default function Desafios() {
       )}
 
       {deleteQuestionTarget && (
-        <div className="video-modal-overlay" onClick={() => setDeleteQuestionTarget(null)}>
-          <div className="video-modal video-confirm-modal" onClick={e => e.stopPropagation()}>
-            <div className="video-confirm-icon">
+        <div className="desafio-modal-overlay" onClick={() => setDeleteQuestionTarget(null)}>
+          <div className="desafio-modal desafio-confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="desafio-confirm-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="3 6 5 6 21 6" />
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -810,11 +810,11 @@ export default function Desafios() {
                 <line x1="14" y1="11" x2="14" y2="17" />
               </svg>
             </div>
-            <h3 className="video-modal-title">Deletar questão?</h3>
-            <p className="video-confirm-text">"{deleteQuestionTarget.title}" será removida permanentemente de todos os desafios.</p>
-            <div className="video-form-actions">
-              <button className="video-form-cancel" onClick={() => setDeleteQuestionTarget(null)} type="button">Cancelar</button>
-              <button className="video-form-confirm video-form-delete" onClick={handleDeleteQuestionFromList} type="button">Deletar</button>
+            <h3 className="desafio-modal-title">Deletar questão?</h3>
+            <p className="desafio-confirm-text">"{deleteQuestionTarget.title}" será removida permanentemente de todos os desafios.</p>
+            <div className="desafio-form-actions">
+              <button className="desafio-form-cancel" onClick={() => setDeleteQuestionTarget(null)} type="button">Cancelar</button>
+              <button className="desafio-form-confirm desafio-form-delete" onClick={handleDeleteQuestionFromList} type="button">Deletar</button>
             </div>
           </div>
         </div>

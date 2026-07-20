@@ -83,6 +83,7 @@ export interface QuestionAnswer {
 }
 
 export interface ChallengeAttempt {
+  id: string
   challengeId: string
   answers: QuestionAnswer[]
   totalTimeMs: number
