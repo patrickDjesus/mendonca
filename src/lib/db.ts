@@ -49,12 +49,9 @@ function questionToUpdateRow(q: ChallengeQuestion): Record<string, unknown> {
     explanation: q.explanation || null,
     options: q.options,
     statements: q.statements,
-    match_pairs: q.matchPairs,
     order_items: q.orderItems,
     blanks: q.blanks,
     open_expected_text: q.openExpectedText || null,
-    crossword_clues: q.crosswordClues,
-    crossword_size: q.crosswordSize,
   }
 }
 
@@ -84,12 +81,9 @@ function rowToQuestion(row: Record<string, unknown>): ChallengeQuestion {
     explanation: (row.explanation as string) || undefined,
     options: (row.options as ChallengeQuestion['options']) || [],
     statements: (row.statements as ChallengeQuestion['statements']) || [],
-    matchPairs: (row.match_pairs as ChallengeQuestion['matchPairs']) || [],
     orderItems: (row.order_items as ChallengeQuestion['orderItems']) || [],
     blanks: (row.blanks as ChallengeQuestion['blanks']) || [],
     openExpectedText: (row.open_expected_text as string) || undefined,
-    crosswordClues: (row.crossword_clues as ChallengeQuestion['crosswordClues']) || [],
-    crosswordSize: (row.crossword_size as number) || 5,
   }
 }
 
@@ -105,12 +99,9 @@ function questionToRow(q: ChallengeQuestion, userId: string): Record<string, unk
     explanation: q.explanation || null,
     options: q.options,
     statements: q.statements,
-    match_pairs: q.matchPairs,
     order_items: q.orderItems,
     blanks: q.blanks,
     open_expected_text: q.openExpectedText || null,
-    crossword_clues: q.crosswordClues,
-    crossword_size: q.crosswordSize,
   }
 }
 

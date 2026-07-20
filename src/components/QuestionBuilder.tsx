@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, type ReactNode } from 'react'
 import type { ChallengeQuestion, QuestionType, ChallengeOption, TrueFalseStatement, OrderItem, CompletarBlank } from '../types/challenge'
 import { QUESTION_TYPE_LABELS } from '../types/challenge'
 import type { Subject } from '../types/doc'
@@ -22,7 +22,7 @@ const TYPE_DESCRIPTIONS: Record<QuestionType, string> = {
   completar: 'Preencher lacunas em uma frase',
 }
 
-const TYPE_ICONS: Record<QuestionType, JSX.Element> = {
+const TYPE_ICONS: Record<QuestionType, ReactNode> = {
   multipla: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
@@ -85,7 +85,7 @@ const TYPE_TEXT_COLORS: Record<QuestionType, string> = {
   completar: '#b450b4',
 }
 
-const SUBJECT_ICONS: Record<Subject, JSX.Element> = {
+const SUBJECT_ICONS: Record<Subject, ReactNode> = {
   'Física': (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="1" />
