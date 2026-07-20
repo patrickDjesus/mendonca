@@ -1,5 +1,5 @@
 import { useState, useCallback, type ReactNode } from 'react'
-import type { ChallengeQuestion, QuestionType, ChallengeOption, TrueFalseStatement, OrderItem, CompletarBlank } from '../types/challenge'
+import type { ChallengeQuestion, QuestionType, ChallengeOption, TrueFalseStatement, OrderItem, CompletarBlank, ChallengeDifficulty } from '../types/challenge'
 import { QUESTION_TYPE_LABELS } from '../types/challenge'
 import type { Subject } from '../types/doc'
 import { SUBJECTS, SUBJECT_COLORS } from '../types/doc'
@@ -11,6 +11,12 @@ const QUESTION_TYPES: QuestionType[] = [
   'aberta',
   'ordem',
   'completar',
+]
+
+const DIFFICULTY_OPTIONS: { value: ChallengeDifficulty; label: string; emoji: string }[] = [
+  { value: 'facil', label: 'Fácil', emoji: '🟢' },
+  { value: 'medio', label: 'Médio', emoji: '🟡' },
+  { value: 'dificil', label: 'Difícil', emoji: '🔴' },
 ]
 
 const TYPE_DESCRIPTIONS: Record<QuestionType, string> = {
@@ -168,12 +174,13 @@ function newBlank(answer = ''): CompletarBlank {
   return { id: crypto.randomUUID(), answer }
 }
 
-function emptyQuestion(type: QuestionType = 'multipla', subject: Subject = 'Matemática'): ChallengeQuestion {
+function emptyQuestion(type: QuestionType = 'multipla', subject: Subject = 'Matemática', difficulty: ChallengeDifficulty = 'medio'): ChallengeQuestion {
   return {
     id: crypto.randomUUID(),
     type,
     title: '',
     subject,
+    difficulty,
     content: '',
     explanation: '',
     options: [newOption('', true), newOption()],
@@ -238,8 +245,6 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
     }
   }, [q, validate, batchQuestions, currentIndex, totalCount, batchSubject, onSave])
 
-  /* ── Options Editor ─────────────────────────── */
-
   const renderOptionsEditor = () => {
     const isMulti = q.type === 'multipla_multipla'
     return (
@@ -251,51 +256,17 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
         {q.options.map((opt, idx) => (
           <div key={opt.id} className="qb-option-row">
             {isMulti ? (
-              <input
-                type="checkbox"
-                className="qb-checkbox"
-                checked={opt.correct}
-                onChange={e => {
-                  const updated = q.options.map(o => o.id === opt.id ? { ...o, correct: e.target.checked } : o)
-                  setField('options', updated)
-                }}
-              />
+              <input type="checkbox" className="qb-checkbox" checked={opt.correct} onChange={e => { setField('options', q.options.map(o => o.id === opt.id ? { ...o, correct: e.target.checked } : o)) }} />
             ) : (
-              <input
-                type="radio"
-                name="qb-correct"
-                className="qb-radio"
-                checked={opt.correct}
-                onChange={() => {
-                  const updated = q.options.map(o => ({ ...o, correct: o.id === opt.id }))
-                  setField('options', updated)
-                }}
-              />
+              <input type="radio" name="qb-correct" className="qb-radio" checked={opt.correct} onChange={() => { setField('options', q.options.map(o => ({ ...o, correct: o.id === opt.id }))) }} />
             )}
-            <input
-              className="qb-input"
-              value={opt.text}
-              placeholder={`Alternativa ${idx + 1}`}
-              onChange={e => {
-                const updated = q.options.map(o => o.id === opt.id ? { ...o, text: e.target.value } : o)
-                setField('options', updated)
-              }}
-            />
-            <button
-              className="qb-remove-btn"
-              onClick={() => setField('options', q.options.filter(o => o.id !== opt.id))}
-              disabled={q.options.length <= 2}
-              type="button"
-            >
-              ×
-            </button>
+            <input className="qb-input" value={opt.text} placeholder={`Alternativa ${idx + 1}`} onChange={e => { setField('options', q.options.map(o => o.id === opt.id ? { ...o, text: e.target.value } : o)) }} />
+            <button className="qb-remove-btn" onClick={() => setField('options', q.options.filter(o => o.id !== opt.id))} disabled={q.options.length <= 2} type="button">×</button>
           </div>
         ))}
       </div>
     )
   }
-
-  /* ── True/False Editor ──────────────────────── */
 
   const renderTrueFalseEditor = () => (
     <div className="qb-section">
@@ -305,40 +276,16 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
       </div>
       {q.statements.map(st => (
         <div key={st.id} className="qb-option-row">
-          <select
-            className="qb-select qb-select-sm"
-            value={st.correct ? 'true' : 'false'}
-            onChange={e => {
-              const updated = q.statements.map(s => s.id === st.id ? { ...s, correct: e.target.value === 'true' } : s)
-              setField('statements', updated)
-            }}
-          >
+          <select className="qb-select qb-select-sm" value={st.correct ? 'true' : 'false'} onChange={e => { setField('statements', q.statements.map(s => s.id === st.id ? { ...s, correct: e.target.value === 'true' } : s)) }}>
             <option value="true">V</option>
             <option value="false">F</option>
           </select>
-          <input
-            className="qb-input"
-            value={st.text}
-            placeholder="Afirmação..."
-            onChange={e => {
-              const updated = q.statements.map(s => s.id === st.id ? { ...s, text: e.target.value } : s)
-              setField('statements', updated)
-            }}
-          />
-          <button
-            className="qb-remove-btn"
-            onClick={() => setField('statements', q.statements.filter(s => s.id !== st.id))}
-            disabled={q.statements.length <= 1}
-            type="button"
-          >
-            ×
-          </button>
+          <input className="qb-input" value={st.text} placeholder="Afirmação..." onChange={e => { setField('statements', q.statements.map(s => s.id === st.id ? { ...s, text: e.target.value } : s)) }} />
+          <button className="qb-remove-btn" onClick={() => setField('statements', q.statements.filter(s => s.id !== st.id))} disabled={q.statements.length <= 1} type="button">×</button>
         </div>
       ))}
     </div>
   )
-
-  /* ── Order Editor ───────────────────────────── */
 
   const renderOrderEditor = () => (
     <div className="qb-section">
@@ -349,29 +296,12 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
       {q.orderItems.map((item, idx) => (
         <div key={item.id} className="qb-option-row">
           <span className="qb-order-num">{idx + 1}°</span>
-          <input
-            className="qb-input"
-            value={item.text}
-            placeholder={`Item ${idx + 1}`}
-            onChange={e => {
-              const updated = q.orderItems.map(oi => oi.id === item.id ? { ...oi, text: e.target.value, correctOrder: idx + 1 } : oi)
-              setField('orderItems', updated)
-            }}
-          />
-          <button
-            className="qb-remove-btn"
-            onClick={() => setField('orderItems', q.orderItems.filter(oi => oi.id !== item.id))}
-            disabled={q.orderItems.length <= 2}
-            type="button"
-          >
-            ×
-          </button>
+          <input className="qb-input" value={item.text} placeholder={`Item ${idx + 1}`} onChange={e => { setField('orderItems', q.orderItems.map(oi => oi.id === item.id ? { ...oi, text: e.target.value, correctOrder: idx + 1 } : oi)) }} />
+          <button className="qb-remove-btn" onClick={() => setField('orderItems', q.orderItems.filter(oi => oi.id !== item.id))} disabled={q.orderItems.length <= 2} type="button">×</button>
         </div>
       ))}
     </div>
   )
-
-  /* ── Fill-in Editor ─────────────────────────── */
 
   const renderCompletarEditor = () => (
     <div className="qb-section">
@@ -383,29 +313,12 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
       {q.blanks.map((blank, idx) => (
         <div key={blank.id} className="qb-option-row">
           <span className="qb-order-num">{idx + 1}°</span>
-          <input
-            className="qb-input"
-            value={blank.answer}
-            placeholder={`Resposta da lacuna ${idx + 1}`}
-            onChange={e => {
-              const updated = q.blanks.map(b => b.id === blank.id ? { ...b, answer: e.target.value } : b)
-              setField('blanks', updated)
-            }}
-          />
-          <button
-            className="qb-remove-btn"
-            onClick={() => setField('blanks', q.blanks.filter(b => b.id !== blank.id))}
-            disabled={q.blanks.length <= 1}
-            type="button"
-          >
-            ×
-          </button>
+          <input className="qb-input" value={blank.answer} placeholder={`Resposta da lacuna ${idx + 1}`} onChange={e => { setField('blanks', q.blanks.map(b => b.id === blank.id ? { ...b, answer: e.target.value } : b)) }} />
+          <button className="qb-remove-btn" onClick={() => setField('blanks', q.blanks.filter(b => b.id !== blank.id))} disabled={q.blanks.length <= 1} type="button">×</button>
         </div>
       ))}
     </div>
   )
-
-  /* ── Open Text Editor ───────────────────────── */
 
   const renderOpenEditor = () => (
     <div className="qb-section">
@@ -413,17 +326,9 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
         <span className="qb-section-title">Resposta esperada (opcional)</span>
       </div>
       <div className="qb-hint">Escreva uma resposta modelo. O próprio usuário irá avaliar se acertou.</div>
-      <textarea
-        className="qb-textarea"
-        value={q.openExpectedText || ''}
-        placeholder="Resposta esperada ou pontos-chave..."
-        rows={3}
-        onChange={e => setField('openExpectedText', e.target.value)}
-      />
+      <textarea className="qb-textarea" value={q.openExpectedText || ''} placeholder="Resposta esperada ou pontos-chave..." rows={3} onChange={e => setField('openExpectedText', e.target.value)} />
     </div>
   )
-
-  /* ── Type-specific editor ───────────────────── */
 
   const renderTypeEditor = () => {
     switch (q.type) {
@@ -440,6 +345,50 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
         return renderOpenEditor()
     }
   }
+
+  const renderDifficultyRow = (current: ChallengeDifficulty, onChange: (d: ChallengeDifficulty) => void) => (
+    <div className="qb-field">
+      <label className="qb-label">Dificuldade da questão *</label>
+      <div className="qb-difficulty-row">
+        {DIFFICULTY_OPTIONS.map(d => (
+          <button key={d.value} className={`qb-diff-btn diff-${d.value} ${current === d.value ? 'active' : ''}`} onClick={() => onChange(d.value)} type="button">
+            <span className="qb-diff-emoji">{d.emoji}</span>
+            <span className="qb-diff-label">{d.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+
+  const renderTypeGrid = (currentType: QuestionType, onTypeChange: (t: QuestionType) => void) => (
+    <div className="qb-field">
+      <label className="qb-label">Tipo de questão *</label>
+      <div className="qb-wizard-type-grid">
+        {QUESTION_TYPES.map(t => {
+          const colors = TYPE_COLORS[t]
+          const isSelected = currentType === t
+          return (
+            <button
+              key={t}
+              className={`qb-wizard-type-btn ${isSelected ? 'active' : ''}`}
+              style={{
+                '--type-default': colors.default,
+                '--type-hover': colors.hover,
+                '--type-active': colors.active,
+                '--type-color': TYPE_TEXT_COLORS[t],
+              } as React.CSSProperties}
+              onClick={() => onTypeChange(t)}
+              type="button"
+            >
+              <div className="qb-wizard-type-icon">{TYPE_ICONS[t]}</div>
+              <span className="qb-wizard-type-name">{QUESTION_TYPE_LABELS[t]}</span>
+              <span className="qb-wizard-type-desc">{TYPE_DESCRIPTIONS[t]}</span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
 
   /* ── Wizard Step: Count ─────────────────────── */
 
@@ -462,31 +411,16 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
           <p className="qb-wizard-desc">Escolha a quantidade de questões para este lote.</p>
           <div className="qb-wizard-count-grid">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
-              <button
-                key={n}
-                className={`qb-wizard-count-btn ${totalCount === n ? 'active' : ''}`}
-                onClick={() => setTotalCount(n)}
-                type="button"
-              >
+              <button key={n} className={`qb-wizard-count-btn ${totalCount === n ? 'active' : ''}`} onClick={() => setTotalCount(n)} type="button">
                 <span className="qb-wizard-count-num">{n}</span>
               </button>
             ))}
           </div>
           <div className="qb-wizard-actions">
             <button className="qb-cancel-btn" onClick={onCancel} type="button">Cancelar</button>
-            <button
-              className="qb-save-btn"
-              onClick={() => {
-                setBatchQuestions(Array.from({ length: totalCount }, () => emptyQuestion('multipla', batchSubject)))
-                setWizardStep('subject')
-              }}
-              type="button"
-            >
+            <button className="qb-save-btn" onClick={() => { setBatchQuestions(Array.from({ length: totalCount }, () => emptyQuestion('multipla', batchSubject))); setWizardStep('subject') }} type="button">
               Próximo
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
             </button>
           </div>
         </div>
@@ -518,19 +452,8 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
               const colors = SUBJECT_COLORS[s]
               const selected = batchSubject === s
               return (
-                <button
-                  key={s}
-                  className={`qb-wizard-subject-btn ${selected ? 'active' : ''}`}
-                  style={{
-                    '--subject-color': colors.text,
-                    '--subject-bg': colors.bg,
-                  } as React.CSSProperties}
-                  onClick={() => setBatchSubject(s)}
-                  type="button"
-                >
-                  <div className="qb-wizard-subject-icon">
-                    {SUBJECT_ICONS[s]}
-                  </div>
+                <button key={s} className={`qb-wizard-subject-btn ${selected ? 'active' : ''}`} style={{ '--subject-color': colors.text, '--subject-bg': colors.bg } as React.CSSProperties} onClick={() => setBatchSubject(s)} type="button">
+                  <div className="qb-wizard-subject-icon">{SUBJECT_ICONS[s]}</div>
                   <span className="qb-wizard-subject-name">{s}</span>
                 </button>
               )
@@ -538,22 +461,9 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
           </div>
           <div className="qb-wizard-actions">
             <button className="qb-cancel-btn" onClick={() => setWizardStep('count')} type="button">Voltar</button>
-            <button
-              className="qb-save-btn"
-              onClick={() => {
-                const qs = Array.from({ length: totalCount }, () => emptyQuestion('multipla', batchSubject))
-                setBatchQuestions(qs)
-                setQ(qs[0])
-                setCurrentIndex(0)
-                setWizardStep('questions')
-              }}
-              type="button"
-            >
+            <button className="qb-save-btn" onClick={() => { const qs = Array.from({ length: totalCount }, () => emptyQuestion('multipla', batchSubject)); setBatchQuestions(qs); setQ(qs[0]); setCurrentIndex(0); setWizardStep('questions') }} type="button">
               Criar questões
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
             </button>
           </div>
         </div>
@@ -572,125 +482,49 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
         <div className="qb-header">
           <div className="qb-header-left">
             <h3 className="qb-title">Questão {currentIndex + 1} de {totalCount}</h3>
-            <span className="qb-wizard-subject-badge" style={{ background: SUBJECT_COLORS[batchSubject]?.bg, color: SUBJECT_COLORS[batchSubject]?.text }}>
-              {batchSubject}
-            </span>
+            <span className="qb-wizard-subject-badge" style={{ background: SUBJECT_COLORS[batchSubject]?.bg, color: SUBJECT_COLORS[batchSubject]?.text }}>{batchSubject}</span>
           </div>
           <div className="qb-header-actions">
             {currentIndex > 0 && (
-              <button className="qb-cancel-btn" onClick={() => {
-                const updated = [...batchQuestions]
-                updated[currentIndex] = q
-                setBatchQuestions(updated)
-                setCurrentIndex(prev => prev - 1)
-                setQ(batchQuestions[currentIndex - 1])
-                setError('')
-              }} type="button">
-                Anterior
-              </button>
+              <button className="qb-cancel-btn" onClick={() => { const updated = [...batchQuestions]; updated[currentIndex] = q; setBatchQuestions(updated); setCurrentIndex(prev => prev - 1); setQ(batchQuestions[currentIndex - 1]); setError('') }} type="button">Anterior</button>
             )}
             <button className="qb-cancel-btn" onClick={onCancel} type="button">Cancelar</button>
           </div>
         </div>
-
-        <div className="qb-wizard-progress">
-          <div className="qb-wizard-progress-fill" style={{ width: `${progress}%` }} />
-        </div>
-
+        <div className="qb-wizard-progress"><div className="qb-wizard-progress-fill" style={{ width: `${progress}%` }} /></div>
         {error && <div className="qb-error">{error}</div>}
-
         <div className="qb-body">
           <div className="qb-field">
             <label className="qb-label">Título da questão *</label>
-            <input
-              className="qb-input"
-              value={q.title}
-              placeholder="Ex: Qual é o resultado de 2 + 2?"
-              onChange={e => setField('title', e.target.value)}
-            />
+            <input className="qb-input" value={q.title} placeholder="Ex: Qual é o resultado de 2 + 2?" onChange={e => setField('title', e.target.value)} />
           </div>
-
-          <div className="qb-field">
-            <label className="qb-label">Tipo de questão *</label>
-            <div className="qb-wizard-type-grid">
-              {QUESTION_TYPES.map(t => {
-                const colors = TYPE_COLORS[t]
-                const isSelected = q.type === t
-                return (
-                  <button
-                    key={t}
-                    className={`qb-wizard-type-btn ${isSelected ? 'active' : ''}`}
-                    style={{
-                      '--type-default': colors.default,
-                      '--type-hover': colors.hover,
-                      '--type-active': colors.active,
-                      '--type-color': TYPE_TEXT_COLORS[t],
-                    } as React.CSSProperties}
-                    onClick={() => setField('type', t)}
-                    type="button"
-                  >
-                    <div className="qb-wizard-type-icon">
-                      {TYPE_ICONS[t]}
-                    </div>
-                    <span className="qb-wizard-type-name">{QUESTION_TYPE_LABELS[t]}</span>
-                    <span className="qb-wizard-type-desc">{TYPE_DESCRIPTIONS[t]}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
+          {renderDifficultyRow(q.difficulty, d => setField('difficulty', d))}
+          {renderTypeGrid(q.type, t => setField('type', t))}
           <div className="qb-field">
             <label className="qb-label">Conteúdo / Contexto (opcional)</label>
-            <textarea
-              className="qb-textarea"
-              value={q.content || ''}
-              placeholder="Texto, imagem contextual ou enunciado mais detalhado..."
-              rows={3}
-              onChange={e => setField('content', e.target.value)}
-            />
+            <textarea className="qb-textarea" value={q.content || ''} placeholder="Texto, imagem contextual ou enunciado mais detalhado..." rows={3} onChange={e => setField('content', e.target.value)} />
           </div>
-
           <div className="qb-field">
             <label className="qb-label">URL da imagem (opcional)</label>
-            <input
-              className="qb-input"
-              value={q.imageUrl || ''}
-              placeholder="https://..."
-              onChange={e => setField('imageUrl', e.target.value)}
-            />
+            <input className="qb-input" value={q.imageUrl || ''} placeholder="https://..." onChange={e => setField('imageUrl', e.target.value)} />
           </div>
-
           {renderTypeEditor()}
-
           <div className="qb-field">
             <label className="qb-label">Explicação (opcional)</label>
-            <textarea
-              className="qb-textarea"
-              value={q.explanation || ''}
-              placeholder="Explicação exibida após o aluno responder..."
-              rows={2}
-              onChange={e => setField('explanation', e.target.value)}
-            />
+            <textarea className="qb-textarea" value={q.explanation || ''} placeholder="Explicação exibida após o aluno responder..." rows={2} onChange={e => setField('explanation', e.target.value)} />
           </div>
         </div>
-
         <div className="qb-wizard-footer">
           <button className="qb-save-btn" onClick={handleSaveWizard} type="button">
             {isLast ? (
               <>
                 Salvar todas
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}><polyline points="20 6 9 17 4 12" /></svg>
               </>
             ) : (
               <>
                 Próxima
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
               </>
             )}
           </button>
@@ -710,94 +544,34 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
           <button className="qb-save-btn" onClick={handleSave} type="button">Salvar questão</button>
         </div>
       </div>
-
       {error && <div className="qb-error">{error}</div>}
-
       <div className="qb-body">
         <div className="qb-field-row">
           <div className="qb-field" style={{ flex: 2 }}>
             <label className="qb-label">Título da questão *</label>
-            <input
-              className="qb-input"
-              value={q.title}
-              placeholder="Ex: Cinética newtoniana..."
-              onChange={e => setField('title', e.target.value)}
-            />
+            <input className="qb-input" value={q.title} placeholder="Ex: Cinética newtoniana..." onChange={e => setField('title', e.target.value)} />
           </div>
           <div className="qb-field" style={{ flex: 1 }}>
             <label className="qb-label">Matéria *</label>
-            <select
-              className="qb-select"
-              value={q.subject}
-              onChange={e => setField('subject', e.target.value as Subject)}
-            >
+            <select className="qb-select" value={q.subject} onChange={e => setField('subject', e.target.value as Subject)}>
               {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
         </div>
-
-        <div className="qb-field">
-          <label className="qb-label">Tipo de questão *</label>
-          <div className="qb-wizard-type-grid">
-            {QUESTION_TYPES.map(t => {
-              const colors = TYPE_COLORS[t]
-              const isSelected = q.type === t
-              return (
-                <button
-                  key={t}
-                  className={`qb-wizard-type-btn ${isSelected ? 'active' : ''}`}
-                  style={{
-                    '--type-default': colors.default,
-                    '--type-hover': colors.hover,
-                    '--type-active': colors.active,
-                    '--type-color': TYPE_TEXT_COLORS[t],
-                  } as React.CSSProperties}
-                  onClick={() => setField('type', t)}
-                  type="button"
-                >
-                  <div className="qb-wizard-type-icon">
-                    {TYPE_ICONS[t]}
-                  </div>
-                  <span className="qb-wizard-type-name">{QUESTION_TYPE_LABELS[t]}</span>
-                  <span className="qb-wizard-type-desc">{TYPE_DESCRIPTIONS[t]}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
+        {renderDifficultyRow(q.difficulty, d => setField('difficulty', d))}
+        {renderTypeGrid(q.type, t => setField('type', t))}
         <div className="qb-field">
           <label className="qb-label">Conteúdo / Contexto (opcional)</label>
-          <textarea
-            className="qb-textarea"
-            value={q.content || ''}
-            placeholder="Texto, imagem contextual ou enunciado mais detalhado..."
-            rows={3}
-            onChange={e => setField('content', e.target.value)}
-          />
+          <textarea className="qb-textarea" value={q.content || ''} placeholder="Texto, imagem contextual ou enunciado mais detalhado..." rows={3} onChange={e => setField('content', e.target.value)} />
         </div>
-
         <div className="qb-field">
           <label className="qb-label">URL da imagem (opcional)</label>
-          <input
-            className="qb-input"
-            value={q.imageUrl || ''}
-            placeholder="https://..."
-            onChange={e => setField('imageUrl', e.target.value)}
-          />
+          <input className="qb-input" value={q.imageUrl || ''} placeholder="https://..." onChange={e => setField('imageUrl', e.target.value)} />
         </div>
-
         {renderTypeEditor()}
-
         <div className="qb-field">
           <label className="qb-label">Explicação (opcional)</label>
-          <textarea
-            className="qb-textarea"
-            value={q.explanation || ''}
-            placeholder="Explicação exibida após o aluno responder..."
-            rows={2}
-            onChange={e => setField('explanation', e.target.value)}
-          />
+          <textarea className="qb-textarea" value={q.explanation || ''} placeholder="Explicação exibida após o aluno responder..." rows={2} onChange={e => setField('explanation', e.target.value)} />
         </div>
       </div>
     </div>

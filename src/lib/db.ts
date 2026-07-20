@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { ChallengeQuestion, Challenge, ChallengeAttempt, UserStreak } from '../types/challenge'
+import type { ChallengeQuestion, Challenge, ChallengeAttempt, UserStreak, ChallengeModifier } from '../types/challenge'
 import type { DocMeta, Subject } from '../types/doc'
 import type { VideoMeta, VideoNote } from '../types/video'
 
@@ -44,6 +44,7 @@ function questionToUpdateRow(q: ChallengeQuestion): Record<string, unknown> {
     type: q.type,
     title: q.title,
     subject: q.subject,
+    difficulty: q.difficulty,
     content: q.content || null,
     image_url: q.imageUrl || null,
     explanation: q.explanation || null,
@@ -76,6 +77,7 @@ function rowToQuestion(row: Record<string, unknown>): ChallengeQuestion {
     type: row.type as ChallengeQuestion['type'],
     title: row.title as string,
     subject: row.subject as ChallengeQuestion['subject'],
+    difficulty: (row.difficulty as ChallengeQuestion['difficulty']) || 'medio',
     content: (row.content as string) || undefined,
     imageUrl: (row.image_url as string) || undefined,
     explanation: (row.explanation as string) || undefined,
@@ -94,6 +96,7 @@ function questionToRow(q: ChallengeQuestion, userId: string): Record<string, unk
     type: q.type,
     title: q.title,
     subject: q.subject,
+    difficulty: q.difficulty,
     content: q.content || null,
     image_url: q.imageUrl || null,
     explanation: q.explanation || null,
@@ -140,6 +143,8 @@ function challengeToUpdateRow(c: Challenge): Record<string, unknown> {
     xp_base: c.xpBase,
     is_daily: c.isDaily,
     daily_date: c.dailyDate || null,
+    modifiers: c.modifiers || [],
+    aposta_cega_min: c.apostaCegaMin || null,
   }
 }
 
@@ -172,6 +177,8 @@ function rowToChallenge(row: Record<string, unknown>): Challenge {
     isDaily: row.is_daily as boolean,
     dailyDate: (row.daily_date as string) || undefined,
     createdAt: new Date(row.created_at as string).getTime(),
+    modifiers: (row.modifiers as ChallengeModifier[]) || [],
+    apostaCegaMin: (row.aposta_cega_min as number) || undefined,
   }
 }
 
@@ -188,6 +195,8 @@ function challengeToRow(c: Challenge, userId: string): Record<string, unknown> {
     xp_base: c.xpBase,
     is_daily: c.isDaily,
     daily_date: c.dailyDate || null,
+    modifiers: c.modifiers || [],
+    aposta_cega_min: c.apostaCegaMin || null,
   }
 }
 

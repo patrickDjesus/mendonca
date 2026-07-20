@@ -47,6 +47,7 @@ export interface ChallengeQuestion {
   type: QuestionType
   title: string
   subject: Subject
+  difficulty: ChallengeDifficulty
   content?: string
   imageUrl?: string
   explanation?: string
@@ -55,6 +56,35 @@ export interface ChallengeQuestion {
   orderItems: OrderItem[]
   blanks: CompletarBlank[]
   openExpectedText?: string
+}
+
+export type ChallengeModifier =
+  | 'cronometro_em_chamas'
+  | 'contagem_regressiva_cegante'
+  | 'morte_subita'
+  | 'memoria_curta'
+  | 'fio_da_navalha'
+  | 'ponte_de_vidro'
+  | 'aposta_cega'
+
+export const MODIFIER_LABELS: Record<ChallengeModifier, string> = {
+  cronometro_em_chamas: 'Cronômetro em Chamas',
+  contagem_regressiva_cegante: 'Contagem Regressiva Cegante',
+  morte_subita: 'Morte Súbita',
+  memoria_curta: 'Memória Curta',
+  fio_da_navalha: 'Fio da Navalha',
+  ponte_de_vidro: 'Ponte de Vidro',
+  aposta_cega: 'Aposta Cega',
+}
+
+export const MODIFIER_DESCRIPTIONS: Record<ChallengeModifier, string> = {
+  cronometro_em_chamas: 'Tempo reduzido pela metade',
+  contagem_regressiva_cegante: 'O aluno não sabe quanto tempo falta',
+  morte_subita: 'Barra de tempo desce mais rápido, mas sobe ao acertar',
+  memoria_curta: 'Questão desaparece após alguns segundos',
+  fio_da_navalha: 'Pontos triplicados, mas perde tudo se errar',
+  ponte_de_vidro: 'Se errar uma questão, perde o desafio',
+  aposta_cega: 'Aluno aposta quantas questões vai acertar',
 }
 
 export interface Challenge {
@@ -70,6 +100,8 @@ export interface Challenge {
   isDaily: boolean
   dailyDate?: string
   createdAt: number
+  modifiers: ChallengeModifier[]
+  apostaCegaMin?: number
 }
 
 export interface QuestionAnswer {
