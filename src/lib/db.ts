@@ -39,10 +39,29 @@ export async function createQuestion(q: ChallengeQuestion): Promise<ChallengeQue
   return q
 }
 
+function questionToUpdateRow(q: ChallengeQuestion): Record<string, unknown> {
+  return {
+    type: q.type,
+    title: q.title,
+    subject: q.subject,
+    content: q.content || null,
+    image_url: q.imageUrl || null,
+    explanation: q.explanation || null,
+    options: q.options,
+    statements: q.statements,
+    match_pairs: q.matchPairs,
+    order_items: q.orderItems,
+    blanks: q.blanks,
+    open_expected_text: q.openExpectedText || null,
+    crossword_clues: q.crosswordClues,
+    crossword_size: q.crosswordSize,
+  }
+}
+
 export async function updateQuestion(q: ChallengeQuestion): Promise<ChallengeQuestion> {
   const { error } = await supabase
     .from('questions')
-    .update(questionToRow(q, ''))
+    .update(questionToUpdateRow(q))
     .eq('id', q.id)
 
   if (error) throw error
@@ -119,10 +138,24 @@ export async function createChallenge(c: Challenge): Promise<Challenge> {
   return c
 }
 
+function challengeToUpdateRow(c: Challenge): Record<string, unknown> {
+  return {
+    title: c.title,
+    description: c.description || null,
+    subject: c.subject,
+    cross_subjects: c.crossSubjects || [],
+    difficulty: c.difficulty,
+    question_ids: c.questionIds,
+    xp_base: c.xpBase,
+    is_daily: c.isDaily,
+    daily_date: c.dailyDate || null,
+  }
+}
+
 export async function updateChallenge(c: Challenge): Promise<Challenge> {
   const { error } = await supabase
     .from('challenges')
-    .update(challengeToRow(c, ''))
+    .update(challengeToUpdateRow(c))
     .eq('id', c.id)
 
   if (error) throw error
@@ -298,10 +331,25 @@ export async function createDoc(d: DocMeta): Promise<DocMeta> {
   return d
 }
 
+function docToUpdateRow(d: DocMeta): Record<string, unknown> {
+  return {
+    title: d.title,
+    description: d.description || null,
+    doc_type: d.type,
+    subject: d.subject || null,
+    content: d.content || null,
+    file_name: d.fileName || null,
+    file_url: d.fileUrl || null,
+    file_size: d.fileSize || null,
+    thumbnail: d.thumbnail || null,
+    is_public: d.isPublic,
+  }
+}
+
 export async function updateDoc(d: DocMeta): Promise<DocMeta> {
   const { error } = await supabase
     .from('documents')
-    .update(docToRow(d, ''))
+    .update(docToUpdateRow(d))
     .eq('id', d.id)
 
   if (error) throw error
@@ -340,7 +388,7 @@ function docToRow(d: DocMeta, userId: string): Record<string, unknown> {
     description: d.description || null,
     doc_type: d.type,
     subject: d.subject || null,
-    content: d.content ? JSON.stringify(d.content) : null,
+    content: d.content || null,
     file_name: d.fileName || null,
     file_url: d.fileUrl || null,
     file_size: d.fileSize || null,

@@ -8,9 +8,6 @@ import { extractYoutubeId } from '../../utils/youtube'
 import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, logActivity } from '../../lib/db'
 import '../../styles/videos.css'
 
-function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
-}
 
 export default function Videos() {
   const [videos, setVideos] = useState<VideoMeta[]>([])
@@ -93,7 +90,7 @@ export default function Videos() {
   const handleAdd = useCallback(async () => {
     if (!addForm.videoUrl.trim() || !addForm.subject) return
     const newVideo: VideoMeta = {
-      id: generateId(),
+      id: crypto.randomUUID(),
       title: addForm.title || 'Novo Vídeo',
       description: addForm.description || undefined,
       subject: addForm.subject,
@@ -106,11 +103,11 @@ export default function Videos() {
       await createVideo(newVideo)
       setVideos(prev => [newVideo, ...prev])
       logActivity('video_added', `Adicionou "${newVideo.title}"`, 'video', '#c85050').catch(() => {})
+      setAddForm({ title: '', description: '', videoUrl: '', subject: null, isPublic: false })
+      setShowAddModal(false)
     } catch (e) {
       console.error('Erro ao salvar vídeo:', e)
     }
-    setAddForm({ title: '', description: '', videoUrl: '', subject: null, isPublic: false })
-    setShowAddModal(false)
   }, [addForm])
 
   const handleDelete = useCallback(async (id: string) => {

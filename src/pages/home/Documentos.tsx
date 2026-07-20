@@ -19,9 +19,7 @@ interface PickerForm {
   isPublic: boolean
 }
 
-function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
-}
+
 
 export default function Documentos() {
   const [activeTab, setActiveTab] = useState<DocTab>('mine')
@@ -97,7 +95,7 @@ export default function Documentos() {
     const form = pickerFormRef.current
     setSubjectPicker(null)
     const newDoc: DocMeta = {
-      id: generateId(),
+      id: crypto.randomUUID(),
       title: form.title || 'Novo Documento',
       description: form.description || undefined,
       type: 'editor',
@@ -108,12 +106,12 @@ export default function Documentos() {
     }
     try {
       await createDoc(newDoc)
+      setMyDocs(prev => [newDoc, ...prev])
+      setEditingDoc(newDoc)
       logActivity('doc_created', `Criou "${newDoc.title}"`, 'book', '#508cc8').catch(() => {})
     } catch (e) {
       console.error('Erro ao salvar documento:', e)
     }
-    setMyDocs(prev => [newDoc, ...prev])
-    setEditingDoc(newDoc)
     setPickerForm({ title: '', description: '', subject: null, isPublic: false })
   }, [])
 
@@ -130,7 +128,7 @@ export default function Documentos() {
         const file = target.files?.[0]
         if (!file) { input.onchange = originalOnchange; return }
         const fileUrl = URL.createObjectURL(file)
-        const newDocId = generateId()
+        const newDocId = crypto.randomUUID()
         const newDoc: DocMeta = {
           id: newDocId,
           title: form.title || file.name.replace(/\.pdf$/i, ''),
@@ -144,13 +142,15 @@ export default function Documentos() {
           updatedAt: Date.now(),
           isPublic: form.isPublic,
         }
-        setMyDocs(prev => [newDoc, ...prev])
-        createDoc(newDoc).catch(e => console.error('Erro ao salvar PDF:', e))
-        generatePdfThumbnail(file).then(thumb => {
-          if (thumb) {
-            setMyDocs(prev => prev.map(d => d.id === newDocId ? { ...d, thumbnail: thumb } : d))
-          }
-        })
+        createDoc(newDoc).then(() => {
+          setMyDocs(prev => [newDoc, ...prev])
+          logActivity('doc_created', `Fez upload de "${newDoc.title}"`, 'book', '#508cc8').catch(() => {})
+          generatePdfThumbnail(file).then(thumb => {
+            if (thumb) {
+              setMyDocs(prev => prev.map(d => d.id === newDocId ? { ...d, thumbnail: thumb } : d))
+            }
+          })
+        }).catch(e => console.error('Erro ao salvar PDF:', e))
         target.value = ''
         input.onchange = originalOnchange
       }
