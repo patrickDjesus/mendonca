@@ -1219,15 +1219,6 @@
   position: sticky;
   top: 20px;
   overflow: hidden;
-  background-image:
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0px,
-      transparent 31px,
-      rgba(200, 180, 140, 0.04) 31px,
-      rgba(200, 180, 140, 0.04) 32px
-    );
-  background-size: 100% 32px;
 }
 
 .notes-panel-header {

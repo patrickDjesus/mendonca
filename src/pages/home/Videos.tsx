@@ -227,15 +227,24 @@ export default function Videos() {
     } catch { /* noop */ }
   }, [watchingVideo, currentTime])
 
-  const handleAddNote = useCallback((note: VideoNote) => {
+  const handleAddNote = useCallback(async (note: VideoNote) => {
     const fullNote = { ...note, videoId: watchingVideo?.id || '' }
-    setNotes(prev => [...prev, fullNote])
-    createVideoNote(fullNote).catch(console.error)
+    try {
+      await createVideoNote(fullNote)
+      setNotes(prev => [...prev, fullNote])
+    } catch (e) {
+      console.error('Erro ao salvar anotação:', e)
+      alert('Erro ao salvar anotação. Verifique se você está logado.')
+    }
   }, [watchingVideo])
 
-  const handleDeleteNote = useCallback((id: string) => {
+  const handleDeleteNote = useCallback(async (id: string) => {
     setNotes(prev => prev.filter(n => n.id !== id))
-    deleteVideoNote(id).catch(console.error)
+    try {
+      await deleteVideoNote(id)
+    } catch (e) {
+      console.error('Erro ao deletar anotação:', e)
+    }
   }, [])
 
   const handleSeek = useCallback((seconds: number) => {
