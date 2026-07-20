@@ -5,6 +5,7 @@ import DocCard from '../../components/DocCard'
 import AddDocCard from '../../components/AddDocCard'
 import '../../styles/documentos.css'
 import { generatePdfThumbnail } from '../../utils/pdfThumbnails'
+import { fetchMyDocs, fetchPublicDocs, createDoc, deleteDoc } from '../../lib/db'
 
 const DocEditor = lazy(() => import('../../components/DocEditor'))
 const PdfViewer = lazy(() => import('../../components/PdfViewer'))
@@ -18,91 +19,14 @@ interface PickerForm {
   isPublic: boolean
 }
 
-const SAMPLE_DOCS: DocMeta[] = [
-  {
-    id: '1',
-    title: 'Apostila de Matemática — Cap. 3',
-    type: 'editor',
-    subject: 'Matemática',
-    createdAt: Date.now() - 86400000 * 2,
-    updatedAt: Date.now() - 86400000 * 2,
-    isPublic: false,
-  },
-  {
-    id: '2',
-    title: 'Notas de Literatura — Modernismo',
-    type: 'editor',
-    subject: 'Linguagens',
-    createdAt: Date.now() - 86400000 * 5,
-    updatedAt: Date.now() - 86400000 * 5,
-    isPublic: false,
-  },
-  {
-    id: '3',
-    title: 'Resumo de História — Brasil Colônia',
-    type: 'editor',
-    subject: 'História',
-    createdAt: Date.now() - 86400000 * 7,
-    updatedAt: Date.now() - 86400000 * 7,
-    isPublic: false,
-  },
-]
-
-const SAMPLE_PUBLIC: DocMeta[] = [
-  {
-    id: 'p1',
-    title: 'Química Orgânica — Resumo Geral',
-    type: 'editor',
-    subject: 'Química',
-    createdAt: Date.now() - 86400000 * 3,
-    updatedAt: Date.now() - 86400000 * 3,
-    isPublic: true,
-    authorName: 'Maria S.',
-  },
-  {
-    id: 'p2',
-    title: 'Lista de Exercícios — Física Mecânica',
-    type: 'pdf',
-    subject: 'Física',
-    fileName: 'fisica-mecanica-lista.pdf',
-    fileSize: 204800,
-    createdAt: Date.now() - 86400000 * 4,
-    updatedAt: Date.now() - 86400000 * 4,
-    isPublic: true,
-    authorName: 'João P.',
-  },
-  {
-    id: 'p3',
-    title: 'Geografia — Mapas Mentais do ENEM',
-    type: 'editor',
-    subject: 'Geografia',
-    createdAt: Date.now() - 86400000 * 6,
-    updatedAt: Date.now() - 86400000 * 6,
-    isPublic: true,
-    authorName: 'Ana L.',
-  },
-  {
-    id: 'p4',
-    title: 'Redação — Modelos de Texto Dissertativo',
-    type: 'pdf',
-    subject: 'Linguagens',
-    fileName: 'redacao-modelos.pdf',
-    fileSize: 512000,
-    createdAt: Date.now() - 86400000 * 8,
-    updatedAt: Date.now() - 86400000 * 8,
-    isPublic: true,
-    authorName: 'Carlos M.',
-  },
-]
-
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
 }
 
 export default function Documentos() {
   const [activeTab, setActiveTab] = useState<DocTab>('mine')
-  const [myDocs, setMyDocs] = useState<DocMeta[]>(SAMPLE_DOCS)
-  const [publicDocs] = useState<DocMeta[]>(SAMPLE_PUBLIC)
+  const [myDocs, setMyDocs] = useState<DocMeta[]>([])
+  const [publicDocs, setPublicDocs] = useState<DocMeta[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [subjectFilter, setSubjectFilter] = useState<Subject | null>(null)
   const [editingDoc, setEditingDoc] = useState<DocMeta | null>(null)
@@ -119,6 +43,13 @@ export default function Documentos() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    Promise.all([fetchMyDocs(), fetchPublicDocs()]).then(([mine, pubs]) => {
+      setMyDocs(mine)
+      setPublicDocs(pubs)
+    }).catch(console.error)
+  }, [])
 
   const allDocs = useMemo(() => [...myDocs, ...publicDocs], [myDocs, publicDocs])
   const docs = useMemo(() => {
@@ -147,12 +78,17 @@ export default function Documentos() {
     setEditingDoc(null)
   }, [])
 
-  const handleDelete = useCallback((id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      await deleteDoc(id)
+    } catch (e) {
+      console.error('Erro ao deletar documento:', e)
+    }
     setMyDocs(prev => prev.filter(d => d.id !== id))
     setDeleteTarget(null)
   }, [])
 
-  const handleCreateWithSubject = useCallback((subject: Subject) => {
+  const handleCreateWithSubject = useCallback(async (subject: Subject) => {
     const form = pickerFormRef.current
     setSubjectPicker(null)
     const newDoc: DocMeta = {
@@ -164,6 +100,11 @@ export default function Documentos() {
       createdAt: Date.now(),
       updatedAt: Date.now(),
       isPublic: form.isPublic,
+    }
+    try {
+      await createDoc(newDoc)
+    } catch (e) {
+      console.error('Erro ao salvar documento:', e)
     }
     setMyDocs(prev => [newDoc, ...prev])
     setEditingDoc(newDoc)

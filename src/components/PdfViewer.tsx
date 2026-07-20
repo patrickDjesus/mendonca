@@ -1,7 +1,9 @@
-import { useState, useCallback } from 'react'
-import { Document, Page } from 'react-pdf'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
+
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 interface PdfViewerProps {
   fileUrl: string
@@ -17,12 +19,42 @@ export default function PdfViewer({ fileUrl, fileName, onClose }: PdfViewerProps
   const [scaleIndex, setScaleIndex] = useState(2)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const pageWrappers = useRef<Map<number, HTMLDivElement>>(new Map())
 
   const scale = ZOOM_STEPS[scaleIndex]
 
+  useEffect(() => {
+    const el = overlayRef.current
+    if (!el) return
+    const onFsChange = () => setIsFullscreen(document.fullscreenElement === el)
+    document.addEventListener('fullscreenchange', onFsChange)
+    return () => document.removeEventListener('fullscreenchange', onFsChange)
+  }, [])
+
+  const toggleFullscreen = useCallback(() => {
+    const el = overlayRef.current
+    if (!el) return
+    if (document.fullscreenElement) document.exitFullscreen()
+    else el.requestFullscreen()
+  }, [])
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'f' || e.key === 'F') {
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+        e.preventDefault()
+        toggleFullscreen()
+      }
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [toggleFullscreen])
+
   const onDocumentLoad = useCallback(({ numPages: n }: { numPages: number }) => {
     setNumPages(n)
-    setCurrentPage(1)
     setLoading(false)
   }, [])
 
@@ -39,16 +71,23 @@ export default function PdfViewer({ fileUrl, fileName, onClose }: PdfViewerProps
     setScaleIndex(i => Math.max(i - 1, 0))
   }, [])
 
-  const goToPrev = useCallback(() => {
-    setCurrentPage(p => Math.max(p - 1, 1))
-  }, [])
-
-  const goToNext = useCallback(() => {
-    setCurrentPage(p => Math.min(p + 1, numPages))
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+    const handleScroll = () => {
+      const threshold = container.getBoundingClientRect().top + container.getBoundingClientRect().height * 0.35
+      let closest = 1
+      for (const [pageNum, el] of pageWrappers.current) {
+        if (el.getBoundingClientRect().top <= threshold) closest = pageNum
+      }
+      setCurrentPage(closest)
+    }
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    return () => container.removeEventListener('scroll', handleScroll)
   }, [numPages])
 
   return (
-    <div className="pdf-viewer-overlay">
+    <div className={`pdf-viewer-overlay ${isFullscreen ? 'pdf-fullscreen' : ''}`} ref={overlayRef}>
       <div className="pdf-viewer-topbar">
         <div className="pdf-viewer-info">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -59,13 +98,7 @@ export default function PdfViewer({ fileUrl, fileName, onClose }: PdfViewerProps
         </div>
 
         <div className="pdf-viewer-controls">
-          <button
-            className="pdf-ctrl-btn"
-            onClick={zoomOut}
-            disabled={scaleIndex === 0}
-            title="Diminuir zoom"
-            type="button"
-          >
+          <button className="pdf-ctrl-btn" onClick={zoomOut} disabled={scaleIndex === 0} title="Diminuir zoom" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -73,13 +106,7 @@ export default function PdfViewer({ fileUrl, fileName, onClose }: PdfViewerProps
             </svg>
           </button>
           <span className="pdf-zoom-label">{Math.round(scale * 100)}%</span>
-          <button
-            className="pdf-ctrl-btn"
-            onClick={zoomIn}
-            disabled={scaleIndex === ZOOM_STEPS.length - 1}
-            title="Aumentar zoom"
-            type="button"
-          >
+          <button className="pdf-ctrl-btn" onClick={zoomIn} disabled={scaleIndex === ZOOM_STEPS.length - 1} title="Aumentar zoom" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -90,28 +117,31 @@ export default function PdfViewer({ fileUrl, fileName, onClose }: PdfViewerProps
 
           <div className="pdf-ctrl-divider" />
 
-          <button
-            className="pdf-ctrl-btn"
-            onClick={goToPrev}
-            disabled={currentPage <= 1}
-            title="Página anterior"
-            type="button"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
           <span className="pdf-page-label">{currentPage} / {numPages}</span>
+
+          <div className="pdf-ctrl-divider" />
+
           <button
-            className="pdf-ctrl-btn"
-            onClick={goToNext}
-            disabled={currentPage >= numPages}
-            title="Próxima página"
+            className={`pdf-ctrl-btn ${isFullscreen ? 'pdf-ctrl-active' : ''}`}
+            onClick={toggleFullscreen}
+            title={isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
             type="button"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
+            {isFullscreen ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3" />
+                <path d="M21 8h-3a2 2 0 0 1-2-2V3" />
+                <path d="M3 16h3a2 2 0 0 1 2 2v3" />
+                <path d="M16 21v-3a2 2 0 0 1 2-2h3" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+              </svg>
+            )}
           </button>
         </div>
 
@@ -123,7 +153,7 @@ export default function PdfViewer({ fileUrl, fileName, onClose }: PdfViewerProps
         </button>
       </div>
 
-      <div className="pdf-viewer-body">
+      <div className="pdf-viewer-body" ref={scrollContainerRef}>
         {error ? (
           <div className="pdf-viewer-placeholder">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -148,12 +178,23 @@ export default function PdfViewer({ fileUrl, fileName, onClose }: PdfViewerProps
               onLoadError={onDocumentLoadError}
               loading=""
             >
-              <Page
-                pageNumber={currentPage}
-                scale={scale}
-                renderTextLayer={true}
-                renderAnnotationLayer={true}
-              />
+              {Array.from({ length: numPages }, (_, i) => (
+                <div
+                  key={i + 1}
+                  ref={el => {
+                    if (el) pageWrappers.current.set(i + 1, el)
+                    else pageWrappers.current.delete(i + 1)
+                  }}
+                  className="pdf-page-slot"
+                >
+                  <Page
+                    pageNumber={i + 1}
+                    scale={scale}
+                    renderTextLayer={true}
+                    renderAnnotationLayer={true}
+                  />
+                </div>
+              ))}
             </Document>
           </div>
         )}

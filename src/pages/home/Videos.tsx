@@ -4,250 +4,16 @@ import type { Subject } from '../../types/doc'
 import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import VideoPlayer, { type VideoPlayerHandle } from '../../components/VideoPlayer'
 import NotesPanel from '../../components/NotesPanel'
+import { extractYoutubeId } from '../../utils/youtube'
+import { fetchVideos, createVideo, deleteVideo } from '../../lib/db'
 import '../../styles/videos.css'
-
-const SAMPLE_VIDEOS: VideoMeta[] = [
-  {
-    id: 'v1',
-    title: 'Derivadas — Conceito e Regras Básicas',
-    description: 'Aula completa sobre derivadas para o ENEM',
-    subject: 'Matemática',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '24:15',
-    authorName: 'Prof. Carlos',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 1,
-    updatedAt: Date.now() - 86400000 * 1,
-  },
-  {
-    id: 'v2',
-    title: 'Tabela Periódica — Elementos e Propriedades',
-    description: 'Visão geral da tabela periódica',
-    subject: 'Química',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '18:42',
-    authorName: 'Prof. Ana',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 2,
-    updatedAt: Date.now() - 86400000 * 2,
-  },
-  {
-    id: 'v3',
-    title: 'Leis de Newton — Exemplos Práticos',
-    description: 'Resolução de exercícios sobre as 3 leis de Newton',
-    subject: 'Física',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '31:08',
-    authorName: 'Prof. Marcos',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 3,
-    updatedAt: Date.now() - 86400000 * 3,
-  },
-  {
-    id: 'v4',
-    title: 'Células — Tipos e Funções',
-    description: 'Células animais, vegetais e procariontes',
-    subject: 'Biologia',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '22:30',
-    authorName: 'Prof. Lucia',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 4,
-    updatedAt: Date.now() - 86400000 * 4,
-  },
-  {
-    id: 'v5',
-    title: 'Modernismo — Manifesto Antropofágico',
-    description: 'Análise completa do Manifesto de Oswald de Andrade',
-    subject: 'Linguagens',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '27:55',
-    authorName: 'Prof. Beatriz',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 5,
-    updatedAt: Date.now() - 86400000 * 5,
-  },
-  {
-    id: 'v6',
-    title: 'Revolução Industrial — Impactos Sociais',
-    description: 'As transformações sociais da revolução industrial',
-    subject: 'História',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '20:10',
-    authorName: 'Prof. Ricardo',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 6,
-    updatedAt: Date.now() - 86400000 * 6,
-  },
-  {
-    id: 'v7',
-    title: 'Climatologia — Tipos Climáticos do Brasil',
-    description: 'Classificação de Köppen aplicada ao Brasil',
-    subject: 'Geografia',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '26:40',
-    authorName: 'Prof. Sandra',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 7,
-    updatedAt: Date.now() - 86400000 * 7,
-  },
-  {
-    id: 'v8',
-    title: 'Ética — Introdução ao Pensamento Filosófico',
-    description: 'Os fundamentos da ética para o ENEM',
-    subject: 'Filosofia',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '19:25',
-    authorName: 'Prof. Fernando',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 8,
-    updatedAt: Date.now() - 86400000 * 8,
-  },
-  {
-    id: 'v9',
-    title: 'Função Exponencial e Logarítmica',
-    description: 'Domine as funções exponenciais e logarítmicas',
-    subject: 'Matemática',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '35:12',
-    authorName: 'Prof. Carlos',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 9,
-    updatedAt: Date.now() - 86400000 * 9,
-  },
-  {
-    id: 'v10',
-    title: 'Cadeia Alimentar — Relações Ecológicas',
-    description: 'Cadeias e teias alimentares nos ecossistemas',
-    subject: 'Biologia',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '16:50',
-    authorName: 'Prof. Lucia',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 10,
-    updatedAt: Date.now() - 86400000 * 10,
-  },
-  {
-    id: 'v11',
-    title: 'Cinemática — Movimento Retilíneo Uniforme',
-    description: 'MRU, MRUV e Queda Livre com exercícios',
-    subject: 'Física',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '29:33',
-    authorName: 'Prof. Marcos',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 11,
-    updatedAt: Date.now() - 86400000 * 11,
-  },
-  {
-    id: 'v12',
-    title: 'Reação Ácido-Base — pH e Neutralização',
-    description: 'Cálculos de pH e conceitos fundamentais',
-    subject: 'Química',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '21:18',
-    authorName: 'Prof. Ana',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 12,
-    updatedAt: Date.now() - 86400000 * 12,
-  },
-  {
-    id: 'v13',
-    title: 'Interpretação de Texto — Estratégias para o ENEM',
-    description: 'Técnicas de leitura e interpretação textual',
-    subject: 'Linguagens',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '15:44',
-    authorName: 'Prof. Beatriz',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 13,
-    updatedAt: Date.now() - 86400000 * 13,
-  },
-  {
-    id: 'vm1',
-    title: 'Geometria Analítica — Reta e Circunferência',
-    description: 'Equações da reta, angulo entre retas e circunferência',
-    subject: 'Matemática',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '28:05',
-    authorName: 'Prof. Carlos',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 14,
-    updatedAt: Date.now() - 86400000 * 14,
-  },
-  {
-    id: 'vm2',
-    title: 'Probabilidade e Estatística — Probabilidade Condicional',
-    description: 'Teorema de Bayes e problemas do ENEM',
-    subject: 'Matemática',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '22:18',
-    authorName: 'Prof. Carlos',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 15,
-    updatedAt: Date.now() - 86400000 * 15,
-  },
-  {
-    id: 'vm3',
-    title: 'Trigonometria — Seno, Cosseno e Tangente',
-    description: 'Relacoes trigonometricas e arcos notaveis',
-    subject: 'Matemática',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '31:42',
-    authorName: 'Prof. Carla',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 16,
-    updatedAt: Date.now() - 86400000 * 16,
-  },
-  {
-    id: 'vm4',
-    title: 'Matrizes e Determinantes — Operacoes Básicas',
-    description: 'Soma, multiplicacao e inversa de matrizes',
-    subject: 'Matemática',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '19:55',
-    authorName: 'Prof. Carlos',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 17,
-    updatedAt: Date.now() - 86400000 * 17,
-  },
-  {
-    id: 'vm5',
-    title: 'Análise Combinatória — Permutacao e Combinacao',
-    description: 'Principio multiplicativo e aditivo resolvidos',
-    subject: 'Matemática',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '25:30',
-    authorName: 'Prof. Carla',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 18,
-    updatedAt: Date.now() - 86400000 * 18,
-  },
-  {
-    id: 'vm6',
-    title: 'Progressoes Aritmeticas e Geometricas',
-    description: 'PA e PG: termo geral, soma e problemas',
-    subject: 'Matemática',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    duration: '17:20',
-    authorName: 'Prof. Carlos',
-    isPublic: true,
-    createdAt: Date.now() - 86400000 * 19,
-    updatedAt: Date.now() - 86400000 * 19,
-  },
-]
-
-function extractYoutubeId(url: string): string | null {
-  const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/)
-  return match?.[1] ?? null
-}
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
 }
 
 export default function Videos() {
-  const [videos, setVideos] = useState<VideoMeta[]>(SAMPLE_VIDEOS)
+  const [videos, setVideos] = useState<VideoMeta[]>([])
   const [watchingVideo, setWatchingVideo] = useState<VideoMeta | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [addForm, setAddForm] = useState({ title: '', description: '', videoUrl: '', subject: null as Subject | null, isPublic: false })
@@ -256,9 +22,11 @@ export default function Videos() {
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [watchTimeAccum, setWatchTimeAccum] = useState(0)
+  const [isPlaying, setIsPlaying] = useState(false)
   const videoPlayerRef = useRef<VideoPlayerHandle>(null)
   const watchTimeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const scrollRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const dragHandlers = useRef<Map<string, (e: MouseEvent) => void>>(new Map())
   const dragRef = useRef({ active: false, el: null as HTMLDivElement | null, startX: 0, scrollLeft: 0 })
   const dragMoved = useRef(false)
   const dragRowCleanup = useRef<(() => void) | null>(null)
@@ -312,6 +80,7 @@ export default function Videos() {
   }, [videos])
 
   const heroVideo = useMemo(() => {
+    if (videos.length === 0) return null
     return videos.reduce((latest, v) => v.createdAt > latest.createdAt ? v : latest, videos[0])
   }, [videos])
 
@@ -321,8 +90,8 @@ export default function Videos() {
     el.scrollBy({ left: dir * el.clientWidth * 0.7, behavior: 'smooth' })
   }, [])
 
-  const handleAdd = useCallback(() => {
-    if (!addForm.subject || !addForm.videoUrl) return
+  const handleAdd = useCallback(async () => {
+    if (!addForm.videoUrl.trim()) return
     const newVideo: VideoMeta = {
       id: generateId(),
       title: addForm.title || 'Novo Vídeo',
@@ -333,12 +102,22 @@ export default function Videos() {
       createdAt: Date.now(),
       updatedAt: Date.now(),
     }
-    setVideos(prev => [newVideo, ...prev])
+    try {
+      await createVideo(newVideo)
+      setVideos(prev => [newVideo, ...prev])
+    } catch (e) {
+      console.error('Erro ao salvar vídeo:', e)
+    }
     setAddForm({ title: '', description: '', videoUrl: '', subject: null, isPublic: false })
     setShowAddModal(false)
   }, [addForm])
 
-  const handleDelete = useCallback((id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      await deleteVideo(id)
+    } catch (e) {
+      console.error('Erro ao deletar vídeo:', e)
+    }
     setVideos(prev => prev.filter(v => v.id !== id))
     setDeleteTarget(null)
     if (watchingVideo?.id === id) {
@@ -359,11 +138,16 @@ export default function Videos() {
         setCurrentTime(0)
         setDuration(0)
         setWatchTimeAccum(0)
+        setIsPlaying(false)
       }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
   }, [watchingVideo])
+
+  useEffect(() => {
+    fetchVideos().then(setVideos).catch(console.error)
+  }, [])
 
   useEffect(() => {
     if (!showAddModal) return
@@ -384,14 +168,14 @@ export default function Videos() {
   }, [deleteTarget])
 
   useEffect(() => {
-    if (!watchingVideo) return
+    if (!watchingVideo || !isPlaying) return
     watchTimeIntervalRef.current = setInterval(() => {
       setWatchTimeAccum(prev => prev + 1)
     }, 1000)
     return () => {
       if (watchTimeIntervalRef.current) clearInterval(watchTimeIntervalRef.current)
     }
-  }, [watchingVideo])
+  }, [watchingVideo, isPlaying])
 
   const handleAddNote = useCallback((note: VideoNote) => {
     setNotes(prev => [...prev, { ...note, videoId: watchingVideo?.id || '' }])
@@ -412,6 +196,7 @@ export default function Videos() {
     setCurrentTime(0)
     setDuration(0)
     setWatchTimeAccum(0)
+    setIsPlaying(false)
   }, [])
 
   const formatWatchTime = useCallback((totalSec: number): string => {
@@ -513,17 +298,21 @@ export default function Videos() {
                 className="video-row"
                 ref={el => {
                   const prev = scrollRefs.current.get(subject)
-                  if (prev && prev !== el) prev.removeEventListener('mousedown', (prev as any).__dragHandler)
+                  const prevHandler = dragHandlers.current.get(subject)
+                  if (prev && prevHandler) {
+                    prev.removeEventListener('mousedown', prevHandler)
+                    dragHandlers.current.delete(subject)
+                  }
                   if (el) {
                     const handler = (e: MouseEvent) => {
                       if (e.button !== 0) return
                       e.preventDefault()
                       initDrag(el, e.pageX)
                     }
-                    ;(el as any).__dragHandler = handler
+                    dragHandlers.current.set(subject, handler)
                     el.addEventListener('mousedown', handler)
+                    scrollRefs.current.set(subject, el)
                   }
-                  if (el) scrollRefs.current.set(subject, el)
                 }}
               >
                 {vids.map(video => {
@@ -586,6 +375,7 @@ export default function Videos() {
                 autoPlay
                 onTimeUpdate={setCurrentTime}
                 onDurationReady={setDuration}
+                onPlayingChange={setIsPlaying}
               />
             </div>
 
@@ -600,6 +390,7 @@ export default function Videos() {
                     setCurrentTime(0)
                     setDuration(0)
                     setWatchTimeAccum(0)
+                    setIsPlaying(false)
                   }}
                   type="button"
                 >

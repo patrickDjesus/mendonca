@@ -1,9 +1,5 @@
 import { useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
-
-function extractYoutubeId(url: string): string | null {
-  const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/)
-  return match?.[1] ?? null
-}
+import { extractYoutubeId } from '../utils/youtube'
 
 declare global {
   interface Window {
@@ -40,10 +36,11 @@ interface Props {
   autoPlay?: boolean
   onTimeUpdate?: (time: number) => void
   onDurationReady?: (duration: number) => void
+  onPlayingChange?: (playing: boolean) => void
 }
 
 const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(function VideoPlayer(
-  { videoUrl, autoPlay = true, onTimeUpdate, onDurationReady },
+  { videoUrl, autoPlay = true, onTimeUpdate, onDurationReady, onPlayingChange },
   ref,
 ) {
   const ytId = extractYoutubeId(videoUrl)
@@ -51,37 +48,44 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(function VideoPlayer(
   const ytPlayerRef = useRef<any>(null)
   const htmlVideoRef = useRef<HTMLVideoElement>(null)
   const timeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const htmlTimeupdateCleanup = useRef<(() => void) | null>(null)
 
   const stopTimeTracking = useCallback(() => {
     if (timeIntervalRef.current) {
       clearInterval(timeIntervalRef.current)
       timeIntervalRef.current = null
     }
+    if (htmlTimeupdateCleanup.current) {
+      htmlTimeupdateCleanup.current()
+      htmlTimeupdateCleanup.current = null
+    }
   }, [])
 
   const startYtTracking = useCallback(() => {
     stopTimeTracking()
+    onPlayingChange?.(true)
     timeIntervalRef.current = setInterval(() => {
       if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
         const t = ytPlayerRef.current.getCurrentTime()
         onTimeUpdate?.(t)
       }
     }, 500)
-  }, [stopTimeTracking, onTimeUpdate])
+  }, [stopTimeTracking, onTimeUpdate, onPlayingChange])
 
   const startHtml5Tracking = useCallback(() => {
     stopTimeTracking()
     const el = htmlVideoRef.current
     if (!el) return
+    onPlayingChange?.(!el.paused)
     const handler = () => onTimeUpdate?.(el.currentTime)
     el.addEventListener('timeupdate', handler)
+    htmlTimeupdateCleanup.current = () => {
+      el.removeEventListener('timeupdate', handler)
+    }
     timeIntervalRef.current = setInterval(() => {
       if (el && !el.paused) onTimeUpdate?.(el.currentTime)
     }, 500)
-    return () => {
-      el.removeEventListener('timeupdate', handler)
-    }
-  }, [stopTimeTracking, onTimeUpdate])
+  }, [stopTimeTracking, onTimeUpdate, onPlayingChange])
 
   useImperativeHandle(ref, () => ({
     getCurrentTime: () => {
@@ -108,14 +112,15 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(function VideoPlayer(
 
     let destroyed = false
     const containerId = `yt-player-${Math.random().toString(36).slice(2, 8)}`
+    const containerEl = containerRef.current
 
     loadYouTubeApi().then(() => {
-      if (destroyed || !containerRef.current) return
+      if (destroyed) return
       const div = document.createElement('div')
       div.id = containerId
       div.style.width = '100%'
       div.style.height = '100%'
-      containerRef.current!.appendChild(div)
+      containerEl.appendChild(div)
 
       ytPlayerRef.current = new window.YT.Player(containerId, {
         videoId: ytId,
@@ -135,6 +140,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(function VideoPlayer(
             if (e.data === window.YT.PlayerState.PLAYING) {
               startYtTracking()
             } else {
+              onPlayingChange?.(false)
               stopTimeTracking()
             }
           },
@@ -145,32 +151,38 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(function VideoPlayer(
     return () => {
       destroyed = true
       stopTimeTracking()
+      onPlayingChange?.(false)
       const player = ytPlayerRef.current
       if (player?.destroy) {
         try { player.destroy() } catch { /* noop */ }
-        ytPlayerRef.current = null
       }
-      const container = containerRef.current
-      if (container) {
-        container.innerHTML = ''
+      ytPlayerRef.current = null
+      if (containerEl) {
+        containerEl.innerHTML = ''
       }
     }
-  }, [ytId, autoPlay, onDurationReady, startYtTracking, stopTimeTracking])
+  }, [ytId, autoPlay, onDurationReady, startYtTracking, stopTimeTracking, onPlayingChange])
 
   useEffect(() => {
     if (ytId) return
     const el = htmlVideoRef.current
     if (!el) return
-    const cleanup = startHtml5Tracking()
+    startHtml5Tracking()
     const onLoaded = () => {
       if (el.duration && isFinite(el.duration)) onDurationReady?.(el.duration)
     }
+    const onPlay = () => onPlayingChange?.(true)
+    const onPause = () => { onPlayingChange?.(false); stopTimeTracking() }
     el.addEventListener('loadedmetadata', onLoaded)
+    el.addEventListener('play', onPlay)
+    el.addEventListener('pause', onPause)
     return () => {
-      cleanup?.()
+      stopTimeTracking()
       el.removeEventListener('loadedmetadata', onLoaded)
+      el.removeEventListener('play', onPlay)
+      el.removeEventListener('pause', onPause)
     }
-  }, [ytId, startHtml5Tracking, onDurationReady, stopTimeTracking])
+  }, [ytId, startHtml5Tracking, onDurationReady, stopTimeTracking, onPlayingChange])
 
   useEffect(() => {
     return () => stopTimeTracking()
