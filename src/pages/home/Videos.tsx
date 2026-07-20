@@ -32,7 +32,7 @@ export default function Videos() {
   const [videos, setVideos] = useState<VideoMeta[]>([])
   const [watchingVideo, setWatchingVideo] = useState<VideoMeta | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [addForm, setAddForm] = useState({ title: '', description: '', videoUrl: '', subject: null as Subject | null, isPublic: false })
+  const [addForm, setAddForm] = useState({ title: '', description: '', videoUrl: '', subject: null as Subject | null })
   const [deleteTarget, setDeleteTarget] = useState<VideoMeta | null>(null)
   const [notes, setNotes] = useState<VideoNote[]>([])
   const [currentTime, setCurrentTime] = useState(0)
@@ -136,7 +136,7 @@ export default function Videos() {
       description: addForm.description || undefined,
       subject: addForm.subject,
       videoUrl: addForm.videoUrl,
-      isPublic: addForm.isPublic,
+      isPublic: true,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     }
@@ -144,7 +144,7 @@ export default function Videos() {
       await createVideo(newVideo)
       setVideos(prev => [newVideo, ...prev])
       logActivity('video_added', `Adicionou "${newVideo.title}"`, 'video', '#c85050').catch(() => {})
-      setAddForm({ title: '', description: '', videoUrl: '', subject: null, isPublic: false })
+      setAddForm({ title: '', description: '', videoUrl: '', subject: null })
       setShowAddModal(false)
     } catch (e) {
       console.error('Erro ao salvar vídeo:', e)
@@ -672,20 +672,6 @@ export default function Videos() {
                   )
                 })}
               </div>
-            </div>
-
-            <div className="video-form-field video-form-toggle-row">
-              <div className="video-form-toggle-info">
-                <span className="video-form-label" style={{ marginBottom: 0 }}>Público</span>
-                <span className="video-form-toggle-desc">Visível para todos os alunos</span>
-              </div>
-              <button
-                className={`video-form-toggle ${addForm.isPublic ? 'on' : ''}`}
-                onClick={() => setAddForm(f => ({ ...f, isPublic: !f.isPublic }))}
-                type="button"
-              >
-                <div className="video-form-toggle-knob" />
-              </button>
             </div>
 
             <div className="video-form-actions">

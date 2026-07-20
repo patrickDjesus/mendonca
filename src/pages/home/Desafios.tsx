@@ -5,7 +5,8 @@ import type { Subject } from '../../types/doc'
 import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import QuestionBuilder from '../../components/QuestionBuilder'
 import ChallengeBuilder from '../../components/ChallengeBuilder'
-import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, createChallenge, updateChallenge, createAttempt, upsertStreak, logActivity } from '../../lib/db'
+import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, createChallenge, updateChallenge, deleteChallenge, createAttempt, upsertStreak, logActivity } from '../../lib/db'
+import { supabase } from '../../lib/supabase'
 import '../../styles/desafios.css'
 
 /* ── Default empty state ─────────────────────────── */
@@ -39,7 +40,7 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a
 }
 
-type View = 'list' | 'quiz' | 'results' | 'create_question' | 'create_challenge' | 'edit_question'
+type View = 'list' | 'quiz' | 'results' | 'create_question' | 'create_challenge' | 'edit_question' | 'edit_challenge'
 
 export default function Desafios() {
   const [questions, setQuestions] = useState<ChallengeQuestion[]>([])
@@ -49,6 +50,7 @@ export default function Desafios() {
   const [loading, setLoading] = useState(true)
   const [selectedSubject, setSelectedSubject] = useState<Subject | 'Todas'>('Todas')
   const [view, setView] = useState<View>('list')
+  const [currentUserId, setCurrentUserId] = useState<string>('')
 
   const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null)
   const [currentQIndex, setCurrentQIndex] = useState(0)
@@ -58,14 +60,14 @@ export default function Desafios() {
   const [showFeedback, setShowFeedback] = useState(false)
   const [lastResult, setLastResult] = useState<ChallengeAttempt | null>(null)
 
-  const [matchSelected, setMatchSelected] = useState<{ left: string | null; right: string | null; matched: string[] }>({ left: null, right: null, matched: [] })
   const [dragOrder, setDragOrder] = useState<string[]>([])
   const [fillAnswers, setFillAnswers] = useState<Record<string, string>>({})
-  const [crosswordAnswers, setCrosswordAnswers] = useState<Record<string, string>>({})
   const [openText, setOpenText] = useState('')
   const [selfEval, setSelfEval] = useState<'correct' | 'wrong' | null>(null)
 
   const [editingQuestion, setEditingQuestion] = useState<ChallengeQuestion | null>(null)
+  const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null)
+  const [deleteChallengeTarget, setDeleteChallengeTarget] = useState<Challenge | null>(null)
 
   const startTimeRef = useRef<number>(0)
   const [elapsed, setElapsed] = useState(0)
@@ -111,14 +113,18 @@ export default function Desafios() {
     return () => { mounted = false }
   }, [])
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setCurrentUserId(user.id)
+    }).catch(() => {})
+  }, [])
+
   const resetQuizState = useCallback(() => {
     setSelectedOptionIds([])
     setTfAnswers({})
     setShowFeedback(false)
-    setMatchSelected({ left: null, right: null, matched: [] })
     setDragOrder([])
     setFillAnswers({})
-    setCrosswordAnswers({})
     setOpenText('')
     setSelfEval(null)
   }, [])
@@ -156,16 +162,12 @@ export default function Desafios() {
         return Object.keys(tfAnswers).length === q.statements.length
       case 'aberta':
         return true
-      case 'arrastar':
-        return matchSelected.matched.length === q.matchPairs.length
       case 'ordem':
         return dragOrder.length === q.orderItems.length
       case 'completar':
         return q.blanks.every(b => fillAnswers[b.id]?.trim())
-      case 'palavras_cruzadas':
-        return q.crosswordClues.every(c => crosswordAnswers[c.id]?.trim())
     }
-  }, [getCurrentQuestion, selectedOptionIds, tfAnswers, matchSelected, dragOrder, fillAnswers, crosswordAnswers])
+  }, [getCurrentQuestion, selectedOptionIds, tfAnswers, dragOrder, fillAnswers])
 
   const checkAnswer = useCallback((): boolean => {
     const q = getCurrentQuestion()
@@ -185,26 +187,14 @@ export default function Desafios() {
         })
       case 'aberta':
         return selfEval === 'correct'
-      case 'arrastar': {
-        const correctPairs = new Map(q.matchPairs.map(p => [p.left, p.right]))
-        const leftSelected = q.matchPairs.map(p => p.id)
-        return leftSelected.every(lId => {
-          const leftText = q.matchPairs.find(p => p.id === lId)?.left
-          const rightId = matchSelected.matched.find(m => m.startsWith(lId + ':'))?.split(':')[1]
-          const rightText = q.matchPairs.find(p => p.id === rightId)?.right
-          return leftText && rightText && correctPairs.get(leftText) === rightText
-        })
-      }
       case 'ordem': {
         const correctOrder = [...q.orderItems].sort((a, b) => a.correctOrder - b.correctOrder).map(i => i.id)
         return dragOrder.every((id, idx) => id === correctOrder[idx])
       }
       case 'completar':
         return q.blanks.every(b => fillAnswers[b.id]?.trim().toLowerCase() === b.answer.toLowerCase())
-      case 'palavras_cruzadas':
-        return q.crosswordClues.every(c => crosswordAnswers[c.id]?.trim().toUpperCase() === c.word.toUpperCase())
     }
-  }, [getCurrentQuestion, selectedOptionIds, tfAnswers, matchSelected, dragOrder, fillAnswers, crosswordAnswers, selfEval])
+  }, [getCurrentQuestion, selectedOptionIds, tfAnswers, dragOrder, fillAnswers, selfEval])
 
   /* ── Confirm / Next ───────────────────────────── */
 
@@ -216,10 +206,9 @@ export default function Desafios() {
     const correct = checkAnswer()
     setAnswers(prev => [...prev, {
       questionId: q.id, type: q.type, selectedOptionIds: q.type === 'verdadeiro_falso' ? Object.values(tfAnswers) : [...selectedOptionIds],
-      openText, matchAnswers: { ...matchSelected.matched.reduce((acc, m) => { const [l, r] = m.split(':'); acc[l] = r; return acc }, {} as Record<string, string>) },
-      orderAnswers: [...dragOrder], fillAnswers: { ...fillAnswers }, crosswordAnswers: { ...crosswordAnswers }, correct,
+      openText, orderAnswers: [...dragOrder], fillAnswers: { ...fillAnswers }, correct,
     }])
-  }, [activeChallenge, getCurrentQuestion, checkAnswer, selectedOptionIds, tfAnswers, openText, matchSelected, dragOrder, fillAnswers, crosswordAnswers])
+  }, [activeChallenge, getCurrentQuestion, checkAnswer, selectedOptionIds, tfAnswers, openText, dragOrder, fillAnswers])
 
   const handleNext = useCallback(() => {
     if (!activeChallenge) return
@@ -286,6 +275,23 @@ export default function Desafios() {
     setView('list')
   }, [])
 
+  const handleDeleteChallenge = useCallback(async () => {
+    if (!deleteChallengeTarget) return
+    try {
+      await deleteChallenge(deleteChallengeTarget.id)
+      setChallenges(prev => prev.filter(c => c.id !== deleteChallengeTarget.id))
+      logActivity('challenge_deleted', `Deletou "${deleteChallengeTarget.title}"`, 'challenge', '#c85050').catch(() => {})
+    } catch (e) {
+      console.error('Erro ao deletar desafio:', e)
+    }
+    setDeleteChallengeTarget(null)
+  }, [deleteChallengeTarget])
+
+  const handleEditChallenge = useCallback((challenge: Challenge) => {
+    setEditingChallenge(challenge)
+    setView('edit_challenge')
+  }, [])
+
   /* ── Initialize drag order on mount ───────────── */
 
   useEffect(() => {
@@ -307,7 +313,7 @@ export default function Desafios() {
     const progress = ((currentQIndex + 1) / activeChallenge.questionIds.length) * 100
 
     const renderQuizBody = () => {
-      if (q.content && q.type !== 'completar' && q.type !== 'palavras_cruzadas') {
+      if (q.content && q.type !== 'completar') {
         return <p className="quiz-content-text">{q.content}</p>
       }
       return null
@@ -400,40 +406,6 @@ export default function Desafios() {
               )}
             </div>
           )
-        case 'arrastar': {
-          const leftItems = q.matchPairs.map(p => ({ id: p.id, text: p.left }))
-          return (
-            <div className="quiz-match-container">
-              {leftItems.map(lItem => {
-                const matchedRight = matchSelected.matched.find(m => m.startsWith(lItem.id + ':'))?.split(':')[1]
-                const matchedRightText = q.matchPairs.find(p => p.id === matchedRight)?.right
-                const isCorrectMatch = showFeedback && matchedRightText === q.matchPairs.find(p => p.id === lItem.id)?.right
-                return (
-                  <div key={lItem.id} className="quiz-match-pair" style={{ display: 'contents' }}>
-                    <div className={`quiz-match-item ${matchedRight ? 'matched' : ''}`} style={{ gridRow: 'auto' }}>
-                      {lItem.text}
-                    </div>
-                    <div
-                      className={`quiz-match-item ${matchSelected.left === lItem.id ? 'selected' : ''} ${showFeedback ? (isCorrectMatch ? 'matched' : 'wrong-match') : ''}`}
-                      onClick={() => {
-                        if (showFeedback) return
-                        if (matchedRight) return
-                        if (matchSelected.left) {
-                          const newMatched = [...matchSelected.matched, matchSelected.left + ':' + lItem.id]
-                          setMatchSelected({ left: null, right: null, matched: newMatched })
-                        } else {
-                          setMatchSelected(prev => ({ ...prev, left: lItem.id }))
-                        }
-                      }}
-                    >
-                      {matchedRightText || (matchSelected.left === lItem.id ? '← Selecione' : '?')}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )
-        }
         case 'ordem': {
           const ordered = dragOrder.map(id => q.orderItems.find(i => i.id === id)!).filter(Boolean)
           return (
@@ -488,33 +460,6 @@ export default function Desafios() {
                   )}
                 </span>
               ))}
-            </div>
-          )
-        }
-        case 'palavras_cruzadas': {
-          return (
-            <div>
-              <div className="quiz-crossword-clues">
-                <p className="qb-hint" style={{ marginBottom: 8 }}>Resolva as palavras cruzadas:</p>
-                {q.crosswordClues.map(clue => (
-                  <div key={clue.id} className="quiz-crossword-clue">
-                    <strong>{clue.direction === 'across' ? '→' : '↓'} {clue.direction === 'across' ? 'Horizontal' : 'Vertical'}:</strong> {clue.clue}
-                    <input
-                      className={`quiz-fill-input ${showFeedback ? (crosswordAnswers[clue.id]?.toUpperCase() === clue.word ? 'correct' : 'wrong') : ''}`}
-                      value={crosswordAnswers[clue.id] || ''}
-                      placeholder="Sua resposta"
-                      disabled={showFeedback}
-                      style={{ marginLeft: 8, minWidth: 80 }}
-                      onChange={e => setCrosswordAnswers(prev => ({ ...prev, [clue.id]: e.target.value }))}
-                    />
-                    {showFeedback && (
-                      <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: crosswordAnswers[clue.id]?.toUpperCase() === clue.word ? '#64b478' : '#c85050' }}>
-                        ({clue.word})
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
             </div>
           )
         }
@@ -614,16 +559,17 @@ export default function Desafios() {
   }
 
   /* ═══════════════════════════════════════════════════
-     CREATE CHALLENGE VIEW
+     CREATE / EDIT CHALLENGE VIEW
      ═══════════════════════════════════════════════════ */
 
-  if (view === 'create_challenge') {
+  if (view === 'create_challenge' || view === 'edit_challenge') {
     return (
       <div className="desafios-page">
         <ChallengeBuilder
           allQuestions={questions}
+          initial={editingChallenge || undefined}
           onSave={handleSaveChallenge}
-          onCancel={() => setView('list')}
+          onCancel={() => { setView('list'); setEditingChallenge(null) }}
         />
       </div>
     )
@@ -706,6 +652,7 @@ export default function Desafios() {
         {filteredChallenges.map(challenge => {
           const isAttempted = attemptIds.has(challenge.id)
           const best = attempts.filter(a => a.challengeId === challenge.id).sort((a, b) => b.score - a.score)[0]
+          const isOwner = currentUserId && challenge.userId === currentUserId
           return (
             <div key={challenge.id} className={`desafio-card ${isAttempted ? 'attempted' : ''}`} onClick={() => !isAttempted && startChallenge(challenge)}>
               <div className="desafio-card-top">
@@ -720,6 +667,22 @@ export default function Desafios() {
               <div className="desafio-card-footer">
                 <span className="desafio-card-subject" style={{ background: SUBJECT_COLORS[challenge.subject]?.bg, color: SUBJECT_COLORS[challenge.subject]?.text }}>{challenge.subject}</span>
                 {challenge.crossSubjects && challenge.crossSubjects.length > 0 && <span className="desafio-card-cross">+ {challenge.crossSubjects.join(', ')}</span>}
+                {isOwner && (
+                  <div className="desafio-card-actions" onClick={e => e.stopPropagation()}>
+                    <button className="desafio-card-action-btn edit" onClick={() => handleEditChallenge(challenge)} type="button" title="Editar desafio">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                        <path d="m15 5 4 4" />
+                      </svg>
+                    </button>
+                    <button className="desafio-card-action-btn delete" onClick={() => setDeleteChallengeTarget(challenge)} type="button" title="Deletar desafio">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )
@@ -732,6 +695,27 @@ export default function Desafios() {
           </div>
         )}
       </div>
+
+      {deleteChallengeTarget && (
+        <div className="video-modal-overlay" onClick={() => setDeleteChallengeTarget(null)}>
+          <div className="video-modal video-confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="video-confirm-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
+            </div>
+            <h3 className="video-modal-title">Deletar desafio?</h3>
+            <p className="video-confirm-text">"{deleteChallengeTarget.title}" será removido permanentemente.</p>
+            <div className="video-form-actions">
+              <button className="video-form-cancel" onClick={() => setDeleteChallengeTarget(null)} type="button">Cancelar</button>
+              <button className="video-form-confirm video-form-delete" onClick={handleDeleteChallenge} type="button">Deletar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

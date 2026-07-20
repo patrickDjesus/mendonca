@@ -170,6 +170,7 @@ export async function deleteChallenge(id: string): Promise<void> {
 function rowToChallenge(row: Record<string, unknown>): Challenge {
   return {
     id: row.id as string,
+    userId: (row.user_id as string) || undefined,
     title: row.title as string,
     description: (row.description as string) || undefined,
     subject: row.subject as Challenge['subject'],

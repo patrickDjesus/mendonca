@@ -7,31 +7,16 @@ export type QuestionType =
   | 'multipla_multipla'
   | 'verdadeiro_falso'
   | 'aberta'
-  | 'arrastar'
   | 'ordem'
   | 'completar'
-  | 'palavras_cruzadas'
 
 export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   multipla: 'Múltipla escolha',
   multipla_multipla: 'Múltiplas alternativas',
   verdadeiro_falso: 'Verdadeiro ou Falso',
   aberta: 'Aberta',
-  arrastar: 'Arrastar e corresponder',
   ordem: 'Colocar em ordem',
   completar: 'Completar frase',
-  palavras_cruzadas: 'Palavras cruzadas',
-}
-
-export const QUESTION_TYPE_ICONS: Record<QuestionType, string> = {
-  multipla: 'circle-check',
-  multipla_multipla: 'checks',
-  verdadeiro_falso: 'toggle-right',
-  aberta: 'pen-line',
-  arrastar: ' grip-vertical',
-  ordem: 'list-ordered',
-  completar: 'text-cursor-input',
-  palavras_cruzadas: 'grid-3x3',
 }
 
 export interface ChallengeOption {
@@ -46,12 +31,6 @@ export interface TrueFalseStatement {
   correct: boolean
 }
 
-export interface MatchPair {
-  id: string
-  left: string
-  right: string
-}
-
 export interface OrderItem {
   id: string
   text: string
@@ -61,15 +40,6 @@ export interface OrderItem {
 export interface CompletarBlank {
   id: string
   answer: string
-}
-
-export interface CrosswordClue {
-  id: string
-  word: string
-  clue: string
-  direction: 'across' | 'down'
-  row: number
-  col: number
 }
 
 export interface ChallengeQuestion {
@@ -82,16 +52,14 @@ export interface ChallengeQuestion {
   explanation?: string
   options: ChallengeOption[]
   statements: TrueFalseStatement[]
-  matchPairs: MatchPair[]
   orderItems: OrderItem[]
   blanks: CompletarBlank[]
   openExpectedText?: string
-  crosswordClues: CrosswordClue[]
-  crosswordSize: number
 }
 
 export interface Challenge {
   id: string
+  userId?: string
   title: string
   description?: string
   subject: Subject
@@ -109,10 +77,8 @@ export interface QuestionAnswer {
   type: QuestionType
   selectedOptionIds: string[]
   openText: string
-  matchAnswers: Record<string, string>
   orderAnswers: string[]
   fillAnswers: Record<string, string>
-  crosswordAnswers: Record<string, string>
   correct: boolean
 }
 

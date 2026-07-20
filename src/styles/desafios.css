@@ -1820,3 +1820,382 @@
 .quiz-crossword-clue strong {
   color: #d4a843;
 }
+
+/* ================================
+   Wizard Styles
+   ================================ */
+
+.qb-wizard {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 40px 0;
+  animation: builderIn 0.3s ease both;
+}
+
+.qb-wizard-step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 36px;
+}
+
+.qb-wizard-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(200, 180, 140, 0.1);
+  border: 2px solid rgba(200, 180, 140, 0.15);
+  transition: all 0.3s ease;
+}
+
+.qb-wizard-dot.active {
+  background: rgba(100, 180, 120, 0.3);
+  border-color: rgba(100, 180, 120, 0.5);
+  box-shadow: 0 0 12px rgba(100, 180, 120, 0.2);
+}
+
+.qb-wizard-dot.completed {
+  background: rgba(100, 180, 120, 0.5);
+  border-color: rgba(100, 180, 120, 0.6);
+}
+
+.qb-wizard-line {
+  width: 60px;
+  height: 2px;
+  background: rgba(200, 180, 140, 0.1);
+  transition: background 0.3s ease;
+}
+
+.qb-wizard-line.completed {
+  background: rgba(100, 180, 120, 0.4);
+}
+
+.qb-wizard-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #e8dcc8;
+  text-align: center;
+  margin: 0 0 8px;
+}
+
+.qb-wizard-desc {
+  font-size: 14px;
+  color: #7a6a5a;
+  text-align: center;
+  margin: 0 0 32px;
+}
+
+.qb-wizard-progress {
+  height: 3px;
+  background: rgba(200, 180, 140, 0.08);
+  border-radius: 3px;
+  margin-bottom: 28px;
+  overflow: hidden;
+}
+
+.qb-wizard-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #64b478, #64b4c8);
+  border-radius: 3px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.qb-wizard-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.qb-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.qb-wizard-subject-badge {
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.qb-wizard-footer {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0 0;
+}
+
+/* ── Count Grid ─────────────────────────────────── */
+
+.qb-wizard-count-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.qb-wizard-count-btn {
+  aspect-ratio: 1;
+  border-radius: 16px;
+  border: 2px solid rgba(200, 180, 140, 0.1);
+  background: rgba(200, 180, 140, 0.04);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qb-wizard-count-btn:hover {
+  border-color: rgba(100, 180, 200, 0.3);
+  background: rgba(100, 180, 200, 0.08);
+  transform: translateY(-2px);
+}
+
+.qb-wizard-count-btn.active {
+  border-color: rgba(100, 180, 120, 0.5);
+  background: rgba(100, 180, 120, 0.12);
+}
+
+.qb-wizard-count-num {
+  font-size: 24px;
+  font-weight: 800;
+  color: #8a7a6a;
+  transition: color 0.2s ease;
+}
+
+.qb-wizard-count-btn:hover .qb-wizard-count-num {
+  color: #64b4c8;
+}
+
+.qb-wizard-count-btn.active .qb-wizard-count-num {
+  color: #64b478;
+}
+
+/* ── Subject Grid ───────────────────────────────── */
+
+.qb-wizard-subject-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.qb-wizard-subject-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 12px;
+  border-radius: 16px;
+  border: 2px solid rgba(200, 180, 140, 0.08);
+  background: rgba(200, 180, 140, 0.03);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.qb-wizard-subject-btn:hover {
+  border-color: var(--subject-color, rgba(200, 180, 140, 0.3));
+  background: var(--subject-bg, rgba(200, 180, 140, 0.08));
+  transform: translateY(-3px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.qb-wizard-subject-btn.active {
+  border-color: var(--subject-color, rgba(100, 180, 120, 0.5));
+  background: var(--subject-bg, rgba(100, 180, 120, 0.12));
+  transform: translateY(-3px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.qb-wizard-subject-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(200, 180, 140, 0.06);
+  color: var(--subject-color, #8a7a6a);
+  transition: all 0.25s ease;
+}
+
+.qb-wizard-subject-btn:hover .qb-wizard-subject-icon,
+.qb-wizard-subject-btn.active .qb-wizard-subject-icon {
+  background: var(--subject-bg, rgba(200, 180, 140, 0.12));
+  color: var(--subject-color, #e8dcc8);
+}
+
+.qb-wizard-subject-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.qb-wizard-subject-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #8a7a6a;
+  transition: color 0.2s ease;
+}
+
+.qb-wizard-subject-btn:hover .qb-wizard-subject-name,
+.qb-wizard-subject-btn.active .qb-wizard-subject-name {
+  color: var(--subject-color, #e8dcc8);
+}
+
+/* ── Type Grid (Wizard) ─────────────────────────── */
+
+.qb-wizard-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.qb-wizard-type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 14px;
+  border-radius: 14px;
+  border: 2px solid rgba(200, 180, 140, 0.08);
+  background: var(--type-default, rgba(200, 180, 140, 0.04));
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: center;
+}
+
+.qb-wizard-type-btn:hover {
+  border-color: var(--type-hover, rgba(200, 180, 140, 0.25));
+  background: var(--type-hover, rgba(200, 180, 140, 0.1));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.qb-wizard-type-btn.active {
+  border-color: var(--type-active, rgba(100, 180, 120, 0.5));
+  background: var(--type-active, rgba(100, 180, 120, 0.15));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.qb-wizard-type-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(200, 180, 140, 0.06);
+  color: var(--type-color, #8a7a6a);
+  transition: all 0.25s ease;
+}
+
+.qb-wizard-type-btn:hover .qb-wizard-type-icon,
+.qb-wizard-type-btn.active .qb-wizard-type-icon {
+  background: var(--type-hover, rgba(200, 180, 140, 0.15));
+  color: var(--type-color, #e8dcc8);
+}
+
+.qb-wizard-type-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.qb-wizard-type-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--type-color, #a89878);
+  transition: color 0.2s ease;
+}
+
+.qb-wizard-type-btn:hover .qb-wizard-type-name,
+.qb-wizard-type-btn.active .qb-wizard-type-name {
+  color: var(--type-color, #e8dcc8);
+}
+
+.qb-wizard-type-desc {
+  font-size: 11px;
+  color: #5a4a3a;
+  line-height: 1.4;
+  display: none;
+}
+
+.qb-wizard-type-btn:hover .qb-wizard-type-desc,
+.qb-wizard-type-btn.active .qb-wizard-type-desc {
+  display: block;
+}
+
+/* ── Challenge Card Actions (edit/delete) ───────── */
+
+.desafio-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.desafio-card-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(200, 180, 140, 0.1);
+  background: rgba(200, 180, 140, 0.04);
+  color: #7a6a5a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.desafio-card-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.desafio-card-action-btn.edit:hover {
+  background: rgba(100, 180, 200, 0.12);
+  border-color: rgba(100, 180, 200, 0.25);
+  color: #64b4c8;
+}
+
+.desafio-card-action-btn.delete:hover {
+  background: rgba(200, 80, 80, 0.12);
+  border-color: rgba(200, 80, 80, 0.25);
+  color: #c85050;
+}
+
+/* ── Responsive Wizard ──────────────────────────── */
+
+@media (max-width: 768px) {
+  .qb-wizard-count-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .qb-wizard-subject-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .qb-wizard-type-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .qb-wizard-title {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .qb-wizard-subject-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .qb-wizard-type-grid {
+    grid-template-columns: 1fr;
+  }
+}
