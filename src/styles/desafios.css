@@ -2169,6 +2169,22 @@
   color: #c85050;
 }
 
+.desafio-card-action-btn.view-questions {
+  width: auto;
+  padding: 6px 12px;
+  border-radius: 8px;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #d4a843;
+}
+
+.desafio-card-action-btn.view-questions svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
 .desafio-card-action-btn.view-questions:hover {
   background: rgba(212, 168, 67, 0.12);
   border-color: rgba(212, 168, 67, 0.25);

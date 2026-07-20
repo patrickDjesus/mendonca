@@ -691,11 +691,12 @@ export default function Desafios() {
                 <span className="desafio-card-subject" style={{ background: SUBJECT_COLORS[challenge.subject]?.bg, color: SUBJECT_COLORS[challenge.subject]?.text }}>{challenge.subject}</span>
                 {challenge.crossSubjects && challenge.crossSubjects.length > 0 && <span className="desafio-card-cross">+ {challenge.crossSubjects.join(', ')}</span>}
                 <div className="desafio-card-actions" onClick={e => e.stopPropagation()}>
-                  <button className="desafio-card-action-btn view-questions" onClick={() => setViewingQuestionsChallenge(challenge)} type="button" title="Ver questões">
+                  <button className="desafio-card-action-btn view-questions" onClick={() => setViewingQuestionsChallenge(challenge)} type="button">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
                       <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
                     </svg>
+                    <span>Ver questões</span>
                   </button>
                   {isOwner && (
                     <>
