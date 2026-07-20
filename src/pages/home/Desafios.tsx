@@ -5,7 +5,7 @@ import type { Subject } from '../../types/doc'
 import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import QuestionBuilder from '../../components/QuestionBuilder'
 import ChallengeBuilder from '../../components/ChallengeBuilder'
-import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, createChallenge, updateChallenge, deleteChallenge, createAttempt, upsertStreak, logActivity } from '../../lib/db'
+import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, deleteQuestion, createChallenge, updateChallenge, deleteChallenge, createAttempt, upsertStreak, logActivity } from '../../lib/db'
 import { supabase } from '../../lib/supabase'
 import '../../styles/desafios.css'
 
@@ -68,6 +68,8 @@ export default function Desafios() {
   const [editingQuestion, setEditingQuestion] = useState<ChallengeQuestion | null>(null)
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null)
   const [deleteChallengeTarget, setDeleteChallengeTarget] = useState<Challenge | null>(null)
+  const [viewingQuestionsChallenge, setViewingQuestionsChallenge] = useState<Challenge | null>(null)
+  const [deleteQuestionTarget, setDeleteQuestionTarget] = useState<ChallengeQuestion | null>(null)
 
   const startTimeRef = useRef<number>(0)
   const [elapsed, setElapsed] = useState(0)
@@ -291,6 +293,27 @@ export default function Desafios() {
     setEditingChallenge(challenge)
     setView('edit_challenge')
   }, [])
+
+  const handleEditQuestionFromList = useCallback((q: ChallengeQuestion) => {
+    setEditingQuestion(q)
+    setView('edit_question')
+  }, [])
+
+  const handleDeleteQuestionFromList = useCallback(async () => {
+    if (!deleteQuestionTarget) return
+    try {
+      await deleteQuestion(deleteQuestionTarget.id)
+      setQuestions(prev => prev.filter(q => q.id !== deleteQuestionTarget.id))
+      setChallenges(prev => prev.map(c => ({
+        ...c,
+        questionIds: c.questionIds.filter(id => id !== deleteQuestionTarget.id),
+      })))
+      logActivity('question_deleted', `Deletou questão "${deleteQuestionTarget.title}"`, 'challenge', '#c85050').catch(() => {})
+    } catch (e) {
+      console.error('Erro ao deletar questão:', e)
+    }
+    setDeleteQuestionTarget(null)
+  }, [deleteQuestionTarget])
 
   /* ── Initialize drag order on mount ───────────── */
 
@@ -667,22 +690,30 @@ export default function Desafios() {
               <div className="desafio-card-footer">
                 <span className="desafio-card-subject" style={{ background: SUBJECT_COLORS[challenge.subject]?.bg, color: SUBJECT_COLORS[challenge.subject]?.text }}>{challenge.subject}</span>
                 {challenge.crossSubjects && challenge.crossSubjects.length > 0 && <span className="desafio-card-cross">+ {challenge.crossSubjects.join(', ')}</span>}
-                {isOwner && (
-                  <div className="desafio-card-actions" onClick={e => e.stopPropagation()}>
-                    <button className="desafio-card-action-btn edit" onClick={() => handleEditChallenge(challenge)} type="button" title="Editar desafio">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                        <path d="m15 5 4 4" />
-                      </svg>
-                    </button>
-                    <button className="desafio-card-action-btn delete" onClick={() => setDeleteChallengeTarget(challenge)} type="button" title="Deletar desafio">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
+                <div className="desafio-card-actions" onClick={e => e.stopPropagation()}>
+                  <button className="desafio-card-action-btn view-questions" onClick={() => setViewingQuestionsChallenge(challenge)} type="button" title="Ver questões">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                    </svg>
+                  </button>
+                  {isOwner && (
+                    <>
+                      <button className="desafio-card-action-btn edit" onClick={() => handleEditChallenge(challenge)} type="button" title="Editar desafio">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                          <path d="m15 5 4 4" />
+                        </svg>
+                      </button>
+                      <button className="desafio-card-action-btn delete" onClick={() => setDeleteChallengeTarget(challenge)} type="button" title="Deletar desafio">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           )
@@ -712,6 +743,77 @@ export default function Desafios() {
             <div className="video-form-actions">
               <button className="video-form-cancel" onClick={() => setDeleteChallengeTarget(null)} type="button">Cancelar</button>
               <button className="video-form-confirm video-form-delete" onClick={handleDeleteChallenge} type="button">Deletar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewingQuestionsChallenge && (
+        <div className="video-modal-overlay" onClick={() => setViewingQuestionsChallenge(null)}>
+          <div className="qb-container questions-view-modal" onClick={e => e.stopPropagation()}>
+            <div className="qb-header">
+              <div>
+                <h3 className="qb-title">Questões de "{viewingQuestionsChallenge.title}"</h3>
+                <span style={{ fontSize: 13, color: '#7a6a5a' }}>{viewingQuestionsChallenge.questionIds.length} questões</span>
+              </div>
+              <button className="qb-cancel-btn" onClick={() => setViewingQuestionsChallenge(null)} type="button">Fechar</button>
+            </div>
+            <div className="qb-body">
+              {viewingQuestionsChallenge.questionIds.length === 0 && (
+                <div className="cb-empty">Nenhuma questão neste desafio.</div>
+              )}
+              {viewingQuestionsChallenge.questionIds.map((qId, idx) => {
+                const q = questionMap.get(qId)
+                if (!q) return null
+                return (
+                  <div key={qId} className="question-view-item">
+                    <div className="question-view-num">{idx + 1}</div>
+                    <div className="question-view-info">
+                      <span className="question-view-title">{q.title}</span>
+                      <div className="question-view-meta">
+                        <span className="question-view-type">{QUESTION_TYPE_LABELS[q.type]}</span>
+                        <span className="question-view-subject" style={{ background: SUBJECT_COLORS[q.subject]?.bg, color: SUBJECT_COLORS[q.subject]?.text }}>{q.subject}</span>
+                      </div>
+                      {q.content && <p className="question-view-content">{q.content}</p>}
+                    </div>
+                    <div className="question-view-actions">
+                      <button className="desafio-card-action-btn edit" onClick={() => { setViewingQuestionsChallenge(null); handleEditQuestionFromList(q) }} type="button" title="Editar questão">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                          <path d="m15 5 4 4" />
+                        </svg>
+                      </button>
+                      <button className="desafio-card-action-btn delete" onClick={() => setDeleteQuestionTarget(q)} type="button" title="Deletar questão">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteQuestionTarget && (
+        <div className="video-modal-overlay" onClick={() => setDeleteQuestionTarget(null)}>
+          <div className="video-modal video-confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="video-confirm-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
+            </div>
+            <h3 className="video-modal-title">Deletar questão?</h3>
+            <p className="video-confirm-text">"{deleteQuestionTarget.title}" será removida permanentemente de todos os desafios.</p>
+            <div className="video-form-actions">
+              <button className="video-form-cancel" onClick={() => setDeleteQuestionTarget(null)} type="button">Cancelar</button>
+              <button className="video-form-confirm video-form-delete" onClick={handleDeleteQuestionFromList} type="button">Deletar</button>
             </div>
           </div>
         </div>
