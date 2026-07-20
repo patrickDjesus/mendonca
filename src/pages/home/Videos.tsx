@@ -91,7 +91,7 @@ export default function Videos() {
   }, [])
 
   const handleAdd = useCallback(async () => {
-    if (!addForm.videoUrl.trim()) return
+    if (!addForm.videoUrl.trim() || !addForm.subject) return
     const newVideo: VideoMeta = {
       id: generateId(),
       title: addForm.title || 'Novo Vídeo',

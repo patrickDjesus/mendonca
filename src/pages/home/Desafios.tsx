@@ -17,7 +17,7 @@ const EMPTY_STREAK: UserStreak = {
 const DIFFICULTY_LABELS: Record<ChallengeDifficulty, string> = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil' }
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F']
 
-function calculateScore(correct: number, wrong: number, timeMs: number, total: number, diff: ChallengeDifficulty) {
+function calculateScore(correct: number, _wrong: number, timeMs: number, total: number, diff: ChallengeDifficulty) {
   const base = diff === 'facil' ? 100 : diff === 'medio' ? 150 : 200
   const pts = correct * base
   const budget = total * 30_000
@@ -54,6 +54,7 @@ export default function Desafios() {
   const [currentQIndex, setCurrentQIndex] = useState(0)
   const [answers, setAnswers] = useState<QuestionAnswer[]>([])
   const [selectedOptionIds, setSelectedOptionIds] = useState<string[]>([])
+  const [tfAnswers, setTfAnswers] = useState<Record<string, 'true' | 'false'>>({})
   const [showFeedback, setShowFeedback] = useState(false)
   const [lastResult, setLastResult] = useState<ChallengeAttempt | null>(null)
 
@@ -112,6 +113,7 @@ export default function Desafios() {
 
   const resetQuizState = useCallback(() => {
     setSelectedOptionIds([])
+    setTfAnswers({})
     setShowFeedback(false)
     setMatchSelected({ left: null, right: null, matched: [] })
     setDragOrder([])
@@ -151,7 +153,7 @@ export default function Desafios() {
       case 'multipla_multipla':
         return selectedOptionIds.length > 0
       case 'verdadeiro_falso':
-        return selectedOptionIds.length === q.statements.length
+        return Object.keys(tfAnswers).length === q.statements.length
       case 'aberta':
         return true
       case 'arrastar':
@@ -163,7 +165,7 @@ export default function Desafios() {
       case 'palavras_cruzadas':
         return q.crosswordClues.every(c => crosswordAnswers[c.id]?.trim())
     }
-  }, [getCurrentQuestion, selectedOptionIds, matchSelected, dragOrder, fillAnswers, crosswordAnswers])
+  }, [getCurrentQuestion, selectedOptionIds, tfAnswers, matchSelected, dragOrder, fillAnswers, crosswordAnswers])
 
   const checkAnswer = useCallback((): boolean => {
     const q = getCurrentQuestion()
@@ -177,8 +179,8 @@ export default function Desafios() {
         return correctIds.size === selectedSet.size && [...correctIds].every(id => selectedSet.has(id))
       }
       case 'verdadeiro_falso':
-        return q.statements.every((s, i) => {
-          const selectedCorrect = selectedOptionIds[i] === 'true'
+        return q.statements.every(s => {
+          const selectedCorrect = tfAnswers[s.id] === 'true'
           return s.correct === selectedCorrect
         })
       case 'aberta':
@@ -202,7 +204,7 @@ export default function Desafios() {
       case 'palavras_cruzadas':
         return q.crosswordClues.every(c => crosswordAnswers[c.id]?.trim().toUpperCase() === c.word.toUpperCase())
     }
-  }, [getCurrentQuestion, selectedOptionIds, matchSelected, dragOrder, fillAnswers, crosswordAnswers, selfEval])
+  }, [getCurrentQuestion, selectedOptionIds, tfAnswers, matchSelected, dragOrder, fillAnswers, crosswordAnswers, selfEval])
 
   /* ── Confirm / Next ───────────────────────────── */
 
@@ -213,11 +215,11 @@ export default function Desafios() {
     if (!q) return
     const correct = checkAnswer()
     setAnswers(prev => [...prev, {
-      questionId: q.id, type: q.type, selectedOptionIds: [...selectedOptionIds],
+      questionId: q.id, type: q.type, selectedOptionIds: q.type === 'verdadeiro_falso' ? Object.values(tfAnswers) : [...selectedOptionIds],
       openText, matchAnswers: { ...matchSelected.matched.reduce((acc, m) => { const [l, r] = m.split(':'); acc[l] = r; return acc }, {} as Record<string, string>) },
       orderAnswers: [...dragOrder], fillAnswers: { ...fillAnswers }, crosswordAnswers: { ...crosswordAnswers }, correct,
     }])
-  }, [activeChallenge, getCurrentQuestion, checkAnswer, selectedOptionIds, openText, matchSelected, dragOrder, fillAnswers, crosswordAnswers])
+  }, [activeChallenge, getCurrentQuestion, checkAnswer, selectedOptionIds, tfAnswers, openText, matchSelected, dragOrder, fillAnswers, crosswordAnswers])
 
   const handleNext = useCallback(() => {
     if (!activeChallenge) return
@@ -347,7 +349,7 @@ export default function Desafios() {
           return (
             <div className="quiz-options">
               {q.statements.map(st => {
-                const selectedVal = selectedOptionIds[st.id]
+                const selectedVal = tfAnswers[st.id]
                 let cls = 'quiz-option'
                 if (showFeedback) {
                   const isCorrect = (selectedVal === 'true') === st.correct
@@ -358,8 +360,8 @@ export default function Desafios() {
                     <span className="quiz-option-text" style={{ flex: 1 }}>{st.text}</span>
                     {!showFeedback && (
                       <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                        <button className={`quiz-tf-btn ${selectedVal === 'true' ? 'active' : ''}`} onClick={() => { const u = { ...selectedOptionIds }; u[st.id] = 'true'; setSelectedOptionIds(u) }} type="button">V</button>
-                        <button className={`quiz-tf-btn ${selectedVal === 'false' ? 'active' : ''}`} onClick={() => { const u = { ...selectedOptionIds }; u[st.id] = 'false'; setSelectedOptionIds(u) }} type="button">F</button>
+                        <button className={`quiz-tf-btn ${selectedVal === 'true' ? 'active' : ''}`} onClick={() => { setTfAnswers(prev => ({ ...prev, [st.id]: 'true' })) }} type="button">V</button>
+                        <button className={`quiz-tf-btn ${selectedVal === 'false' ? 'active' : ''}`} onClick={() => { setTfAnswers(prev => ({ ...prev, [st.id]: 'false' })) }} type="button">F</button>
                       </div>
                     )}
                     {showFeedback && (
@@ -397,7 +399,7 @@ export default function Desafios() {
             <div className="quiz-match-container">
               {leftItems.map(lItem => {
                 const matchedRight = matchSelected.matched.find(m => m.startsWith(lItem.id + ':'))?.split(':')[1]
-                const matchedRightText = q.matchPairs.find(p => p.id === matchedRight)?.text
+                const matchedRightText = q.matchPairs.find(p => p.id === matchedRight)?.right
                 const isCorrectMatch = showFeedback && matchedRightText === q.matchPairs.find(p => p.id === lItem.id)?.right
                 return (
                   <div key={lItem.id} className="quiz-match-pair" style={{ display: 'contents' }}>
