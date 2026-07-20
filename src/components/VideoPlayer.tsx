@@ -82,9 +82,6 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(function VideoPlayer(
     htmlTimeupdateCleanup.current = () => {
       el.removeEventListener('timeupdate', handler)
     }
-    timeIntervalRef.current = setInterval(() => {
-      if (el && !el.paused) onTimeUpdate?.(el.currentTime)
-    }, 500)
   }, [stopTimeTracking, onTimeUpdate, onPlayingChange])
 
   useImperativeHandle(ref, () => ({

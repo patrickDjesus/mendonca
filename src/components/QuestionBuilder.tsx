@@ -4,9 +4,6 @@ import { QUESTION_TYPE_LABELS } from '../types/challenge'
 import type { Subject } from '../types/doc'
 import { SUBJECTS } from '../types/doc'
 
-let _id = 0
-const uid = (prefix = 'q') => `${prefix}_${Date.now()}_${++_id}`
-
 const QUESTION_TYPES: QuestionType[] = [
   'multipla',
   'multipla_multipla',
@@ -36,32 +33,32 @@ interface Props {
 }
 
 function newOption(text = '', correct = false): ChallengeOption {
-  return { id: uid('opt'), text, correct }
+  return { id: crypto.randomUUID(), text, correct }
 }
 
 function newStatement(text = '', correct = true): TrueFalseStatement {
-  return { id: uid('st'), text, correct }
+  return { id: crypto.randomUUID(), text, correct }
 }
 
 function newPair(left = '', right = ''): MatchPair {
-  return { id: uid('pr'), left, right }
+  return { id: crypto.randomUUID(), left, right }
 }
 
 function newOrderItem(text = '', correctOrder = 0): OrderItem {
-  return { id: uid('oi'), text, correctOrder }
+  return { id: crypto.randomUUID(), text, correctOrder }
 }
 
 function newBlank(answer = ''): CompletarBlank {
-  return { id: uid('bl'), answer }
+  return { id: crypto.randomUUID(), answer }
 }
 
 function newClue(word = '', clue = '', direction: 'across' | 'down' = 'across', row = 0, col = 0): CrosswordClue {
-  return { id: uid('cl'), word, clue, direction, row, col }
+  return { id: crypto.randomUUID(), word, clue, direction, row, col }
 }
 
 function emptyQuestion(): ChallengeQuestion {
   return {
-    id: uid('q'),
+    id: crypto.randomUUID(),
     type: 'multipla',
     title: '',
     subject: 'Matemática',

@@ -14,14 +14,7 @@ export default function FantasyScene() {
     <div className="shelf-scene" onMouseMove={handleMouseMove}>
       <div className="mouse-glow" />
       <div className="study-logo shelf-logo">
-        <svg viewBox="0 0 64 64" fill="none">
-          <path d="M32 16C18 16 6 28 6 32C6 36 18 52 32 52C46 52 58 36 58 32C58 28 46 16 32 16Z" stroke="currentColor" strokeWidth="2" fill="none" />
-          <circle cx="32" cy="32" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
-          <circle cx="32" cy="32" r="4" fill="currentColor" className="eye-pupil" />
-          <circle cx="32" cy="32" r="2" fill="currentColor" opacity="0.4" className="eye-glow" />
-          <path d="M10 30C14 20 22 16 32 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
-          <path d="M10 34C14 44 22 52 32 52" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
-        </svg>
+        <img src="/logo.png" alt="Mendonça" className="shelf-logo-img" />
         <span className="logo-text">Mendonça</span>
       </div>
 

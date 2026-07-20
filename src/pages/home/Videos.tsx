@@ -8,6 +8,25 @@ import { extractYoutubeId } from '../../utils/youtube'
 import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, logActivity } from '../../lib/db'
 import '../../styles/videos.css'
 
+function formatTimestamp(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
+
+function getSavedProgress(videoId: string): number {
+  try {
+    const raw = localStorage.getItem(getProgressKey(videoId))
+    if (raw) {
+      const data = JSON.parse(raw)
+      return data.time || 0
+    }
+  } catch { /* noop */ }
+  return 0
+}
+
+
+function getProgressKey(videoId: string) { return `video_progress_${videoId}` }
 
 export default function Videos() {
   const [videos, setVideos] = useState<VideoMeta[]>([])
@@ -20,6 +39,8 @@ export default function Videos() {
   const [duration, setDuration] = useState(0)
   const [watchTimeAccum, setWatchTimeAccum] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [resumePrompt, setResumePrompt] = useState<{ video: VideoMeta; seconds: number } | null>(null)
   const videoPlayerRef = useRef<VideoPlayerHandle>(null)
   const watchTimeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const scrollRefs = useRef<Map<string, HTMLDivElement>>(new Map())
@@ -27,6 +48,15 @@ export default function Videos() {
   const dragRef = useRef({ active: false, el: null as HTMLDivElement | null, startX: 0, scrollLeft: 0 })
   const dragMoved = useRef(false)
   const dragRowCleanup = useRef<(() => void) | null>(null)
+
+  const savedProgressMap = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const v of videos) {
+      const t = getSavedProgress(v.id)
+      if (t > 0) map.set(v.id, t)
+    }
+    return map
+  }, [videos])
 
   const initDrag = useCallback((row: HTMLDivElement, startX: number) => {
     dragRef.current = { active: true, el: row, startX, scrollLeft: row.scrollLeft }
@@ -70,16 +100,27 @@ export default function Videos() {
     const map = new Map<Subject, VideoMeta[]>()
     for (const s of SUBJECTS) map.set(s, [])
     for (const v of videos) {
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase()
+        const match = v.title.toLowerCase().includes(q) || (v.description || '').toLowerCase().includes(q)
+        if (!match) continue
+      }
       const arr = map.get(v.subject)
       if (arr) arr.push(v)
     }
     return Array.from(map.entries()).filter(([, vids]) => vids.length > 0)
-  }, [videos])
+  }, [videos, searchQuery])
 
   const heroVideo = useMemo(() => {
-    if (videos.length === 0) return null
-    return videos.reduce((latest, v) => v.createdAt > latest.createdAt ? v : latest, videos[0])
-  }, [videos])
+    const filtered = searchQuery.trim()
+      ? videos.filter(v => {
+          const q = searchQuery.toLowerCase()
+          return v.title.toLowerCase().includes(q) || (v.description || '').toLowerCase().includes(q)
+        })
+      : videos
+    if (filtered.length === 0) return null
+    return filtered.reduce((latest, v) => v.createdAt > latest.createdAt ? v : latest, filtered[0])
+  }, [videos, searchQuery])
 
   const scrollRow = useCallback((subject: Subject, dir: -1 | 1) => {
     const el = scrollRefs.current.get(subject)
@@ -175,6 +216,17 @@ export default function Videos() {
     }
   }, [watchingVideo, isPlaying])
 
+  useEffect(() => {
+    if (!watchingVideo || currentTime < 3) return
+    const key = getProgressKey(watchingVideo.id)
+    try {
+      const existing = JSON.parse(localStorage.getItem(key) || '{}')
+      existing.time = currentTime
+      existing.updatedAt = Date.now()
+      localStorage.setItem(key, JSON.stringify(existing))
+    } catch { /* noop */ }
+  }, [watchingVideo, currentTime])
+
   const handleAddNote = useCallback((note: VideoNote) => {
     const fullNote = { ...note, videoId: watchingVideo?.id || '' }
     setNotes(prev => [...prev, fullNote])
@@ -199,6 +251,16 @@ export default function Videos() {
     setWatchTimeAccum(0)
     setIsPlaying(false)
     fetchVideoNotes(video.id).then(setNotes).catch(console.error)
+
+    try {
+      const raw = localStorage.getItem(getProgressKey(video.id))
+      if (raw) {
+        const data = JSON.parse(raw)
+        if (data.time && data.time > 10) {
+          setResumePrompt({ video, seconds: data.time })
+        }
+      }
+    } catch { /* noop */ }
   }, [])
 
   const formatWatchTime = useCallback((totalSec: number): string => {
@@ -222,13 +284,36 @@ export default function Videos() {
           </svg>
           <h1 className="videos-page-title">Videoaulas</h1>
         </div>
-        <button className="videos-add-btn" onClick={() => setShowAddModal(true)} type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          Adicionar vídeo
-        </button>
+        <div className="videos-topbar-right">
+          <div className="videos-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              className="videos-search-input"
+              type="text"
+              placeholder="Buscar vídeos..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button className="videos-search-clear" onClick={() => setSearchQuery('')} type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            )}
+          </div>
+          <button className="videos-add-btn" onClick={() => setShowAddModal(true)} type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Adicionar vídeo
+          </button>
+        </div>
       </div>
 
       {!watchingVideo && (
@@ -349,6 +434,14 @@ export default function Videos() {
                           </svg>
                         </div>
                         {video.duration && <span className="video-card-duration">{video.duration}</span>}
+                        {savedProgressMap.has(video.id) && (
+                          <div className="video-card-progress-bar">
+                            <div
+                              className="video-card-progress-fill"
+                              style={{ width: `${Math.min(100, (savedProgressMap.get(video.id)! / 3600) * 100)}%` }}
+                            />
+                          </div>
+                        )}
                       </div>
                       <div className="video-card-info">
                         <span className="video-card-title">{video.title}</span>
@@ -499,6 +592,7 @@ export default function Videos() {
             <NotesPanel
               notes={notes}
               currentTime={currentTime}
+              videoTitle={watchingVideo.title}
               onAdd={handleAddNote}
               onDelete={handleDeleteNote}
               onSeek={handleSeek}
@@ -621,6 +715,37 @@ export default function Videos() {
               </button>
               <button className="video-form-confirm video-form-delete" onClick={() => handleDelete(deleteTarget.id)} type="button">
                 Deletar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {resumePrompt && (
+        <div className="video-modal-overlay" onClick={() => setResumePrompt(null)}>
+          <div className="video-modal video-confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="video-confirm-icon" style={{ color: '#daa03c' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            </div>
+            <h3 className="video-modal-title">Continuar assistindo?</h3>
+            <p className="video-confirm-text">
+              Você parou em {formatTimestamp(resumePrompt.seconds)}. Deseja continuar de onde parou?
+            </p>
+            <div className="video-form-actions">
+              <button className="video-form-cancel" onClick={() => {
+                setResumePrompt(null)
+              }} type="button">
+                Do começo
+              </button>
+              <button className="video-form-confirm" onClick={() => {
+                const sec = resumePrompt.seconds
+                setResumePrompt(null)
+                setTimeout(() => videoPlayerRef.current?.seekTo(sec), 300)
+              }} type="button">
+                Continuar
               </button>
             </div>
           </div>

@@ -96,16 +96,14 @@
   gap: 12px;
 }
 
-.shelf-logo svg {
+.shelf-logo-img {
   width: 36px;
   height: 36px;
-  color: #a89878;
+  border-radius: 8px;
   flex-shrink: 0;
   filter: drop-shadow(0 0 6px rgba(180, 150, 100, 0.15));
+  object-fit: contain;
 }
-
-.shelf-logo .eye-pupil { animation: eyePulse 3s ease-in-out infinite; }
-.shelf-logo .eye-glow { animation: eyeGlow 3s ease-in-out infinite; }
 
 .logo-text {
   font-size: 18px;

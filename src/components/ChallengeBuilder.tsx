@@ -4,9 +4,6 @@ import { QUESTION_TYPE_LABELS } from '../types/challenge'
 import type { Subject } from '../types/doc'
 import { SUBJECTS } from '../types/doc'
 
-let _cbid = 0
-const cbuid = (prefix = 'ch') => `${prefix}_${Date.now()}_${++_cbid}`
-
 interface Props {
   allQuestions: ChallengeQuestion[]
   initial?: Challenge
@@ -50,7 +47,7 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
     const baseXp = difficulty === 'facil' ? 100 : difficulty === 'medio' ? 150 : 200
 
     const challenge: Challenge = {
-      id: initial?.id || cbuid('ch'),
+      id: initial?.id || crypto.randomUUID(),
       title: title.trim(),
       description: description.trim() || undefined,
       subject,

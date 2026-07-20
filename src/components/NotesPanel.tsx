@@ -7,19 +7,40 @@ function formatTimestamp(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-function generateNoteId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+function exportNotesPdf(notes: VideoNote[], videoTitle: string) {
+  const sorted = [...notes].sort((a, b) => a.timestamp - b.timestamp)
+  const lines: string[] = [
+    `ANOTACOES — ${videoTitle}`,
+    `Total: ${sorted.length} anotacoes`,
+    '',
+  ]
+  for (const n of sorted) {
+    lines.push(`[${formatTimestamp(n.timestamp)}] ${n.text}`)
+  }
+  lines.push('')
+  lines.push(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`)
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `anotacoes-${videoTitle.replace(/[^a-zA-Z0-9]/g, '_')}.txt`
+  a.click()
+  URL.revokeObjectURL(url)
 }
+
+
 
 interface Props {
   notes: VideoNote[]
   currentTime: number
+  videoTitle?: string
   onAdd: (note: VideoNote) => void
   onDelete: (id: string) => void
   onSeek: (seconds: number) => void
 }
 
-export default function NotesPanel({ notes, currentTime, onAdd, onDelete, onSeek }: Props) {
+export default function NotesPanel({ notes, currentTime, videoTitle, onAdd, onDelete, onSeek }: Props) {
   const [input, setInput] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
   const [flashId, setFlashId] = useState<string | null>(null)
@@ -30,7 +51,7 @@ export default function NotesPanel({ notes, currentTime, onAdd, onDelete, onSeek
     const text = input.trim()
     if (!text) return
     const note: VideoNote = {
-      id: generateNoteId(),
+      id: crypto.randomUUID(),
       videoId: '',
       text,
       timestamp: currentTime,
@@ -69,6 +90,20 @@ export default function NotesPanel({ notes, currentTime, onAdd, onDelete, onSeek
         </svg>
         <h3 className="notes-panel-title">Anotações</h3>
         <span className="notes-panel-count">{notes.length}</span>
+        {notes.length > 0 && videoTitle && (
+          <button
+            className="notes-export-btn"
+            onClick={() => exportNotesPdf(notes, videoTitle)}
+            title="Exportar anotações"
+            type="button"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </button>
+        )}
       </div>
 
       <div className="notes-input-area">

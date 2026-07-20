@@ -61,6 +61,75 @@
   height: 16px;
 }
 
+/* ── Topbar Right ────────────────────────────────────── */
+
+.videos-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.videos-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(200, 180, 140, 0.12);
+  background: rgba(200, 180, 140, 0.04);
+  transition: border-color 0.15s ease;
+}
+
+.videos-search:focus-within {
+  border-color: rgba(200, 80, 80, 0.3);
+}
+
+.videos-search svg {
+  width: 16px;
+  height: 16px;
+  color: #6a5a4a;
+  flex-shrink: 0;
+}
+
+.videos-search-input {
+  background: none;
+  border: none;
+  outline: none;
+  color: #e8dcc8;
+  font-size: 13px;
+  font-family: inherit;
+  width: 180px;
+}
+
+.videos-search-input::placeholder {
+  color: #4a3a2a;
+}
+
+.videos-search-clear {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(200, 80, 80, 0.15);
+  color: #c87070;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s ease;
+}
+
+.videos-search-clear:hover {
+  background: rgba(200, 80, 80, 0.3);
+}
+
+.videos-search-clear svg {
+  width: 12px;
+  height: 12px;
+  color: #c87070;
+}
+
 /* ── Hero Section ───────────────────────────────────── */
 
 .video-hero {
@@ -431,6 +500,22 @@
   font-size: 11px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+.video-card-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(200, 180, 140, 0.12);
+}
+
+.video-card-progress-fill {
+  height: 100%;
+  background: #c85050;
+  border-radius: 0 2px 2px 0;
+  transition: width 0.3s ease;
 }
 
 .video-card-info {
@@ -1134,6 +1219,15 @@
   position: sticky;
   top: 20px;
   overflow: hidden;
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 31px,
+      rgba(200, 180, 140, 0.04) 31px,
+      rgba(200, 180, 140, 0.04) 32px
+    );
+  background-size: 100% 32px;
 }
 
 .notes-panel-header {
@@ -1165,6 +1259,39 @@
   background: rgba(200, 180, 140, 0.08);
   padding: 2px 8px;
   border-radius: 10px;
+}
+
+.notes-panel-count + .notes-export-btn {
+  margin-left: 0;
+}
+
+.notes-panel-count:only-of-type + .notes-export-btn {
+  margin-left: auto;
+}
+
+.notes-export-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(200, 180, 140, 0.06);
+  color: #8a7a6a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.notes-export-btn:hover {
+  background: rgba(200, 180, 140, 0.12);
+  color: #c8b898;
+}
+
+.notes-export-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* ── Input Area ──────────────────────────────────────── */
