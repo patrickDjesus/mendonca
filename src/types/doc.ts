@@ -34,13 +34,18 @@ export const SUBJECT_COLORS: Record<Subject, { bg: string; text: string }> = {
   'Filosofia':   { bg: 'rgba(140,120,200,0.15)', text: '#8c78c8' },
 }
 
+export type PaperStyle = 'default' | 'white'
+
 export interface DocMeta {
   id: string
   title: string
+  description?: string
   type: DocType
   content?: Block[]
   subject?: Subject
+  paperStyle?: PaperStyle
   fileName?: string
+  fileUrl?: string
   fileSize?: number
   thumbnail?: string
   createdAt: number

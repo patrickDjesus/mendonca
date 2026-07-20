@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 import { useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import '@blocknote/mantine/style.css'
@@ -35,11 +35,16 @@ export default function DocEditor({ doc, onSave }: DocEditorProps) {
   const editor = useCreateBlockNote({
     initialContent: doc.content && doc.content.length > 0
       ? doc.content
-      : [{ type: 'heading', props: { level: 1 }, content: doc.title }],
+      : [{ type: 'heading', props: { level: 1 }, content: [{ type: 'text', text: doc.title, styles: {} }] }],
   })
 
   const titleRef = useRef<HTMLInputElement>(null)
   const titleValue = useRef(doc.title)
+  const [paperStyle, setPaperStyle] = useState<'default' | 'white'>(doc.paperStyle || 'default')
+
+  useEffect(() => {
+    setPaperStyle(doc.paperStyle || 'default')
+  }, [doc.id, doc.paperStyle])
 
   useEffect(() => {
     if (titleRef.current) {
@@ -55,16 +60,17 @@ export default function DocEditor({ doc, onSave }: DocEditorProps) {
     if (!title && firstBlock) {
       const text = firstBlock.content
       if (Array.isArray(text)) {
-        title = text.map((b: { type: string; text?: string }) => ('text' in b ? b.text : '')).join('')
+        title = text.map((b: { type: string; text?: string }) => ('text' in b && b.text ? b.text : '')).join('')
       }
     }
     onSave({
       ...doc,
       title: title || 'Sem título',
       content: blocks,
+      paperStyle,
       updatedAt: Date.now(),
     })
-  }, [editor, doc, onSave])
+  }, [editor, doc, onSave, paperStyle])
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -91,9 +97,9 @@ export default function DocEditor({ doc, onSave }: DocEditorProps) {
     heading3: () => editor.updateBlock(editor.getTextCursorPosition().block, { type: 'heading', props: { level: 3 } }),
     paragraph: () => editor.updateBlock(editor.getTextCursorPosition().block, { type: 'paragraph' }),
     bulletList: () => editor.updateBlock(editor.getTextCursorPosition().block, { type: 'bulletListItem' }),
-    numberedLIST: () => editor.updateBlock(editor.getTextCursorPosition().block, { type: 'numberedListItem' }),
+    numberedList: () => editor.updateBlock(editor.getTextCursorPosition().block, { type: 'numberedListItem' }),
     checkList: () => editor.updateBlock(editor.getTextCursorPosition().block, { type: 'checkListItem' }),
-    blockquote: () => editor.updateBlock(editor.getTextCursorPosition().block, { type: 'paragraph' }),
+    inlineCode: () => editor.toggleStyles({ code: true }),
   }
 
   return (
@@ -121,6 +127,14 @@ export default function DocEditor({ doc, onSave }: DocEditorProps) {
             <polyline points="7 3 7 8 15 8" />
           </svg>
           <span>Salvar</span>
+        </button>
+        <button
+          className={`doc-paper-toggle ${paperStyle === 'white' ? 'active' : ''}`}
+          onClick={() => setPaperStyle(p => p === 'default' ? 'white' : 'default')}
+          type="button"
+        >
+          <div className="doc-paper-toggle-dot" />
+          <span>{paperStyle === 'white' ? 'Papel branco' : 'Papel marrom'}</span>
         </button>
       </div>
 
@@ -194,7 +208,7 @@ export default function DocEditor({ doc, onSave }: DocEditorProps) {
               <circle cx="5" cy="18" r="1" fill="currentColor" />
             </svg>
           </ToolbarBtn>
-          <ToolbarBtn title="Lista numerada" onClick={fmt.numberedLIST}>
+              <ToolbarBtn title="Lista numerada" onClick={fmt.numberedList}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="10" y1="6" x2="21" y2="6" />
               <line x1="10" y1="12" x2="21" y2="12" />
@@ -218,17 +232,17 @@ export default function DocEditor({ doc, onSave }: DocEditorProps) {
         <ToolbarSep />
 
         <div className="doc-format-group">
-          <ToolbarBtn title="Citação" onClick={fmt.blockquote}>
+          <ToolbarBtn title="Código inline" onClick={fmt.inlineCode}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z" />
-              <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3z" />
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
             </svg>
           </ToolbarBtn>
         </div>
       </div>
 
       <div className="doc-editor-body">
-        <div className="doc-editor-paper">
+        <div className={`doc-editor-paper ${paperStyle === 'white' ? 'paper-white' : ''}`}>
           <div className="doc-paper-margin" />
           <div className="doc-paper-holes">
             <span /><span /><span />

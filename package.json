@@ -15,8 +15,10 @@
     "@blocknote/react": "^0.51.4",
     "@mantine/core": "^9.4.1",
     "@supabase/supabase-js": "^2.110.7",
+    "pdfjs-dist": "^4.10.38",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-pdf": "^9.2.1",
     "react-router-dom": "^7.18.1"
   },
   "devDependencies": {
