@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 import type { ChallengeQuestion, Challenge, ChallengeAttempt, UserStreak } from '../types/challenge'
 import type { DocMeta, Subject } from '../types/doc'
-import type { VideoMeta } from '../types/video'
+import type { VideoMeta, VideoNote } from '../types/video'
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -320,8 +320,11 @@ function rowToDoc(row: Record<string, unknown>): DocMeta {
     description: (row.description as string) || undefined,
     type: row.doc_type as 'editor' | 'pdf',
     subject: (row.subject as Subject) || null,
+    content: (row.content as DocMeta['content']) || undefined,
     fileName: (row.file_name as string) || undefined,
+    fileUrl: (row.file_url as string) || undefined,
     fileSize: (row.file_size as number) || undefined,
+    thumbnail: (row.thumbnail as string) || undefined,
     isPublic: row.is_public as boolean,
     authorName: undefined,
     createdAt: new Date(row.created_at as string).getTime(),
@@ -337,8 +340,11 @@ function docToRow(d: DocMeta, userId: string): Record<string, unknown> {
     description: d.description || null,
     doc_type: d.type,
     subject: d.subject || null,
+    content: d.content ? JSON.stringify(d.content) : null,
     file_name: d.fileName || null,
+    file_url: d.fileUrl || null,
     file_size: d.fileSize || null,
+    thumbnail: d.thumbnail || null,
     is_public: d.isPublic,
   }
 }
@@ -401,4 +407,111 @@ function videoToRow(v: VideoMeta, userId: string): Record<string, unknown> {
     author_name: v.authorName || null,
     is_public: v.isPublic,
   }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   VIDEO NOTES
+   ═══════════════════════════════════════════════════════════ */
+
+export async function fetchVideoNotes(videoId: string): Promise<VideoNote[]> {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('video_notes')
+    .select('*')
+    .eq('video_id', videoId)
+    .eq('user_id', userId)
+    .order('timestamp', { ascending: true })
+
+  if (error) throw error
+  return (data || []).map(row => ({
+    id: row.id as string,
+    videoId: row.video_id as string,
+    text: row.text as string,
+    timestamp: row.timestamp as number,
+    createdAt: new Date(row.created_at as string).getTime(),
+  }))
+}
+
+export async function createVideoNote(note: VideoNote): Promise<VideoNote> {
+  const userId = await getUserId()
+  const { error } = await supabase
+    .from('video_notes')
+    .insert({
+      id: note.id,
+      user_id: userId,
+      video_id: note.videoId,
+      text: note.text,
+      timestamp: note.timestamp,
+    })
+
+  if (error) throw error
+  return note
+}
+
+export async function deleteVideoNote(id: string): Promise<void> {
+  const { error } = await supabase.from('video_notes').delete().eq('id', id)
+  if (error) throw error
+}
+
+/* ═══════════════════════════════════════════════════════════
+   COUNTS (for VisaoGeral stats)
+   ═══════════════════════════════════════════════════════════ */
+
+export async function fetchMyCounts(): Promise<{ docs: number; challenges: number; videos: number; xp: number; streak: number }> {
+  const userId = await getUserId()
+  const [docs, challenges, videos, streak] = await Promise.all([
+    supabase.from('documents').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    supabase.from('challenges').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    supabase.from('videos').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    supabase.from('user_streaks').select('total_xp, current_streak').eq('user_id', userId).maybeSingle(),
+  ])
+  return {
+    docs: docs.count ?? 0,
+    challenges: challenges.count ?? 0,
+    videos: videos.count ?? 0,
+    xp: streak.data?.total_xp ?? 0,
+    streak: streak.data?.current_streak ?? 0,
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ACTIVITY LOG
+   ═══════════════════════════════════════════════════════════ */
+
+export interface Activity {
+  id: string
+  action: string
+  title: string
+  icon: string
+  color: string
+  createdAt: number
+}
+
+export async function logActivity(action: string, title: string, icon: string, color: string): Promise<void> {
+  const userId = await getUserId()
+  const { error } = await supabase
+    .from('activity_log')
+    .insert({ user_id: userId, action, title, icon, color })
+
+  if (error) throw error
+}
+
+export async function fetchRecentActivities(limit = 8): Promise<Activity[]> {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('activity_log')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+  return (data || []).map(row => ({
+    id: row.id as string,
+    action: row.action as string,
+    title: row.title as string,
+    icon: row.icon as string,
+    color: row.color as string,
+    createdAt: new Date(row.created_at as string).getTime(),
+  }))
 }

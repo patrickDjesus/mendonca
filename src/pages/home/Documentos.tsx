@@ -5,7 +5,7 @@ import DocCard from '../../components/DocCard'
 import AddDocCard from '../../components/AddDocCard'
 import '../../styles/documentos.css'
 import { generatePdfThumbnail } from '../../utils/pdfThumbnails'
-import { fetchMyDocs, fetchPublicDocs, createDoc, deleteDoc } from '../../lib/db'
+import { fetchMyDocs, fetchPublicDocs, createDoc, updateDoc, deleteDoc, logActivity } from '../../lib/db'
 
 const DocEditor = lazy(() => import('../../components/DocEditor'))
 const PdfViewer = lazy(() => import('../../components/PdfViewer'))
@@ -73,9 +73,14 @@ export default function Documentos() {
     }
   }, [])
 
-  const handleSave = useCallback((updated: DocMeta) => {
+  const handleSave = useCallback(async (updated: DocMeta) => {
     setMyDocs(prev => prev.map(d => d.id === updated.id ? updated : d))
     setEditingDoc(null)
+    try {
+      await updateDoc(updated)
+    } catch (e) {
+      console.error('Erro ao salvar documento:', e)
+    }
   }, [])
 
   const handleDelete = useCallback(async (id: string) => {
@@ -103,6 +108,7 @@ export default function Documentos() {
     }
     try {
       await createDoc(newDoc)
+      logActivity('doc_created', `Criou "${newDoc.title}"`, 'book', '#508cc8').catch(() => {})
     } catch (e) {
       console.error('Erro ao salvar documento:', e)
     }
@@ -139,6 +145,7 @@ export default function Documentos() {
           isPublic: form.isPublic,
         }
         setMyDocs(prev => [newDoc, ...prev])
+        createDoc(newDoc).catch(e => console.error('Erro ao salvar PDF:', e))
         generatePdfThumbnail(file).then(thumb => {
           if (thumb) {
             setMyDocs(prev => prev.map(d => d.id === newDocId ? { ...d, thumbnail: thumb } : d))
@@ -185,17 +192,23 @@ export default function Documentos() {
     })
   }, [])
 
-  const saveEditProps = useCallback(() => {
+  const saveEditProps = useCallback(async () => {
     if (!editPropsDoc) return
-    setMyDocs(prev => prev.map(d => d.id === editPropsDoc.id ? {
-      ...d,
-      title: propsForm.title || d.title,
+    const updated = {
+      ...editPropsDoc,
+      title: propsForm.title || editPropsDoc.title,
       description: propsForm.description || undefined,
       subject: propsForm.subject || undefined,
       isPublic: propsForm.isPublic,
       updatedAt: Date.now(),
-    } : d))
+    }
+    setMyDocs(prev => prev.map(d => d.id === editPropsDoc.id ? updated : d))
     setEditPropsDoc(null)
+    try {
+      await updateDoc(updated)
+    } catch (e) {
+      console.error('Erro ao salvar propriedades:', e)
+    }
   }, [editPropsDoc, propsForm])
 
   useEffect(() => {

@@ -5,7 +5,7 @@ import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import VideoPlayer, { type VideoPlayerHandle } from '../../components/VideoPlayer'
 import NotesPanel from '../../components/NotesPanel'
 import { extractYoutubeId } from '../../utils/youtube'
-import { fetchVideos, createVideo, deleteVideo } from '../../lib/db'
+import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, logActivity } from '../../lib/db'
 import '../../styles/videos.css'
 
 function generateId(): string {
@@ -105,6 +105,7 @@ export default function Videos() {
     try {
       await createVideo(newVideo)
       setVideos(prev => [newVideo, ...prev])
+      logActivity('video_added', `Adicionou "${newVideo.title}"`, 'video', '#c85050').catch(() => {})
     } catch (e) {
       console.error('Erro ao salvar vídeo:', e)
     }
@@ -178,11 +179,14 @@ export default function Videos() {
   }, [watchingVideo, isPlaying])
 
   const handleAddNote = useCallback((note: VideoNote) => {
-    setNotes(prev => [...prev, { ...note, videoId: watchingVideo?.id || '' }])
+    const fullNote = { ...note, videoId: watchingVideo?.id || '' }
+    setNotes(prev => [...prev, fullNote])
+    createVideoNote(fullNote).catch(console.error)
   }, [watchingVideo])
 
   const handleDeleteNote = useCallback((id: string) => {
     setNotes(prev => prev.filter(n => n.id !== id))
+    deleteVideoNote(id).catch(console.error)
   }, [])
 
   const handleSeek = useCallback((seconds: number) => {
@@ -197,6 +201,7 @@ export default function Videos() {
     setDuration(0)
     setWatchTimeAccum(0)
     setIsPlaying(false)
+    fetchVideoNotes(video.id).then(setNotes).catch(console.error)
   }, [])
 
   const formatWatchTime = useCallback((totalSec: number): string => {

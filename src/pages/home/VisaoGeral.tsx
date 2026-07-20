@@ -1,16 +1,22 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import philosophers from '../../data/philosophers.json'
+import { fetchMyCounts, fetchRecentActivities, type Activity } from '../../lib/db'
+
+function timeAgo(ms: number): string {
+  const diff = Date.now() - ms
+  const min = Math.floor(diff / 60000)
+  if (min < 1) return 'agora'
+  if (min < 60) return `há ${min}min`
+  const h = Math.floor(min / 60)
+  if (h < 24) return `há ${h}h`
+  const d = Math.floor(h / 24)
+  if (d < 7) return `há ${d}d`
+  const w = Math.floor(d / 7)
+  return `há ${w}sem`
+}
 
 const ENEM_DATE = new Date('2026-11-08T13:30:00-03:00')
-
-const recentActivities = [
-  { icon: 'book', text: ' Apostila de Matemática — Cap. 3', time: 'há 2 dias', color: '#508cc8' },
-  { icon: 'video', text: ' Videoaula de Redação — Introdução', time: 'há 3 dias', color: '#c85050' },
-  { icon: 'challenge', text: ' Desafio de Ciências da Natureza', time: 'há 4 dias', color: '#b450b4' },
-  { icon: 'book', text: ' Notas de Literatura — Modernismo', time: 'há 5 dias', color: '#508cc8' },
-  { icon: 'video', text: ' Videoaula de História — Brasil Colônia', time: 'há 1 semana', color: '#c85050' },
-]
 
 interface Goal {
   id: number
@@ -53,6 +59,15 @@ function ActivityIcon({ icon, color }: { icon: string; color: string }) {
       </div>
     )
   }
+  if (icon === 'challenge') {
+    return (
+      <div className="act-icon" style={{ background: `${color}20`, color }}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+      </div>
+    )
+  }
   return (
     <div className="act-icon" style={{ background: `${color}20`, color }}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -70,10 +85,17 @@ export default function VisaoGeral() {
   const [goalInput, setGoalInput] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editText, setEditText] = useState('')
+  const [counts, setCounts] = useState({ docs: 0, challenges: 0, videos: 0 })
+  const [activities, setActivities] = useState<Activity[]>([])
 
   useEffect(() => {
     const timer = setInterval(() => setTimeLeft(getTimeLeft()), 1000)
     return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    fetchMyCounts().then(setCounts).catch(console.error)
+    fetchRecentActivities().then(setActivities).catch(console.error)
   }, [])
 
   useEffect(() => {
@@ -200,11 +222,14 @@ export default function VisaoGeral() {
         <div className="card card-activities">
           <h3 className="card-title">Atividades Recentes</h3>
           <div className="act-list">
-            {recentActivities.map((act, i) => (
-              <div className="act-item" key={i}>
+            {activities.length === 0 && (
+              <p className="goals-empty">Nenhuma atividade ainda.</p>
+            )}
+            {activities.map(act => (
+              <div className="act-item" key={act.id}>
                 <ActivityIcon icon={act.icon} color={act.color} />
-                <span className="act-text">{act.text}</span>
-                <span className="act-time">{act.time}</span>
+                <span className="act-text">{act.title}</span>
+                <span className="act-time">{timeAgo(act.createdAt)}</span>
               </div>
             ))}
           </div>
@@ -221,7 +246,7 @@ export default function VisaoGeral() {
                     <polyline points="14 2 14 8 20 8" />
                   </svg>
                 </div>
-                <div className="stat-num">0</div>
+                <div className="stat-num">{counts.docs}</div>
                 <div className="stat-desc">Documentos</div>
               </div>
               <div className="stat-box">
@@ -230,7 +255,7 @@ export default function VisaoGeral() {
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                   </svg>
                 </div>
-                <div className="stat-num">0</div>
+                <div className="stat-num">{counts.challenges}</div>
                 <div className="stat-desc">Desafios</div>
               </div>
               <div className="stat-box">
@@ -240,7 +265,7 @@ export default function VisaoGeral() {
                     <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
                   </svg>
                 </div>
-                <div className="stat-num">0</div>
+                <div className="stat-num">{counts.videos}</div>
                 <div className="stat-desc">Vídeos</div>
               </div>
             </div>

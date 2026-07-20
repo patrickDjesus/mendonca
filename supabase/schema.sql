@@ -185,6 +185,20 @@ CREATE TABLE IF NOT EXISTS user_streaks (
   updated_at       TIMESTAMPTZ DEFAULT now()
 );
 
+-- ── Activity Log ─────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS activity_log (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  action     TEXT NOT NULL,
+  title      TEXT NOT NULL,
+  icon       TEXT NOT NULL DEFAULT 'book',
+  color      TEXT NOT NULL DEFAULT '#508cc8',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_activity_user ON activity_log(user_id, created_at DESC);
+
 -- ── RLS (Row Level Security) ────────────────────────────────
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -195,6 +209,7 @@ ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE challenges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE challenge_attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_streaks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE activity_log ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: anyone can read, only own can update
 CREATE POLICY "profiles_select" ON profiles FOR SELECT USING (true);
@@ -237,3 +252,7 @@ CREATE POLICY "attempts_insert" ON challenge_attempts FOR INSERT WITH CHECK (aut
 CREATE POLICY "streaks_select" ON user_streaks FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "streaks_insert" ON user_streaks FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "streaks_update" ON user_streaks FOR UPDATE USING (auth.uid() = user_id);
+
+-- Activity Log: owner full access
+CREATE POLICY "activity_select" ON activity_log FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "activity_insert" ON activity_log FOR INSERT WITH CHECK (auth.uid() = user_id);

@@ -5,7 +5,7 @@ import type { Subject } from '../../types/doc'
 import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import QuestionBuilder from '../../components/QuestionBuilder'
 import ChallengeBuilder from '../../components/ChallengeBuilder'
-import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, createChallenge, updateChallenge, createAttempt, upsertStreak } from '../../lib/db'
+import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, createChallenge, updateChallenge, createAttempt, upsertStreak, logActivity } from '../../lib/db'
 import '../../styles/desafios.css'
 
 /* ── Default empty state ─────────────────────────── */
@@ -245,6 +245,13 @@ export default function Desafios() {
         }
         createAttempt(attempt).catch(() => {})
         upsertStreak(ns).catch(() => {})
+        const isWin = correctCount > wrongCount
+        logActivity(
+          'challenge_done',
+          `${isWin ? 'Acertou' : 'Errou'} "${activeChallenge.title}" (${correctCount}/${activeChallenge.questionIds.length})`,
+          'challenge',
+          isWin ? '#b450b4' : '#c86450',
+        ).catch(() => {})
         return ns
       })
       setView('results')
