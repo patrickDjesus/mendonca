@@ -337,12 +337,69 @@
 .exam-q-content {
   font-size: 14px;
   color: #a89878;
-  line-height: 1.6;
+  line-height: 1.7;
   margin: 0 0 16px;
   padding: 14px 16px;
   border-radius: 10px;
   background: rgba(200, 180, 140, 0.04);
   border-left: 3px solid rgba(200, 180, 140, 0.12);
+}
+
+.enem-markdown p {
+  margin: 0 0 8px;
+}
+
+.enem-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.enem-markdown strong {
+  color: #d4a843;
+  font-weight: 700;
+}
+
+.enem-inline-img {
+  max-width: 100%;
+  max-height: 280px;
+  border-radius: 8px;
+  margin: 8px 0;
+  cursor: zoom-in;
+  object-fit: contain;
+  transition: transform 0.15s ease;
+  display: block;
+}
+
+.enem-inline-img:hover {
+  transform: scale(1.02);
+}
+
+.enem-citation {
+  padding: 10px 16px;
+  border-left: 3px solid rgba(212, 168, 67, 0.3);
+  margin: 8px 0;
+  color: #8a7a6a;
+  font-style: italic;
+  font-size: 13px;
+}
+
+.enem-citation p {
+  margin: 0 0 4px;
+}
+
+.enem-citation p:last-child {
+  margin-bottom: 0;
+}
+
+.exam-q-question {
+  font-size: 14px;
+  color: #d4a843;
+  font-weight: 600;
+  line-height: 1.6;
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(212, 168, 67, 0.06);
+  border-left: 3px solid rgba(212, 168, 67, 0.3);
 }
 
 .exam-q-image {
@@ -351,6 +408,11 @@
   border-radius: 10px;
   margin-bottom: 16px;
   object-fit: contain;
+  cursor: zoom-in;
+}
+
+.exam-q-image:hover {
+  opacity: 0.9;
 }
 
 /* ================================
@@ -497,6 +559,61 @@
 .navigator-btn.answered:hover {
   background: rgba(100, 180, 120, 0.2);
   border-color: rgba(100, 180, 120, 0.4);
+}
+
+/* ================================
+   Image Lightbox
+   ================================ */
+.simulados-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  cursor: zoom-out;
+  animation: lightboxFadeIn 0.2s ease;
+}
+
+.simulados-lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 10px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  object-fit: contain;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.lightbox-close svg {
+  width: 22px;
+  height: 22px;
+}
+
+@keyframes lightboxFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* ================================

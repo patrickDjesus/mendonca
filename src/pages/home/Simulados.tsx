@@ -23,6 +23,7 @@ interface EnemQuestion {
   files: string[]
   correctAlternative: string
   alternatives: EnemAlternative[]
+  alternativesIntroduction: string | null
 }
 
 interface EnemApiResponse {
@@ -198,6 +199,48 @@ function classifySubject(discipline: string | null, context: string | null, altT
   return bestScore > 0 ? bestSubject : (broad || 'Linguagens')
 }
 
+function renderEnemMarkdown(text: string): string {
+  let html = text
+  html = html.replace(/&/g, '&amp;')
+  html = html.replace(/</g, '&lt;')
+  html = html.replace(/>/g, '&gt;')
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img class="enem-inline-img" src="$2" alt="$1" />')
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+  const lines = html.split('\n')
+  const processed: string[] = []
+  let inBlock = false
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (trimmed === '') {
+      if (inBlock) {
+        processed.push('</div>')
+        inBlock = false
+      }
+      processed.push('')
+    } else if (trimmed.startsWith('&gt;') || trimmed.startsWith('[')) {
+      if (!inBlock) {
+        processed.push('<div class="enem-citation">')
+        inBlock = true
+      }
+      processed.push(trimmed)
+    } else {
+      if (inBlock) {
+        processed.push('</div>')
+        inBlock = false
+      }
+      processed.push(trimmed)
+    }
+  }
+  if (inBlock) processed.push('</div>')
+  return processed
+    .map(line => {
+      if (line === '') return '<br/>'
+      if (line.startsWith('<div') || line.startsWith('</div>')) return line
+      return `<p>${line}</p>`
+    })
+    .join('')
+}
+
 function transformQuestion(enem: EnemQuestion): ChallengeQuestion {
   const options: ChallengeOption[] = enem.alternatives.map(alt => ({
     id: crypto.randomUUID(),
@@ -218,6 +261,7 @@ function transformQuestion(enem: EnemQuestion): ChallengeQuestion {
     difficulty: enem.index <= 5 ? 'facil' : enem.index > 35 ? 'dificil' : 'medio',
     content: enem.context || undefined,
     imageUrl: enem.files.length > 0 ? enem.files[0] : undefined,
+    explanation: enem.alternativesIntroduction || undefined,
     options,
     statements: [],
     orderItems: [],
@@ -239,6 +283,7 @@ export default function Simulados() {
   const [questions, setQuestions] = useState<ChallengeQuestion[]>([])
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [elapsed, setElapsed] = useState(0)
+  const [lightboxImg, setLightboxImg] = useState<string | null>(null)
   const startTimeRef = useRef<number>(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const questionRefs = useRef<Map<number, HTMLDivElement | null>>(new Map())
@@ -253,6 +298,15 @@ export default function Simulados() {
   useEffect(() => {
     setLoading(false)
   }, [])
+
+  useEffect(() => {
+    if (!lightboxImg) return
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxImg(null)
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [lightboxImg])
 
   const startExam = useCallback(async (year: number) => {
     setSelectedYear(year)
@@ -303,6 +357,13 @@ export default function Simulados() {
   const handleFinish = useCallback(() => {
     stopTimer()
   }, [stopTimer])
+
+  const handleContentClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement
+    if (target.tagName === 'IMG' && target.classList.contains('enem-inline-img')) {
+      setLightboxImg((target as HTMLImageElement).src)
+    }
+  }, [])
 
   if (view === 'gallery') {
     return (
@@ -419,8 +480,24 @@ export default function Simulados() {
                   <span className="exam-q-num">{idx + 1}</span>
                   <span className="exam-q-subject">{q.subject}</span>
                 </div>
-                {q.content && <p className="exam-q-content">{q.content}</p>}
-                {q.imageUrl && <img className="exam-q-image" src={q.imageUrl} alt="" />}
+                {q.content && (
+                  <div
+                    className="exam-q-content enem-markdown"
+                    dangerouslySetInnerHTML={{ __html: renderEnemMarkdown(q.content) }}
+                    onClick={handleContentClick}
+                  />
+                )}
+                {q.imageUrl && (
+                  <img
+                    className="exam-q-image"
+                    src={q.imageUrl}
+                    alt=""
+                    onClick={() => setLightboxImg(q.imageUrl!)}
+                  />
+                )}
+                {q.explanation && (
+                  <p className="exam-q-question">{q.explanation}</p>
+                )}
                 <div className="exam-q-options">
                   {q.options.map((opt, oi) => (
                     <button
@@ -461,6 +538,18 @@ export default function Simulados() {
           </div>
         </div>
       </div>
+
+      {lightboxImg && (
+        <div className="simulados-lightbox" onClick={() => setLightboxImg(null)}>
+          <img src={lightboxImg} alt="" onClick={e => e.stopPropagation()} />
+          <button className="lightbox-close" onClick={() => setLightboxImg(null)} type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   )
 }
