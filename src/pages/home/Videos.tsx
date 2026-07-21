@@ -8,11 +8,7 @@ import { extractYoutubeId } from '../../utils/youtube'
 import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, logActivity } from '../../lib/db'
 import '../../styles/videos.css'
 
-function formatTimestamp(seconds: number): string {
-  const m = Math.floor(seconds / 60)
-  const s = Math.floor(seconds % 60)
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
+import { formatTimestamp } from '../../utils/format'
 
 function getSavedProgress(videoId: string): number {
   try {
@@ -228,7 +224,8 @@ export default function Videos() {
   }, [watchingVideo, currentTime])
 
   const handleAddNote = useCallback(async (note: VideoNote) => {
-    const fullNote = { ...note, videoId: watchingVideo?.id || '' }
+    if (!watchingVideo?.id) return
+    const fullNote = { ...note, videoId: watchingVideo.id }
     try {
       await createVideoNote(fullNote)
       setNotes(prev => [...prev, fullNote])
@@ -239,13 +236,15 @@ export default function Videos() {
   }, [watchingVideo])
 
   const handleDeleteNote = useCallback(async (id: string) => {
+    const previousNotes = notes
     setNotes(prev => prev.filter(n => n.id !== id))
     try {
       await deleteVideoNote(id)
     } catch (e) {
       console.error('Erro ao deletar anotação:', e)
+      setNotes(previousNotes)
     }
-  }, [])
+  }, [notes])
 
   const handleSeek = useCallback((seconds: number) => {
     videoPlayerRef.current?.seekTo(seconds)
@@ -361,6 +360,10 @@ export default function Videos() {
             <div className="video-hero-meta">
               {heroVideo.authorName && <span>{heroVideo.authorName}</span>}
               <span>{new Date(heroVideo.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+              {heroVideo.duration && <span>{heroVideo.duration}</span>}
+              {savedProgressMap.has(heroVideo.id) && (
+                <span style={{ color: '#daa03c' }}>&#9201; {formatWatchTime(savedProgressMap.get(heroVideo.id)!)}</span>
+              )}
             </div>
           </div>
         </div>
@@ -456,6 +459,10 @@ export default function Videos() {
                         <span className="video-card-title">{video.title}</span>
                         <div className="video-card-meta">
                           {video.authorName && <span className="video-card-author">{video.authorName}</span>}
+                          {video.duration && <span className="video-card-author">{video.duration}</span>}
+                          {savedProgressMap.has(video.id) && (
+                            <span className="video-card-author" style={{ color: '#daa03c' }}>&#9201; {formatWatchTime(savedProgressMap.get(video.id)!)}</span>
+                          )}
                         </div>
                       </div>
                     </div>

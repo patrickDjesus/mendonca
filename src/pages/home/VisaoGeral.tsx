@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, useCallback, type FormEvent } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import philosophers from '../../data/philosophers.json'
 import { fetchMyCounts, fetchRecentActivities, type Activity } from '../../lib/db'
@@ -19,7 +19,7 @@ function timeAgo(ms: number): string {
 const ENEM_DATE = new Date('2026-11-08T13:30:00-03:00')
 
 interface Goal {
-  id: number
+  id: string
   text: string
   done: boolean
   createdAt: number
@@ -81,9 +81,14 @@ export default function VisaoGeral() {
   const { userName } = useOutletContext<{ userName: string }>()
   const [timeLeft, setTimeLeft] = useState(getTimeLeft)
   const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * philosophers.length))
-  const [goals, setGoals] = useState<Goal[]>([])
+  const [goals, setGoals] = useState<Goal[]>(() => {
+    try {
+      const raw = localStorage.getItem('user_goals')
+      return raw ? JSON.parse(raw) : []
+    } catch { return [] }
+  })
   const [goalInput, setGoalInput] = useState('')
-  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
   const [counts, setCounts] = useState({ docs: 0, challenges: 0, videos: 0 })
   const [activities, setActivities] = useState<Activity[]>([])
@@ -92,6 +97,10 @@ export default function VisaoGeral() {
     const timer = setInterval(() => setTimeLeft(getTimeLeft()), 1000)
     return () => clearInterval(timer)
   }, [])
+
+  useEffect(() => {
+    localStorage.setItem('user_goals', JSON.stringify(goals))
+  }, [goals])
 
   useEffect(() => {
     fetchMyCounts().then(setCounts).catch(console.error)
@@ -112,11 +121,11 @@ export default function VisaoGeral() {
     const text = goalInput.trim()
     if (!text) return
     const now = Date.now()
-    setGoals(prev => [...prev, { id: now, text, done: false, createdAt: now, completedAt: null }])
+    setGoals(prev => [...prev, { id: crypto.randomUUID(), text, done: false, createdAt: now, completedAt: null }])
     setGoalInput('')
   }
 
-  function toggleGoal(id: number) {
+  function toggleGoal(id: string) {
     setGoals(prev => prev.map(g => {
       if (g.id !== id) return g
       const willBeDone = !g.done
@@ -124,16 +133,16 @@ export default function VisaoGeral() {
     }))
   }
 
-  function deleteGoal(id: number) {
+  function deleteGoal(id: string) {
     setGoals(prev => prev.filter(g => g.id !== id))
   }
 
-  function startEdit(id: number, text: string) {
+  function startEdit(id: string, text: string) {
     setEditingId(id)
     setEditText(text)
   }
 
-  function saveEdit(id: number) {
+  function saveEdit(id: string) {
     const text = editText.trim()
     if (!text) {
       setEditingId(null)

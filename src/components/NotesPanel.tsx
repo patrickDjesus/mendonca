@@ -1,13 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import type { VideoNote } from '../types/video'
+import { formatTimestamp } from '../utils/format'
 
-function formatTimestamp(seconds: number): string {
-  const m = Math.floor(seconds / 60)
-  const s = Math.floor(seconds % 60)
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
-
-function exportNotesPdf(notes: VideoNote[], videoTitle: string) {
+function exportNotesTxt(notes: VideoNote[], videoTitle: string) {
   const sorted = [...notes].sort((a, b) => a.timestamp - b.timestamp)
   const lines: string[] = [
     `ANOTACOES — ${videoTitle}`,
@@ -44,12 +39,14 @@ export default function NotesPanel({ notes, currentTime, videoTitle, onAdd, onDe
   const [input, setInput] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
   const [flashId, setFlashId] = useState<string | null>(null)
+  const [isAdding, setIsAdding] = useState(false)
 
   const sorted = [...notes].sort((a, b) => a.timestamp - b.timestamp)
 
   const handleAdd = useCallback(() => {
     const text = input.trim()
-    if (!text) return
+    if (!text || isAdding) return
+    setIsAdding(true)
     const note: VideoNote = {
       id: crypto.randomUUID(),
       videoId: '',
@@ -59,7 +56,8 @@ export default function NotesPanel({ notes, currentTime, videoTitle, onAdd, onDe
     }
     onAdd(note)
     setInput('')
-  }, [input, currentTime, onAdd])
+    setTimeout(() => setIsAdding(false), 500)
+  }, [input, currentTime, onAdd, isAdding])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -93,7 +91,7 @@ export default function NotesPanel({ notes, currentTime, videoTitle, onAdd, onDe
         {notes.length > 0 && videoTitle && (
           <button
             className="notes-export-btn"
-            onClick={() => exportNotesPdf(notes, videoTitle)}
+            onClick={() => exportNotesTxt(notes, videoTitle)}
             title="Exportar anotações"
             type="button"
           >
@@ -126,7 +124,7 @@ export default function NotesPanel({ notes, currentTime, videoTitle, onAdd, onDe
           <button
             className="notes-send-btn"
             onClick={handleAdd}
-            disabled={!input.trim()}
+            disabled={!input.trim() || isAdding}
             title="Adicionar anotação"
             type="button"
           >

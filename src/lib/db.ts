@@ -500,7 +500,8 @@ export async function createVideoNote(note: VideoNote): Promise<VideoNote> {
 }
 
 export async function deleteVideoNote(id: string): Promise<void> {
-  const { error } = await supabase.from('video_notes').delete().eq('id', id)
+  const userId = await getUserId()
+  const { error } = await supabase.from('video_notes').delete().eq('id', id).eq('user_id', userId)
   if (error) throw error
 }
 
