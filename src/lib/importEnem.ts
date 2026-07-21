@@ -37,105 +37,249 @@ const DISCIPLINE_MAP: Record<string, Subject> = {
 
 const SUBJECT_KEYWORDS: Record<Subject, string[]> = {
   'Física': [
-    'força', 'velocidade', 'aceleração', 'movimento', 'energia', 'trabalho', 'potência',
-    'circuito', 'tensão', 'resistência', 'corrente', 'elétrica', 'eletromagnetismo',
-    'onda', 'luz', 'som', 'calor', 'temperatura', 'termodinâmica', 'entropia',
-    'newton', 'gravidade', 'cinemática', 'dinâmica', 'momento', 'impulso',
-    'arco elétrico', 'capacitor', 'indutor', 'transformador', 'ohm',
-    'reflexão', 'refração', 'lente', 'espelho', 'espectro',
+    'forca', 'velocidade', 'aceleracao', 'movimento', 'energia', 'trabalho', 'potencia',
+    'circuito', 'tensao', 'resistencia', 'corrente', 'eletrica', 'eletromagnetismo',
+    'onda', 'luz', 'som', 'calor', 'temperatura', 'termodinamica', 'entropia',
+    'newton', 'gravidade', 'cinematica', 'dinamica', 'momento', 'impulso',
+    'arco eletrico', 'capacitor', 'indutor', 'transformador', 'ohm',
+    'reflexao', 'refracao', 'lente', 'espelho', 'espectro',
+    'inercia', 'friccao', 'atrito', 'colisao', 'projecao',
+    'frequuencia', 'amplitude', 'velocidade da luz', 'indice de refracao',
+    'lei de ohm', 'lei de faraday', 'lei de lenz', 'coulomb',
+    'massa', 'peso', 'aceleracao da gravidade', 'campo gravitacional',
+    'pressao', 'densidade', 'arquimedes', 'hidrostatica', 'hidrodinamica',
+    'calorimetria', 'calor sensivel', 'calor latente', 'dilatacao',
+    'cinetica', 'potencial', 'eletrico', 'magnetico', 'magnetismo',
+    'semicondutor', 'diodo', 'transistor', 'led', 'fotoeletrico',
+    'nuclear', 'radioatividade', 'fissao', 'fusao', 'massa atomica',
+    'torricelli', 'pascal', 'energia cinetica', 'energia potencial',
+    'trabalho mecanico', 'rendimento', 'maquina simples', 'alavanca',
+    'relatividade', 'espaco-tempo', 'einstein', 'foton',
   ],
   'Química': [
-    'átomo', 'átomos', 'molécula', 'moléculas', 'elemento', 'elementos',
-    'reação', 'reações', 'composto', 'compostos', 'liga', 'ligas',
-    'pH', 'ácido', 'ácidos', 'base', 'bases', 'neutralização',
-    'tabela periódica', 'elétrons', 'prótons', 'nêutrons', 'camada',
-    'orgânico', 'orgânica', 'hidrocarboneto', 'polímero', 'polímeros',
-    'solução', 'soluções', 'concentração', 'diluição', 'solubilidade',
-    'estequiometria', 'mol', 'massa molar', 'oxidação', 'redução',
-    'eletroquímica', 'pilha', 'bateria', 'corrosão',
+    'atomo', 'atomos', 'molecula', 'moleculas', 'elemento', 'elementos',
+    'reacao', 'reacoes', 'composto', 'compostos', 'liga', 'ligas',
+    'ph', 'acido', 'acidos', 'base', 'bases', 'neutralizacao',
+    'tabela periodica', 'eletrons', 'protons', 'neutrons', 'camada',
+    'organico', 'organica', 'hidrocarboneto', 'polimero', 'polimeros',
+    'solucao', 'solucoes', 'concentracao', 'diluicao', 'solubilidade',
+    'estequiometria', 'mol', 'massa molar', 'oxidacao', 'reducao',
+    'eletroquimica', 'pilha', 'bateria', 'corrosao',
+    'carbono', 'hidrogenio', 'oxigenio', 'nitrogenio', 'enxofre',
+    'sal', 'cloreto', 'sulfato', 'carbonato', 'bicarbonato',
+    'gás', 'gas', 'vapor', 'condensacao', 'ebulicao', 'fusao',
+    'cristal', 'cristalino', 'amorfo', 'estrutura cristalina',
+    'isomeria', 'isomero', 'cadeia carbônica', 'funcao organica',
+    'alcool', 'aldeido', 'cetona', 'acido carboxilico', 'amina',
+    'coligativa', 'ebulioscopia', 'crioscopia', 'osmose',
+    'ph', 'ionizacao', 'dissociacao', 'constante de equilibrio',
+    'velocidade de reacao', 'catalisador', 'ativacao',
+    'cinza', 'fogos', 'explosivo', 'nitroglicerina', 'dinitrotolueno',
+    'combustao', 'combustivel', 'hidrocarboneto', 'petroleo', 'gas natural',
+    'poluicao quimica', 'metais pesados', 'mercurio', 'chumbo',
+    'ferro', 'aco', 'cobre', 'aluminio', 'ouro', 'prata',
+    'gasolina', 'etanol', 'biodiesel', 'hidrogenio verde',
   ],
   'Biologia': [
-    'célula', 'células', 'DNA', 'RNA', 'gene', 'genes', 'genética',
-    'evolução', 'evolutiva', 'seleção natural', 'darwin',
+    'celula', 'celulas', 'dna', 'rna', 'gene', 'genes', 'genetica',
+    'evolucao', 'evolutiva', 'selecao natural', 'darwin',
     'ecossistema', 'ecossistemas', 'biodiversidade', 'cadeia alimentar',
-    'fotossíntese', 'respiração celular', 'metabolismo',
-    'bactéria', 'bactérias', 'vírus', 'microrganismo',
-    'humano', 'corpo humano', 'sistema digestório', 'sistema nervoso',
-    'saúde', 'doença', 'doenças', 'epidemia', 'pandemia', 'vacina',
-    'hormônio', 'hormônios', 'enzima', 'enzimas', 'proteína', 'proteínas',
-    'meio ambiente', 'desmatamento', 'poluição', 'sustentabilidade',
-    'plantio', 'ciclo da água', 'bioma', 'biomas',
+    'fotossintese', 'respiracao celular', 'metabolismo',
+    'bacteria', 'bacterias', 'virus', 'microrganismo',
+    'humano', 'corpo humano', 'sistema digestorio', 'sistema nervoso',
+    'saude', 'doenca', 'doencas', 'epidemia', 'pandemia', 'vacina',
+    'hormonio', 'hormonios', 'enzima', 'enzimas', 'proteina', 'proteinas',
+    'meio ambiente', 'desmatamento', 'poluicao', 'sustentabilidade',
+    'plantio', 'ciclo da agua', 'bioma', 'biomas',
+    'mitose', 'meiose', 'cromossomo', 'alelo', 'genotipo', 'fenotipo',
+    'hereditario', 'hereditariedade', 'mendel', 'diibridismo',
+    'teia alimentar', 'ciclo do carbono', 'ciclo do nitrogenio',
+    'decompositor', 'produtor', 'consumidor', 'predador', 'presa',
+    'simbiose', 'mutualismo', 'parasitismo', 'competicao',
+    'selecao artificial', 'especiacao', 'extincao', 'fosseis',
+    'anatomia', 'fisiologia', 'histologia', 'tecido',
+    'sangue', 'coracao', 'pulmao', 'rim', 'figado', 'intestino',
+    'sistema imunologico', 'anticorpo', 'antigeno', 'linfocito',
+    'fotossintese', 'clorofila', 'ciclo de calvin', 'krebs',
+    'glicolise', 'atp', 'mitocondria', 'ribossomo',
+    'aminoacido', 'lipideo', 'carboidrato', 'acido nucleico',
+    'biodiversidade', 'conservacao', 'desmatamento', 'queimada',
+    'cambio climatico', 'efeito estufa', 'camada de ozonio',
+    'transgênico', 'transgenico', 'engenharia genetica', 'clonagem',
+    'covid', 'sars', 'coronavirus', 'gripe', 'dengue', 'zika',
+    'antibiotico', 'antibacteriano', 'resistencia', 'mutacao',
   ],
   'Matemática': [
-    'equação', 'equações', 'função', 'funções', 'grau', 'polinômio',
-    'geometria', 'triângulo', 'círculo', 'área', 'perímetro', 'volume',
-    'estatística', 'probabilidade', 'combinatória', 'arranjo', 'combinação',
-    'progressão', 'PA', 'PG', 'razão', 'diferença',
-    'logaritmo', 'exponencial', 'raiz', 'potência',
+    'equacao', 'equacoes', 'funcao', 'funcoes', 'grau', 'polinomio',
+    'geometria', 'triangulo', 'circulo', 'area', 'perimetro', 'volume',
+    'estatistica', 'probabilidade', 'combinatoria', 'arranjo', 'combinacao',
+    'progressao', 'pa', 'pg', 'razao', 'diferenca',
+    'logaritmo', 'exponencial', 'raiz', 'potencia',
     'trigonometria', 'seno', 'cosseno', 'tangente',
     'matriz', 'sistemas lineares', 'determinante',
-    'cálculo', 'derivada', 'integral', 'limite',
-    'porcentagem', 'razão', 'proporção', 'regra de três',
+    'calculo', 'derivada', 'integral', 'limite',
+    'porcentagem', 'proporcao', 'regra de tres',
+    'plano cartesiano', 'reta', 'reta tangente', 'circunferencia',
+    'hipotenusa', 'cateto', 'pitagoras', 'teorema',
+    'congruencia', 'semelhanca', 'angulo', 'angulos',
+    'simetria', 'translacao', 'rotacao', ' reflexao',
+    'prisma', 'piramide', 'cilindro', 'cone', 'esfera',
+    'conversao', 'unidade', 'sistema metrico',
+    'mmc', 'mdc', 'divisao', 'divisivel', 'primo', 'primo',
+    'fracao', 'numeros racionais', 'irracional',
+    'desigualdade', 'modulo', 'valor absoluto',
+    'conjunto', 'conjuntos', 'uniao', 'intersecao',
+    'estatistica', 'media', 'mediana', 'moda', 'desvio',
+    'grafico', 'grafico de barras', 'histograma',
+    'juros simples', 'juros compostos', 'capital', 'taxa',
+    'escala', 'razao grafica', 'proporcionalidade',
+    'congruencia', 'lado', 'diagonal', 'poligono',
+    'circulo', 'arco', 'corda', 'setor circular',
+    'funcao afim', 'funcao quadratica', 'funcao exponencial',
+    'funcao logaritmica', 'funcao trigonometrica',
+    'permutacao', 'combinacao', 'principio multiplicativo',
+    'bayes', 'problema', 'conta', 'calculo', 'numero',
+    'quociente', 'dividendo', 'divisor', 'resto',
+    'multiplo', 'divisor', 'criterio de divibilidade',
+    'notacao cientifica', 'notacao decimal',
+    'corpo', 'faces', 'arestas', 'vertices',
+    'paralela', 'perpendicular', 'concotada',
+    'vetor', 'vetores', 'produto escalar', 'produto vetorial',
   ],
   'Linguagens': [
-    'texto', 'letra', 'música', 'canção', 'poema', 'poesia',
-    'gênero textual', 'gêneros', 'discurso', 'argumentação',
-    'norma culta', 'gramática', 'sintaxe', 'semântica',
-    'interpretação', 'linguagem', 'figuras de linguagem',
-    'metáfora', 'ironia', 'ambiguidade',
-    'literatura', 'romance', 'conto', 'crônica',
-    'inglês', 'english', 'espanhol', 'español',
-    'leitura', 'compreensão', 'coerência', 'coesão',
+    'texto', 'letra', 'musica', 'cancao', 'poema', 'poesia',
+    'genero textual', 'generos', 'discurso', 'argumentacao',
+    'norma culta', 'gramatica', 'sintaxe', 'semantica',
+    'interpretacao', 'linguagem', 'figuras de linguagem',
+    'metafora', 'ironia', 'ambiguidade',
+    'literatura', 'romance', 'conto', 'cronica',
+    'ingles', 'english', 'espanhol', 'espanhol',
+    'leitura', 'compreensao', 'coerencia', 'coesao',
+    'substantivo', 'adjetivo', 'verbo', 'adverbio', 'preposicao',
+    'sujeito', 'predicado', 'objeto', 'complemento',
+    'oracao', 'frase', 'periodo', 'paragrafo',
+    'genero literario', 'narrativo', 'descritivo', 'dissertativo',
+    'lirismo', 'subjetividade', 'eu lirico',
+    'verso', 'estrofe', 'estrofe', 'rima', 'metrica',
+    'soneto', 'ode', 'elegia', 'epigrama',
+    'prosa', 'romance', 'novela', 'ficcao',
+    'jornalistico', 'noticia', 'editorial', 'reportagem',
+    'publicitario', 'propaganda', 'anuncio',
+    'instrucional', 'receita', 'manual', 'bula',
+    'dialogo', 'entrevista', 'debate',
+    'plano de texto', 'introducao', 'conclusao', 'argumento',
+    'redacao', 'redigir', 'escrever', 'escreva',
+    'lingua portuguesa', 'linguagem verbal', 'linguagem nao verbal',
+    'recurso expressivo', 'recurso linguistico',
+    'conotacao', 'denotacao', 'polissemia', 'antonimo', 'sinonimo',
+    'campos semanticos', 'jargao', 'gíria',
+    'discurso indireto livre', 'fluxo de consciencia',
+    'foco narrativo', 'tempo verbal', 'genero do texto',
+    'tema', 'titulo', 'publico alvo', 'intencao',
+    'ingles', 'spanish', 'idioma', 'idiomas', 'extrangeiro',
   ],
   'Geografia': [
-    'população', 'populações', 'demografia', 'crescimento populacional',
-    'cidade', 'cidades', 'urbanização', 'metropolização',
-    'globalização', 'global', 'mundial',
-    'relevo', 'continente', 'oceano', 'placa tectônica',
-    'clima', 'climático', 'temperatura', 'precipitação',
-    'agricultura', 'agropecuária', 'lavoura', 'plantio',
-    'recurso', 'recursos naturais', 'matéria-prima',
-    'fronteira', 'território', 'região', 'espaço',
-    'desigualdade', 'exclusão social', 'fome', 'miséria',
-    'energia renovável', 'sustentabilidade ambiental',
+    'populacao', 'populacoes', 'demografia', 'crescimento populacional',
+    'cidade', 'cidades', 'urbanizacao', 'metropolizacao',
+    'globalizacao', 'global', 'mundial',
+    'relevo', 'continente', 'oceano', 'placa tectonica',
+    'clima', 'climatico', 'temperatura', 'precipitacao',
+    'agricultura', 'agropecuaria', 'lavoura', 'plantio',
+    'recurso', 'recursos naturais', 'materia-prima',
+    'fronteira', 'territorio', 'regiao', 'espaco',
+    'desigualdade', 'exclusao social', 'fome', 'miseria',
+    'energia renovavel', 'sustentabilidade ambiental',
+    'mapa', 'atlas', 'coordenadas', 'latitude', 'longitude',
+    'meridiano', 'equador', 'tropico', 'circulo polar',
+    'brasilia', 'brasil', 'americas', 'america do sul',
+    'oeste', 'leste', 'norte', 'sul',
+    'portos', 'aeroportos', 'rodovia', 'ferrovia',
+    'comercio', 'importacao', 'exportacao', 'balanca comercial',
+    'piib', 'pib', 'desenvolvimento', 'idh', 'indicadores',
+    'desemprego', 'informalidade', 'trabalho escravo',
+    'migracao', 'migrante', 'refugiado', 'apatriado',
+    'conflito fundiario', 'reforma agraria', 'sem terra',
+    'indigena', 'quilombo', 'comunidade tradicional',
+    'urbanizacao', 'crescimento urbano', 'periferia', 'favela',
+    'megalopole', 'regiao metropolitana',
+    'bacia hidrografica', 'rio', 'lago', 'represa', 'aquifero',
+    'solo', 'erosao', 'desmatamento', 'reflorestamento',
+    'bioma', 'amazonia', 'cerrado', 'mata atlantica', 'caatinga',
+    'pantanal', 'pampa',
+    'cambio climatico', 'aquecimento global', 'emissao', 'co2',
+    'etica ambiental', 'desenvolvimento sustentavel',
+    'geopolitica', 'onu', 'mercosul', 'brics',
+    'imperialismo', 'neocolonialismo', 'dependencia',
   ],
   'História': [
-    'Brasil colonial', 'colônia', 'colonial', 'escravidão', 'escravatura',
-    'independência', 'independente', 'proclamação',
-    'república', 'monarquia', 'imperial',
-    'ditadura', 'regime militar', 'AI-5',
+    'brasil colonial', 'colonia', 'colonial', 'escravidao', 'escravatura',
+    'independencia', 'independente', 'proclamacao',
+    'republica', 'monarquia', 'imperial',
+    'ditadura', 'regime militar', 'ai-5',
     'guerra', 'guerras', 'mundial', 'primeira', 'segunda',
-    'revolução', 'revoltas', 'revolta',
-    'ditatorial', 'autoritário', 'regime',
-    'século', 'Idade Média', 'Renascimento', 'Antiguidade',
-    'civilização', 'império', 'república',
+    'revolucao', 'revoltas', 'revolta',
+    'ditatorial', 'autoritario', 'regime',
+    'seculo', 'idade media', 'renascimento', 'antiguidade',
+    'civilizacao', 'imperio', 'republica',
     'movimento social', 'trabalhador', 'sindicalismo',
-    'imigração', 'imigrante',
+    'imigracao', 'imigrante',
+    'descobrimento', 'pedro alvares cabral', 'tupinamba',
+    'bandeirantes', 'missoes', 'jesuitas',
+    'capitanias hereditarias', 'governo geral', 'administracao colonial',
+    'ouro', 'mineracao', 'ciclo do ouro', 'minas gerais',
+    'inconfidencia mineira', 'tiradentes', 'jacobinos',
+    'revolta dos maloes', 'inconfidencia baiana',
+    'pernambuco', 'revolucao pernambucana',
+    'abertura dos portos', 'dom joao', 'd. joao',
+    'independencia do brasil', 'dom pedro i', 'pedro i',
+    'brasil imperial', 'casa da suplicacao', 'conselho de estado',
+    'guerra do paraguai', 'triplice alianca',
+    'ababolicao', 'lei aurea', 'princessa', 'abole',
+    'republica da espada', 'republica velha', 'cafe com leite',
+    'era vargas', 'getulio vargas', 'estado novo',
+    'plebiscito', 'constituicao', 'carta de 37',
+    'getulio', 'juscelino', 'juscelino kubitschek',
+    'brasilia', '50 anos em 5',
+    'golpe de 64', 'ai-5', 'censura', 'tortura',
+    'ditadura militar', 'resistencia', 'armada',
+    'abertura democratica', 'anistia', 'diretas ja',
+    'nova republica', 'collor', 'impeachment',
+    'era lula', 'dilma', 'golpe parlamentar',
+    'segunda guerra', 'holocausto', 'nazismo', 'fascismo',
+    'guerra fria', 'urss', 'europa feudal', 'feudalismo',
+    'iluminismo', 'revolucao francesa', 'independencia americana',
+    'revolucao industrial', 'capitalismo', 'socialismo',
+    'messias', 'dom pedro ii', 'abolição',
   ],
   'Filosofia': [
-    'ética', 'moral', 'justiça', 'justo',
+    'etica', 'moral', 'justica', 'justo',
     'liberdade', 'liberdades', 'direito', 'direitos',
-    'cidadania', 'cidadão', 'cidadã',
-    'democracia', 'democrático',
+    'cidadania', 'cida dao', 'cida da',
+    'democracia', 'democratico',
     'igualdade', 'desigualdade',
     'dignidade', 'dignidade humana',
-    'pensador', 'filósofo', 'filósofa',
-    'consciência', 'existencial', 'existencialismo',
+    'pensador', 'filosofo', 'filosofa',
+    'consciencia', 'existencial', 'existencialismo',
     'virtude', 'bem', 'mal', 'verdade',
+    'platon', 'aristoteles', 'socrates', 'heraclito',
+    'descartes', 'kant', 'nietzsche', 'spinoza',
+    'locke', 'hobbes', 'rousseau', 'marx',
+    'sartre', 'camus', 'heidegger', 'fenomenologia',
+    'ontologia', 'epistemologia', 'logica', 'dialetica',
+    'dualismo', 'monismo', 'materialismo', 'idealismo',
+    'utilitarismo', 'deontologia', 'virtude',
+    'contrato social', 'vontade geral',
+    'imperativo categorico', 'etica kantiana',
+    'niilismo', 'absurdo', 'angustia', 'autenticidade',
+    'sujeito', 'objeto', 'fenomeno', 'noumen',
+    'razao', 'entendimento', 'sensibilidade',
+    'liberdade de consciencia', 'pluralismo',
+    'igualdade de genero', 'etica ambiental',
+    'bioetica', 'eutanasia', 'aborto',
+    'propriedade intelectual', 'direitos autorais',
   ],
-  'Ciências Humanas': [
-    'população', 'sociedade', 'social', 'cultura',
-    'economia', 'econômico', 'mercado', 'capitalismo',
-    'política', 'político', 'governo', 'estado',
-    'geopolítica', 'global', 'mundial',
-    'desigualdade', 'exclusão', 'marginalização',
-  ],
-  'Ciências da Natureza': [
-    'natureza', 'natural', 'ambiental', 'meio ambiente',
-    'ecologia', 'sustentável', 'sustentabilidade',
-    'recursos naturais', 'biodiversidade',
-    'clima', 'atmosfera', 'hidrosfera',
-  ],
+  'Ciências Humanas': [],
+  'Ciências da Natureza': [],
 }
 
 function sleep(ms: number): Promise<void> {
@@ -146,28 +290,37 @@ function normalize(text: string): string {
   return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
-function classifySubject(discipline: string | null, context: string | null): Subject {
+function classifySubject(discipline: string | null, context: string | null, altTexts: string[] = []): Subject {
   const broad = mapBroadSubject(discipline)
 
-  if (broad === 'Matemática' || broad === 'Linguagens') return broad
+  const fullText = [
+    context || '',
+    ...altTexts,
+  ].join(' ')
 
-  if (!context) return broad
-
-  const text = normalize(context)
-  let bestSubject: Subject = broad
-  let bestScore = 0
-
-  const candidates = broad === 'Ciências Humanas'
-    ? (['História', 'Geografia', 'Filosofia'] as Subject[])
+  const candidates: Subject[] = broad === 'Ciências Humanas'
+    ? ['História', 'Geografia', 'Filosofia']
     : broad === 'Ciências da Natureza'
-      ? (['Física', 'Química', 'Biologia'] as Subject[])
-      : [broad]
+      ? ['Física', 'Química', 'Biologia']
+      : broad === 'Matemática'
+        ? ['Matemática']
+        : broad === 'Linguagens'
+          ? ['Linguagens']
+          : ['Física', 'Química', 'Biologia', 'Matemática', 'Linguagens', 'História', 'Geografia', 'Filosofia']
+
+  if (!fullText.trim()) return broad || 'Linguagens'
+
+  const text = normalize(fullText)
+  let bestSubject: Subject = broad || 'Linguagens'
+  let bestScore = 0
 
   for (const subject of candidates) {
     const keywords = SUBJECT_KEYWORDS[subject] || []
     let score = 0
     for (const kw of keywords) {
-      if (text.includes(normalize(kw))) score++
+      const nkw = normalize(kw)
+      if (nkw.length < 3) continue
+      if (text.includes(nkw)) score++
     }
     if (score > bestScore) {
       bestScore = score
@@ -175,16 +328,20 @@ function classifySubject(discipline: string | null, context: string | null): Sub
     }
   }
 
-  return bestSubject
+  if (bestScore === 0 && (!broad || broad === 'Linguagens')) {
+    return 'Linguagens'
+  }
+
+  return bestScore > 0 ? bestSubject : broad
 }
 
-function mapBroadSubject(discipline: string | null): Subject {
-  if (!discipline) return 'Linguagens'
+function mapBroadSubject(discipline: string | null): Subject | null {
+  if (!discipline) return null
   const key = normalize(discipline)
   for (const [k, v] of Object.entries(DISCIPLINE_MAP)) {
     if (key.includes(normalize(k))) return v
   }
-  return 'Linguagens'
+  return null
 }
 
 function estimateDifficulty(index: number, context: string | null): ChallengeDifficulty {
@@ -221,6 +378,8 @@ function transformQuestion(enem: EnemQuestion): ChallengeQuestion {
     correct: alt.isCorrect,
   }))
 
+  const altTexts = enem.alternatives.map(a => a.text || '').filter(Boolean)
+
   const hasImages = enem.alternatives.some(a => a.text === null && a.file)
   const contextParts: string[] = []
   if (enem.context) contextParts.push(enem.context)
@@ -235,7 +394,7 @@ function transformQuestion(enem: EnemQuestion): ChallengeQuestion {
     id: crypto.randomUUID(),
     type: 'multipla',
     title,
-    subject: classifySubject(enem.discipline, enem.context),
+    subject: classifySubject(enem.discipline, enem.context, altTexts),
     difficulty: estimateDifficulty(enem.index, enem.context),
     content: contextParts.join('\n\n') || undefined,
     imageUrl: enem.files.length > 0 ? enem.files[0] : undefined,
