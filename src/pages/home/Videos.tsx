@@ -239,9 +239,10 @@ export default function Videos() {
     try {
       await createVideoNote(fullNote)
       setNotes(prev => [...prev, fullNote])
-    } catch (e) {
-      console.error('Erro ao salvar anotação:', e)
-      alert('Erro ao salvar anotação. Verifique se você está logado.')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      console.error('Erro ao salvar anotação:', msg)
+      alert(`Erro ao salvar anotação: ${msg}`)
     }
   }, [watchingVideo])
 
