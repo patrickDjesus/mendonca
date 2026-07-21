@@ -126,6 +126,8 @@ export default function Desafios() {
     if (memoryTimerRef.current) { clearInterval(memoryTimerRef.current); memoryTimerRef.current = null }
   }, [])
 
+  useEffect(() => () => stopMemoryTimer(), [stopMemoryTimer])
+
   useEffect(() => {
     let mounted = true
     async function load() {
@@ -216,12 +218,10 @@ export default function Desafios() {
       const { score, xpEarned } = calculateScore(correctCount, wrongCount, totalTimeMs, activeChallenge.questionIds.length, activeChallenge.difficulty)
       const attempt: ChallengeAttempt = { id: crypto.randomUUID(), challengeId: activeChallenge.id, answers: [...answers], totalTimeMs, correctCount, wrongCount, score, xpEarned, completedAt: Date.now() }
       setAttempts(prev => [...prev, attempt]); setLastResult(attempt)
-      setStreak(prev => {
-        const ns = { currentStreak: correctCount > wrongCount ? prev.currentStreak + 1 : 0, longestStreak: correctCount > wrongCount ? Math.max(prev.longestStreak, prev.currentStreak + 1) : prev.longestStreak, totalXp: prev.totalXp + xpEarned, lastChallengeDate: new Date().toISOString().split('T')[0] }
-        createAttempt(attempt).catch(() => {}); upsertStreak(ns).catch(() => {})
-        logActivity('challenge_done', `${correctCount > wrongCount ? 'Acertou' : 'Errou'} "${activeChallenge.title}" (${correctCount}/${activeChallenge.questionIds.length})`, 'challenge', correctCount > wrongCount ? '#b450b4' : '#c86450').catch(() => {})
-        return ns
-      })
+      const ns = { currentStreak: correctCount > wrongCount ? streak.currentStreak + 1 : 0, longestStreak: correctCount > wrongCount ? Math.max(streak.longestStreak, streak.currentStreak + 1) : streak.longestStreak, totalXp: streak.totalXp + xpEarned, lastChallengeDate: new Date().toISOString().split('T')[0] }
+      setStreak(ns)
+      createAttempt(attempt).catch(() => {}); upsertStreak(ns).catch(() => {})
+      logActivity('challenge_done', `${correctCount > wrongCount ? 'Acertou' : 'Errou'} "${activeChallenge.title}" (${correctCount}/${activeChallenge.questionIds.length})`, 'challenge', correctCount > wrongCount ? '#b450b4' : '#c86450').catch(() => {})
       setView('results')
       stopMemoryTimer()
     } else {
@@ -243,7 +243,7 @@ export default function Desafios() {
         }, 0)
       }
     }
-  }, [activeChallenge, currentQIndex, answers, stopTimer, resetQuizState, stopMemoryTimer])
+  }, [activeChallenge, currentQIndex, answers, stopTimer, resetQuizState, stopMemoryTimer, streak])
 
   const handleBackToList = useCallback(() => { setView('list'); setActiveChallenge(null); setLastResult(null); stopTimer(); stopMemoryTimer(); setQuestionHidden(false) }, [stopTimer, stopMemoryTimer])
 
@@ -254,7 +254,7 @@ export default function Desafios() {
       createQuestion(q).catch(() => {})
       return [...prev, q]
     })
-    setView(listOrBack()); setEditingQuestion(null)
+    setView(v => v === 'edit_question' ? 'list_questions' : v === 'create_question' ? 'list_questions' : 'list'); setEditingQuestion(null)
   }, [])
 
   const handleSaveChallenge = useCallback((_c: Challenge, _newQs: ChallengeQuestion[]) => {
@@ -264,7 +264,7 @@ export default function Desafios() {
       createChallenge(_c).catch(() => {})
       return [...prev, _c]
     })
-    setView(listOrBack())
+    setView(v => v === 'edit_challenge' ? 'list_challenges' : v === 'create_challenge' ? 'list_challenges' : 'list')
   }, [])
 
   const handleDeleteChallenge = useCallback(async () => {
@@ -281,12 +281,6 @@ export default function Desafios() {
     try { await deleteQuestion(deleteQuestionTarget.id); setQuestions(prev => prev.filter(q => q.id !== deleteQuestionTarget.id)); setChallenges(prev => prev.map(c => ({ ...c, questionIds: c.questionIds.filter(id => id !== deleteQuestionTarget.id) }))); logActivity('question_deleted', `Deletou questão "${deleteQuestionTarget.title}"`, 'challenge', '#c85050').catch(() => {}) } catch (e) { console.error('Erro ao deletar questão:', e) }
     setDeleteQuestionTarget(null)
   }, [deleteQuestionTarget])
-
-  const listOrBack = useCallback(() => {
-    if (view === 'edit_question') return 'list_questions' as View
-    if (view === 'edit_challenge') return 'list_challenges' as View
-    return 'list' as View
-  }, [view])
 
   useEffect(() => { if (view === 'quiz') { const q = getCurrentQuestion(); if (q?.type === 'ordem' && dragOrder.length === 0) setDragOrder(shuffleArray(q.orderItems.map(i => i.id))) } }, [view, getCurrentQuestion, dragOrder.length])
 
@@ -388,7 +382,7 @@ export default function Desafios() {
   if (view === 'create_question' || view === 'edit_question') {
     return (
       <div className="desafios-page">
-        <QuestionBuilder initial={editingQuestion || undefined} onSave={handleSaveQuestion} onCancel={() => { setView(listOrBack()); setEditingQuestion(null) }} />
+        <QuestionBuilder initial={editingQuestion || undefined} onSave={handleSaveQuestion} onCancel={() => { setView(v => v === 'edit_question' ? 'list_questions' : 'list'); setEditingQuestion(null) }} />
       </div>
     )
   }
@@ -396,7 +390,7 @@ export default function Desafios() {
   if (view === 'create_challenge' || view === 'edit_challenge') {
     return (
       <div className="desafios-page">
-        <ChallengeBuilder allQuestions={questions} initial={editingChallenge || undefined} onSave={handleSaveChallenge} onCancel={() => { setView(listOrBack()); setEditingChallenge(null) }} />
+        <ChallengeBuilder allQuestions={questions} initial={editingChallenge || undefined} onSave={handleSaveChallenge} onCancel={() => { setView(v => v === 'edit_challenge' ? 'list_challenges' : 'list'); setEditingChallenge(null) }} />
       </div>
     )
   }

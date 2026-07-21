@@ -294,10 +294,11 @@ export default function Simulados() {
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [elapsed, setElapsed] = useState(0)
   const [lightboxImg, setLightboxImg] = useState<string | null>(null)
+  const [fetchError, setFetchError] = useState<string | null>(null)
+  const [fetching, setFetching] = useState(false)
   const startTimeRef = useRef<number>(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const questionRefs = useRef<Map<number, HTMLDivElement | null>>(new Map())
-  const navigatorRef = useRef<HTMLDivElement>(null)
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
@@ -323,26 +324,34 @@ export default function Simulados() {
     setQuestions([])
     setAnswers({})
     setElapsed(0)
+    setFetchError(null)
+    setFetching(true)
 
-    let allQuestions: ChallengeQuestion[] = []
-    let offset = 0
-    const limit = 50
+    try {
+      let allQuestions: ChallengeQuestion[] = []
+      let offset = 0
+      const limit = 50
 
-    do {
-      const res = await fetch(`${API_BASE}/exams/${year}/questions?limit=${limit}&offset=${offset}`)
-      if (!res.ok) throw new Error(`Erro ao buscar questões ENEM ${year}: ${res.status}`)
-      const data: EnemApiResponse = await res.json()
-      allQuestions = [...allQuestions, ...data.questions.map(transformQuestion)]
-      offset += limit
-      if (!data.metadata.hasMore) break
-    } while (true)
+      do {
+        const res = await fetch(`${API_BASE}/exams/${year}/questions?limit=${limit}&offset=${offset}`)
+        if (!res.ok) throw new Error(`Erro ao buscar questões ENEM ${year}: ${res.status}`)
+        const data: EnemApiResponse = await res.json()
+        allQuestions = [...allQuestions, ...data.questions.map(transformQuestion)]
+        offset += limit
+        if (!data.metadata.hasMore) break
+      } while (true)
 
-    setQuestions(allQuestions)
-    setView('exam')
+      setQuestions(allQuestions)
+      setView('exam')
 
-    startTimeRef.current = Date.now()
-    setElapsed(0)
-    timerRef.current = setInterval(() => setElapsed(Date.now() - startTimeRef.current), 200)
+      startTimeRef.current = Date.now()
+      setElapsed(0)
+      timerRef.current = setInterval(() => setElapsed(Date.now() - startTimeRef.current), 200)
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : 'Erro ao carregar questões')
+    } finally {
+      setFetching(false)
+    }
   }, [])
 
   const handleAnswer = useCallback((questionId: string, optionId: string) => {
@@ -366,6 +375,7 @@ export default function Simulados() {
 
   const handleFinish = useCallback(() => {
     stopTimer()
+    setView('gallery')
   }, [stopTimer])
 
   const questionsContainerRef = useRef<HTMLDivElement>(null)
@@ -403,6 +413,23 @@ export default function Simulados() {
           <div className="simulados-empty">
             <div className="quiz-spinner" />
             <h4 className="simulados-empty-title">Carregando...</h4>
+          </div>
+        ) : fetching ? (
+          <div className="simulados-empty">
+            <div className="quiz-spinner" />
+            <h4 className="simulados-empty-title">Carregando questões do ENEM {selectedYear}...</h4>
+            <p className="simulados-empty-desc">Isso pode levar alguns segundos.</p>
+          </div>
+        ) : fetchError ? (
+          <div className="simulados-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 48, height: 48, color: '#c85050' }}>
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <h4 className="simulados-empty-title">Erro ao carregar</h4>
+            <p className="simulados-empty-desc">{fetchError}</p>
+            <button className="simulado-card-btn" onClick={() => setFetchError(null)} type="button">Voltar</button>
           </div>
         ) : (
           <div className="simulados-grid">
@@ -537,7 +564,7 @@ export default function Simulados() {
           })}
         </div>
 
-        <div className="exam-navigator" ref={navigatorRef}>
+        <div className="exam-navigator">
           <div className="navigator-header">
             <span className="navigator-title">Questões</span>
             <span className="navigator-count">{answeredCount}/{totalQuestions}</span>

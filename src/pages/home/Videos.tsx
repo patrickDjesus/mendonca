@@ -10,6 +10,17 @@ import '../../styles/videos.css'
 
 import { formatTimestamp } from '../../utils/format'
 
+function parseDurationToSeconds(dur: string | undefined): number {
+  if (!dur) return 3600
+  const hMatch = dur.match(/(\d+)\s*h/)
+  const mMatch = dur.match(/(\d+)\s*min/)
+  const colonMatch = dur.match(/^(\d+):(\d{2})$/)
+  if (hMatch) return parseInt(hMatch[1]) * 3600 + (mMatch ? parseInt(mMatch[1]) * 60 : 0)
+  if (mMatch) return parseInt(mMatch[1]) * 60
+  if (colonMatch) return parseInt(colonMatch[1]) * 60 + parseInt(colonMatch[2])
+  return 3600
+}
+
 function getSavedProgress(videoId: string): number {
   try {
     const raw = localStorage.getItem(getProgressKey(videoId))
@@ -467,14 +478,14 @@ export default function Videos() {
                           </svg>
                         </div>
                         {video.duration && <span className="video-card-duration">{video.duration}</span>}
-                        {savedProgressMap.has(video.id) && (
-                          <div className="video-card-progress-bar">
-                            <div
-                              className="video-card-progress-fill"
-                              style={{ width: `${Math.min(100, (savedProgressMap.get(video.id)! / 3600) * 100)}%` }}
-                            />
-                          </div>
-                        )}
+                    {savedProgressMap.has(video.id) && (
+                      <div className="video-card-progress-bar">
+                        <div
+                          className="video-card-progress-fill"
+                          style={{ width: `${Math.min(100, (savedProgressMap.get(video.id)! / parseDurationToSeconds(video.duration)) * 100)}%` }}
+                        />
+                      </div>
+                    )}
                       </div>
                       <div className="video-card-info">
                         <span className="video-card-title">{video.title}</span>

@@ -15,7 +15,6 @@ export default function FantasyScene() {
       <div className="mouse-glow" />
       <div className="study-logo shelf-logo">
         <img src="/logo.png" alt="Mendonça" className="shelf-logo-img" />
-        <span className="logo-text">Mendonça</span>
       </div>
 
       {/* Warm light cone */}
@@ -135,14 +134,47 @@ export default function FantasyScene() {
       </div>
 
       {/* Floating dust particles */}
-      {[...Array(20)].map((_, i) => (
-        <div key={i} className="dust" style={{
-          left: `${10 + (i * 4.2)}%`,
-          top: `${15 + ((i * 7) % 65)}%`,
-          animationDelay: `${i * 0.6}s`,
-          animationDuration: `${4 + (i % 4) * 1.5}s`,
-          width: `${1.5 + (i % 3)}px`,
-          height: `${1.5 + (i % 3)}px`,
+      {[...Array(40)].map((_, i) => (
+        <div key={`dust-${i}`} className={`dust ${i % 3 === 0 ? 'dust-lg' : i % 3 === 1 ? 'dust-sm' : ''}`} style={{
+          left: `${(i * 2.5) % 100}%`,
+          top: `${10 + ((i * 11) % 75)}%`,
+          animationDelay: `${i * 0.45}s`,
+          animationDuration: `${5 + (i % 5) * 1.2}s`,
+          width: `${1 + (i % 4) * 0.7}px`,
+          height: `${1 + (i % 4) * 0.7}px`,
+        }} />
+      ))}
+
+      {/* Glowing orbs */}
+      {[...Array(8)].map((_, i) => (
+        <div key={`orb-${i}`} className="glow-orb" style={{
+          left: `${12 + (i * 11)}%`,
+          top: `${20 + ((i * 13) % 55)}%`,
+          animationDelay: `${i * 1.5}s`,
+          animationDuration: `${6 + (i % 3) * 2}s`,
+          width: `${3 + (i % 3) * 2}px`,
+          height: `${3 + (i % 3) * 2}px`,
+        }} />
+      ))}
+
+      {/* Firefly sparkles */}
+      {[...Array(12)].map((_, i) => (
+        <div key={`spark-${i}`} className="sparkle" style={{
+          left: `${5 + (i * 8)}%`,
+          top: `${15 + ((i * 9) % 65)}%`,
+          animationDelay: `${i * 0.8}s`,
+          animationDuration: `${3 + (i % 4) * 0.8}s`,
+        }} />
+      ))}
+
+      {/* Light streaks */}
+      {[...Array(5)].map((_, i) => (
+        <div key={`streak-${i}`} className="light-streak" style={{
+          left: `${15 + (i * 18)}%`,
+          top: `${10 + (i * 15)}%`,
+          animationDelay: `${i * 2.5}s`,
+          animationDuration: `${8 + i * 1.5}s`,
+          transform: `rotate(${-30 + i * 15}deg)`,
         }} />
       ))}
     </div>

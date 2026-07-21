@@ -7,6 +7,7 @@ import type { DocMeta } from '../types/doc'
 interface DocEditorProps {
   doc: DocMeta
   onSave: (doc: DocMeta) => void
+  onCancel: () => void
 }
 
 function ToolbarBtn({ active, title, onClick, children }: {
@@ -31,7 +32,7 @@ function ToolbarSep() {
   return <div className="doc-toolbar-sep" />
 }
 
-export default function DocEditor({ doc, onSave }: DocEditorProps) {
+export default function DocEditor({ doc, onSave, onCancel }: DocEditorProps) {
   const editor = useCreateBlockNote({
     initialContent: doc.content && doc.content.length > 0
       ? doc.content
@@ -79,12 +80,12 @@ export default function DocEditor({ doc, onSave }: DocEditorProps) {
         handleSave()
       }
       if (e.key === 'Escape') {
-        handleSave()
+        onCancel()
       }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
-  }, [handleSave])
+  }, [handleSave, onCancel])
 
   const fmt = {
     toggleBold: () => editor.toggleStyles({ bold: true }),
@@ -105,7 +106,7 @@ export default function DocEditor({ doc, onSave }: DocEditorProps) {
   return (
     <div className="doc-editor-overlay">
       <div className="doc-editor-toolbar">
-        <button className="doc-editor-back" onClick={handleSave} type="button">
+        <button className="doc-editor-back" onClick={onCancel} type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="19" y1="12" x2="5" y2="12" />
             <polyline points="12 19 5 12 12 5" />

@@ -72,24 +72,28 @@ export default function Documentos() {
   }, [])
 
   const handleSave = useCallback(async (updated: DocMeta) => {
+    const previousDocs = myDocs
     setMyDocs(prev => prev.map(d => d.id === updated.id ? updated : d))
     setEditingDoc(null)
     try {
       await updateDoc(updated)
     } catch (e) {
       console.error('Erro ao salvar documento:', e)
+      setMyDocs(previousDocs)
     }
-  }, [])
+  }, [myDocs])
 
   const handleDelete = useCallback(async (id: string) => {
+    const previousDocs = myDocs
+    setMyDocs(prev => prev.filter(d => d.id !== id))
+    setDeleteTarget(null)
     try {
       await deleteDoc(id)
     } catch (e) {
       console.error('Erro ao deletar documento:', e)
+      setMyDocs(previousDocs)
     }
-    setMyDocs(prev => prev.filter(d => d.id !== id))
-    setDeleteTarget(null)
-  }, [])
+  }, [myDocs])
 
   const handleCreateWithSubject = useCallback(async (subject: Subject) => {
     const form = pickerFormRef.current
@@ -277,7 +281,7 @@ export default function Documentos() {
   if (editingDoc) {
     return (
       <Suspense fallback={<div className="doc-editor-overlay"><div className="doc-editor-loading">Carregando editor...</div></div>}>
-        <DocEditor doc={editingDoc} onSave={handleSave} />
+        <DocEditor doc={editingDoc} onSave={handleSave} onCancel={() => setEditingDoc(null)} />
       </Suspense>
     )
   }
@@ -360,13 +364,13 @@ export default function Documentos() {
           {activeTab === 'mine' && (
             <AddDocCard onOpenWheel={handleOpenWheel} />
           )}
-          {visibleFiltered.length === 0 && activeTab === 'public' && (
+          {visibleFiltered.length === 0 && (activeTab === 'public' || (activeTab === 'mine' && !searchQuery && !subjectFilter)) && (
             <div className="docs-empty">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
               </svg>
-              <p>{searchQuery || subjectFilter ? 'Nenhum documento encontrado.' : 'Nenhum documento ainda.'}</p>
+              <p>{searchQuery || subjectFilter ? 'Nenhum documento encontrado.' : activeTab === 'mine' ? 'Nenhum documento ainda. Clique em "+" para criar!' : 'Nenhum documento público ainda.'}</p>
             </div>
           )}
           {visibleFiltered.map(doc => (
