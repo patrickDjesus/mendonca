@@ -494,7 +494,6 @@ export async function fetchVideoNotes(videoId: string): Promise<VideoNote[]> {
 
 export async function createVideoNote(note: VideoNote): Promise<VideoNote> {
   const userId = await getUserId()
-  await supabase.from('profiles').upsert({ id: userId }, { onConflict: 'id', ignoreDuplicates: true })
   const { error } = await supabase
     .from('video_notes')
     .insert({
@@ -502,7 +501,7 @@ export async function createVideoNote(note: VideoNote): Promise<VideoNote> {
       user_id: userId,
       video_id: note.videoId,
       text: note.text,
-      timestamp: note.timestamp,
+      timestamp: Math.round(note.timestamp),
     })
 
   if (error) {

@@ -30,7 +30,7 @@ interface Props {
   notes: VideoNote[]
   currentTime: number
   videoTitle?: string
-  onAdd: (note: VideoNote) => void
+  onAdd: (note: VideoNote) => Promise<boolean>
   onDelete: (id: string) => void
   onSeek: (seconds: number) => void
 }
@@ -43,7 +43,7 @@ export default function NotesPanel({ notes, currentTime, videoTitle, onAdd, onDe
 
   const sorted = [...notes].sort((a, b) => a.timestamp - b.timestamp)
 
-  const handleAdd = useCallback(() => {
+  const handleAdd = useCallback(async () => {
     const text = input.trim()
     if (!text || isAdding) return
     setIsAdding(true)
@@ -54,9 +54,10 @@ export default function NotesPanel({ notes, currentTime, videoTitle, onAdd, onDe
       timestamp: currentTime,
       createdAt: Date.now(),
     }
-    onAdd(note)
     setInput('')
-    setTimeout(() => setIsAdding(false), 500)
+    const ok = await onAdd(note)
+    if (!ok) setInput(text)
+    setIsAdding(false)
   }, [input, currentTime, onAdd, isAdding])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {

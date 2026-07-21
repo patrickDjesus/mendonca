@@ -233,16 +233,18 @@ export default function Videos() {
     updateVideoDuration(watchingVideo.id, formatted).catch(() => {})
   }, [watchingVideo, duration])
 
-  const handleAddNote = useCallback(async (note: VideoNote) => {
-    if (!watchingVideo?.id) return
+  const handleAddNote = useCallback(async (note: VideoNote): Promise<boolean> => {
+    if (!watchingVideo?.id) return false
     const fullNote = { ...note, videoId: watchingVideo.id }
     try {
       await createVideoNote(fullNote)
       setNotes(prev => [...prev, fullNote])
+      return true
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
       console.error('Erro ao salvar anotação:', msg)
       alert(`Erro ao salvar anotação: ${msg}`)
+      return false
     }
   }, [watchingVideo])
 
@@ -254,6 +256,7 @@ export default function Videos() {
     } catch (e) {
       console.error('Erro ao deletar anotação:', e)
       setNotes(previousNotes)
+      alert('Erro ao deletar anotação.')
     }
   }, [notes])
 
