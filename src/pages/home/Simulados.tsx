@@ -241,6 +241,16 @@ function renderEnemMarkdown(text: string): string {
     .join('')
 }
 
+function extractImageUrls(text: string): Set<string> {
+  const urls = new Set<string>()
+  const re = /!\[[^\]]*\]\(([^)]+)\)/g
+  let m
+  while ((m = re.exec(text)) !== null) {
+    urls.add(m[1])
+  }
+  return urls
+}
+
 function transformQuestion(enem: EnemQuestion): ChallengeQuestion {
   const options: ChallengeOption[] = enem.alternatives.map(alt => ({
     id: crypto.randomUUID(),
@@ -470,6 +480,8 @@ export default function Simulados() {
         <div className="exam-questions">
           {questions.map((q, idx) => {
             const isAnswered = !!answers[q.id]
+            const contextImages = q.content ? extractImageUrls(q.content) : new Set<string>()
+            const showSeparateImage = q.imageUrl && !contextImages.has(q.imageUrl)
             return (
               <div
                 key={q.id}
@@ -487,10 +499,10 @@ export default function Simulados() {
                     onClick={handleContentClick}
                   />
                 )}
-                {q.imageUrl && (
+                {showSeparateImage && (
                   <img
                     className="exam-q-image"
-                    src={q.imageUrl}
+                    src={q.imageUrl!}
                     alt=""
                     onClick={() => setLightboxImg(q.imageUrl!)}
                   />
