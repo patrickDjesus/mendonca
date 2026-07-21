@@ -332,7 +332,7 @@ function classifySubject(discipline: string | null, context: string | null, altT
     return 'Linguagens'
   }
 
-  return bestScore > 0 ? bestSubject : broad
+  return bestScore > 0 ? bestSubject : (broad || 'Linguagens')
 }
 
 function mapBroadSubject(discipline: string | null): Subject | null {
