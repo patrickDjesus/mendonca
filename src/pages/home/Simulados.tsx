@@ -260,11 +260,20 @@ export default function Simulados() {
     setAnswers({})
     setElapsed(0)
 
-    const res = await fetch(`${API_BASE}/exams/${year}/questions?limit=180&offset=0`)
-    if (!res.ok) throw new Error(`Erro ao buscar questões ENEM ${year}: ${res.status}`)
-    const data: EnemApiResponse = await res.json()
-    const qs = data.questions.map(transformQuestion)
-    setQuestions(qs)
+    let allQuestions: ChallengeQuestion[] = []
+    let offset = 0
+    const limit = 50
+
+    do {
+      const res = await fetch(`${API_BASE}/exams/${year}/questions?limit=${limit}&offset=${offset}`)
+      if (!res.ok) throw new Error(`Erro ao buscar questões ENEM ${year}: ${res.status}`)
+      const data: EnemApiResponse = await res.json()
+      allQuestions = [...allQuestions, ...data.questions.map(transformQuestion)]
+      offset += limit
+      if (!data.metadata.hasMore) break
+    } while (true)
+
+    setQuestions(allQuestions)
     setView('exam')
 
     startTimeRef.current = Date.now()
