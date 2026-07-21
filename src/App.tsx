@@ -7,6 +7,7 @@ import VisaoGeral from './pages/home/VisaoGeral'
 import Documentos from './pages/home/Documentos'
 import Videos from './pages/home/Videos'
 import Desafios from './pages/home/Desafios'
+import Simulados from './pages/home/Simulados'
 import Perfil from './pages/home/Perfil'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -38,6 +39,7 @@ function App() {
         <Route path="documentos" element={<Documentos />} />
         <Route path="videos" element={<Videos />} />
         <Route path="desafios" element={<Desafios />} />
+        <Route path="simulados" element={<Simulados />} />
         <Route path="perfil" element={<Perfil />} />
       </Route>
       <Route path="*" element={<Navigate to="/auth" replace />} />
