@@ -10,9 +10,13 @@ function uid(): string {
 }
 
 async function getUserId(): Promise<string> {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Não autenticado')
-  return user.id
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Não autenticado')
+    return user.id
+  }
+  return session.user.id
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -426,6 +430,11 @@ export async function createVideo(v: VideoMeta): Promise<VideoMeta> {
 
 export async function deleteVideo(id: string): Promise<void> {
   const { error } = await supabase.from('videos').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function updateVideoDuration(id: string, duration: string): Promise<void> {
+  const { error } = await supabase.from('videos').update({ duration }).eq('id', id)
   if (error) throw error
 }
 

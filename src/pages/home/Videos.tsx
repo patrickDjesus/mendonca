@@ -5,7 +5,7 @@ import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import VideoPlayer, { type VideoPlayerHandle } from '../../components/VideoPlayer'
 import NotesPanel from '../../components/NotesPanel'
 import { extractYoutubeId } from '../../utils/youtube'
-import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, logActivity } from '../../lib/db'
+import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, updateVideoDuration, logActivity } from '../../lib/db'
 import '../../styles/videos.css'
 
 import { formatTimestamp } from '../../utils/format'
@@ -223,6 +223,16 @@ export default function Videos() {
     } catch { /* noop */ }
   }, [watchingVideo, currentTime])
 
+  useEffect(() => {
+    if (!watchingVideo || duration <= 0 || watchingVideo.duration) return
+    const h = Math.floor(duration / 3600)
+    const m = Math.floor((duration % 3600) / 60)
+    const s = Math.floor(duration % 60)
+    const formatted = h > 0 ? `${h}h ${m}min` : `${m}:${s.toString().padStart(2, '0')}`
+    setVideos(prev => prev.map(v => v.id === watchingVideo.id ? { ...v, duration: formatted } : v))
+    updateVideoDuration(watchingVideo.id, formatted).catch(() => {})
+  }, [watchingVideo, duration])
+
   const handleAddNote = useCallback(async (note: VideoNote) => {
     if (!watchingVideo?.id) return
     const fullNote = { ...note, videoId: watchingVideo.id }
@@ -362,7 +372,13 @@ export default function Videos() {
               <span>{new Date(heroVideo.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
               {heroVideo.duration && <span>{heroVideo.duration}</span>}
               {savedProgressMap.has(heroVideo.id) && (
-                <span style={{ color: '#daa03c' }}>&#9201; {formatWatchTime(savedProgressMap.get(heroVideo.id)!)}</span>
+                <span style={{ color: '#daa03c', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  {formatWatchTime(savedProgressMap.get(heroVideo.id)!)}
+                </span>
               )}
             </div>
           </div>
@@ -461,7 +477,13 @@ export default function Videos() {
                           {video.authorName && <span className="video-card-author">{video.authorName}</span>}
                           {video.duration && <span className="video-card-author">{video.duration}</span>}
                           {savedProgressMap.has(video.id) && (
-                            <span className="video-card-author" style={{ color: '#daa03c' }}>&#9201; {formatWatchTime(savedProgressMap.get(video.id)!)}</span>
+                            <span className="video-card-author" style={{ color: '#daa03c', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                              </svg>
+                              {formatWatchTime(savedProgressMap.get(video.id)!)}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -579,7 +601,9 @@ export default function Videos() {
                   </svg>
                 </div>
                 <div className="video-watch-stat-info">
-                  <span className="video-watch-stat-value">{watchingVideo.duration || '—'}</span>
+                  <span className="video-watch-stat-value">
+                    {watchingVideo.duration || (duration > 0 ? formatWatchTime(duration) : '—')}
+                  </span>
                   <span className="video-watch-stat-label">Duração</span>
                 </div>
               </div>
