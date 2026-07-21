@@ -63,11 +63,16 @@ export default function Desafios() {
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null)
   const [deleteChallengeTarget, setDeleteChallengeTarget] = useState<Challenge | null>(null)
   const [viewingQuestionsChallenge, setViewingQuestionsChallenge] = useState<Challenge | null>(null)
+  const [expandedQVQuestion, setExpandedQVQuestion] = useState<string | null>(null)
   const [deleteQuestionTarget, setDeleteQuestionTarget] = useState<ChallengeQuestion | null>(null)
 
   const startTimeRef = useRef<number>(0)
   const [elapsed, setElapsed] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const [questionHidden, setQuestionHidden] = useState(false)
+  const [memoryTimeLeft, setMemoryTimeLeft] = useState(15)
+  const memoryTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const [openDropdown, setOpenDropdown] = useState<'questions' | 'challenges' | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -117,6 +122,10 @@ export default function Desafios() {
   const stopTimer = useCallback(() => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null } }, [])
   useEffect(() => () => stopTimer(), [stopTimer])
 
+  const stopMemoryTimer = useCallback(() => {
+    if (memoryTimerRef.current) { clearInterval(memoryTimerRef.current); memoryTimerRef.current = null }
+  }, [])
+
   useEffect(() => {
     let mounted = true
     async function load() {
@@ -138,6 +147,22 @@ export default function Desafios() {
     setActiveChallenge(challenge); setCurrentQIndex(0); setAnswers([]); resetQuizState(); setLastResult(null); setView('quiz')
     startTimeRef.current = Date.now(); setElapsed(0)
     timerRef.current = setInterval(() => setElapsed(Date.now() - startTimeRef.current), 200)
+    if (challenge.modifiers?.includes('memoria_curta')) {
+      setTimeout(() => {
+        setQuestionHidden(false); setMemoryTimeLeft(15)
+        if (memoryTimerRef.current) clearInterval(memoryTimerRef.current)
+        memoryTimerRef.current = setInterval(() => {
+          setMemoryTimeLeft(prev => {
+            if (prev <= 1) {
+              if (memoryTimerRef.current) { clearInterval(memoryTimerRef.current); memoryTimerRef.current = null }
+              setQuestionHidden(true)
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
+      }, 0)
+    }
   }, [resetQuizState])
 
   const getCurrentQuestion = useCallback((): ChallengeQuestion | null => {
@@ -177,7 +202,9 @@ export default function Desafios() {
     const answer: QuestionAnswer = { questionId: q.id, type: q.type, selectedOptionIds: q.type === 'verdadeiro_falso' ? Object.values(tfAnswers) : [...selectedOptionIds], openText, orderAnswers: [...dragOrder], fillAnswers: { ...fillAnswers }, correct }
     setAnswers(prev => [...prev, answer])
     setShowFeedback(true)
-  }, [getCurrentQuestion, checkAnswer, selectedOptionIds, tfAnswers, openText, dragOrder, fillAnswers])
+    stopMemoryTimer()
+    setQuestionHidden(false)
+  }, [getCurrentQuestion, checkAnswer, selectedOptionIds, tfAnswers, openText, dragOrder, fillAnswers, stopMemoryTimer])
 
   const handleNext = useCallback(() => {
     if (!activeChallenge) return
@@ -196,10 +223,29 @@ export default function Desafios() {
         return ns
       })
       setView('results')
-    } else { setCurrentQIndex(i => i + 1); resetQuizState() }
-  }, [activeChallenge, currentQIndex, answers, stopTimer, resetQuizState])
+      stopMemoryTimer()
+    } else {
+      setCurrentQIndex(i => i + 1); resetQuizState()
+      if (activeChallenge.modifiers?.includes('memoria_curta')) {
+        setTimeout(() => {
+          setQuestionHidden(false); setMemoryTimeLeft(15)
+          if (memoryTimerRef.current) clearInterval(memoryTimerRef.current)
+          memoryTimerRef.current = setInterval(() => {
+            setMemoryTimeLeft(prev => {
+              if (prev <= 1) {
+                if (memoryTimerRef.current) { clearInterval(memoryTimerRef.current); memoryTimerRef.current = null }
+                setQuestionHidden(true)
+                return 0
+              }
+              return prev - 1
+            })
+          }, 1000)
+        }, 0)
+      }
+    }
+  }, [activeChallenge, currentQIndex, answers, stopTimer, resetQuizState, stopMemoryTimer])
 
-  const handleBackToList = useCallback(() => { setView('list'); setActiveChallenge(null); setLastResult(null); stopTimer() }, [stopTimer])
+  const handleBackToList = useCallback(() => { setView('list'); setActiveChallenge(null); setLastResult(null); stopTimer(); stopMemoryTimer(); setQuestionHidden(false) }, [stopTimer, stopMemoryTimer])
 
   const handleSaveQuestion = useCallback((q: ChallengeQuestion) => {
     setQuestions(prev => {
@@ -252,6 +298,7 @@ export default function Desafios() {
     const q = getCurrentQuestion()
     if (!q) return null
     const progress = ((currentQIndex + 1) / activeChallenge.questionIds.length) * 100
+    const showMemory = activeChallenge.modifiers?.includes('memoria_curta') && !showFeedback
 
     const renderQuizBody = () => {
       if (q.content && q.type !== 'completar') return <p className="quiz-content-text">{q.content}</p>
@@ -274,16 +321,26 @@ export default function Desafios() {
         <div className="quiz-header">
           <button className="quiz-back-btn" onClick={handleBackToList} type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg></button>
           <div className="quiz-info"><span className="quiz-challenge-name">{activeChallenge.title}</span><span className="quiz-progress-text">{currentQIndex + 1}/{activeChallenge.questionIds.length}</span></div>
-          <span className="quiz-timer">{formatTime(elapsed)}</span>
+          <div className="quiz-header-right">
+            {showMemory && !questionHidden && <span className="quiz-memory-timer">🧠 {memoryTimeLeft}s</span>}
+            {showMemory && questionHidden && <span className="quiz-memory-hidden">🔒 Pergunta oculta</span>}
+            <span className="quiz-timer">{formatTime(elapsed)}</span>
+          </div>
         </div>
         <div className="quiz-progress"><div className="quiz-progress-fill" style={{ width: `${progress}%` }} /></div>
+        {showMemory && !questionHidden && (
+          <div className="quiz-memory-bar">
+            <div className="quiz-memory-bar-fill" style={{ width: `${(memoryTimeLeft / 15) * 100}%` }} />
+          </div>
+        )}
         <div className="quiz-card">
           <div className="quiz-q-header">
             <span className="quiz-q-badge subject" style={{ background: SUBJECT_COLORS[q.subject]?.bg, color: SUBJECT_COLORS[q.subject]?.text }}>{q.subject}</span>
             <span className="quiz-q-badge type">{QUESTION_TYPE_LABELS[q.type]}</span>
           </div>
-          <h3 className="quiz-q-title">{q.title}</h3>
-          {renderQuizBody()}
+          {!questionHidden && <h3 className="quiz-q-title">{q.title}</h3>}
+          {!questionHidden && renderQuizBody()}
+          {questionHidden && <div className="quiz-question-hidden-msg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg><span>Memória Curta: a pergunta desapareceu!</span></div>}
           {renderTypeSpecific()}
           {showFeedback && q.explanation && <div className="quiz-explanation"><strong>Explicação:</strong> {q.explanation}</div>}
           <div className="quiz-actions">
@@ -483,39 +540,6 @@ export default function Desafios() {
             </div>
           </div>
         )}
-
-        {viewingQuestionsChallenge && (
-          <div className="desafio-modal-overlay" onClick={() => setViewingQuestionsChallenge(null)}>
-            <div className="qb-container questions-view-modal" onClick={e => e.stopPropagation()}>
-              <div className="qb-header">
-                <div>
-                  <h3 className="qb-title">Questões de "{viewingQuestionsChallenge.title}"</h3>
-                  <span style={{ fontSize: 13, color: '#7a6a5a' }}>{viewingQuestionsChallenge.questionIds.length} questões</span>
-                </div>
-                <button className="qb-cancel-btn" onClick={() => setViewingQuestionsChallenge(null)} type="button">Fechar</button>
-              </div>
-              <div className="qb-body">
-                {viewingQuestionsChallenge.questionIds.length === 0 && <div className="cb-empty">Nenhuma questão neste desafio.</div>}
-                {viewingQuestionsChallenge.questionIds.map((qId, idx) => {
-                  const q = questionMap.get(qId)
-                  if (!q) return null
-                  return (
-                    <div key={qId} className="question-view-item">
-                      <div className="question-view-num">{idx + 1}</div>
-                      <div className="question-view-info">
-                        <span className="question-view-title">{q.title}</span>
-                        <div className="question-view-meta">
-                          <span className="question-view-type">{QUESTION_TYPE_LABELS[q.type]}</span>
-                          <span className="question-view-subject" style={{ background: SUBJECT_COLORS[q.subject]?.bg, color: SUBJECT_COLORS[q.subject]?.text }}>{q.subject}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     )
   }
@@ -657,30 +681,116 @@ export default function Desafios() {
       </div>
 
       {viewingQuestionsChallenge && (
-        <div className="desafio-modal-overlay" onClick={() => setViewingQuestionsChallenge(null)}>
-          <div className="qb-container questions-view-modal" onClick={e => e.stopPropagation()}>
-            <div className="qb-header">
-              <div>
-                <h3 className="qb-title">Questões de "{viewingQuestionsChallenge.title}"</h3>
-                <span style={{ fontSize: 13, color: '#7a6a5a' }}>{viewingQuestionsChallenge.questionIds.length} questões</span>
+        <div className="qv-overlay" onClick={() => { setViewingQuestionsChallenge(null); setExpandedQVQuestion(null) }}>
+          <div className="qv-modal" onClick={e => e.stopPropagation()}>
+            <div className="qv-header">
+              <div className="qv-header-left">
+                <div className="qv-header-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
+                </div>
+                <div>
+                  <h3 className="qv-title">{viewingQuestionsChallenge.title}</h3>
+                  <span className="qv-subtitle">{viewingQuestionsChallenge.questionIds.length} {viewingQuestionsChallenge.questionIds.length === 1 ? 'questão' : 'questões'}</span>
+                </div>
               </div>
-              <button className="qb-cancel-btn" onClick={() => setViewingQuestionsChallenge(null)} type="button">Fechar</button>
+              <button className="qv-close" onClick={() => { setViewingQuestionsChallenge(null); setExpandedQVQuestion(null) }} type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
             </div>
-            <div className="qb-body">
-              {viewingQuestionsChallenge.questionIds.length === 0 && <div className="cb-empty">Nenhuma questão neste desafio.</div>}
+
+            <div className="qv-body">
+              {viewingQuestionsChallenge.questionIds.length === 0 && (
+                <div className="qv-empty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M8 15h8" /></svg>
+                  <span>Nenhuma questão neste desafio</span>
+                </div>
+              )}
+
               {viewingQuestionsChallenge.questionIds.map((qId, idx) => {
                 const q = questionMap.get(qId)
                 if (!q) return null
+                const isExpanded = expandedQVQuestion === qId
+                const detailCount = q.type === 'multipla' || q.type === 'multipla_multipla' ? q.options.length
+                  : q.type === 'verdadeiro_falso' ? q.statements.length
+                  : q.type === 'ordem' ? q.orderItems.length
+                  : q.type === 'completar' ? q.blanks.length
+                  : 0
+
                 return (
-                  <div key={qId} className="question-view-item">
-                    <div className="question-view-num">{idx + 1}</div>
-                    <div className="question-view-info">
-                      <span className="question-view-title">{q.title}</span>
-                      <div className="question-view-meta">
-                        <span className="question-view-type">{QUESTION_TYPE_LABELS[q.type]}</span>
-                        <span className="question-view-subject" style={{ background: SUBJECT_COLORS[q.subject]?.bg, color: SUBJECT_COLORS[q.subject]?.text }}>{q.subject}</span>
+                  <div key={qId} className={`qv-card ${isExpanded ? 'expanded' : ''}`}>
+                    <button className="qv-card-header" onClick={() => setExpandedQVQuestion(isExpanded ? null : qId)} type="button">
+                      <div className="qv-card-left">
+                        <span className="qv-card-num">{String(idx + 1).padStart(2, '0')}</span>
+                        <div className="qv-card-info">
+                          <span className="qv-card-title">{q.title}</span>
+                          <div className="qv-card-badges">
+                            <span className="qv-badge subject" style={{ background: SUBJECT_COLORS[q.subject]?.bg, color: SUBJECT_COLORS[q.subject]?.text }}>{q.subject}</span>
+                            <span className="qv-badge type">{QUESTION_TYPE_LABELS[q.type]}</span>
+                            <span className={`qv-badge difficulty diff-${q.difficulty}`}>{DIFFICULTY_LABELS[q.difficulty]}</span>
+                            {detailCount > 0 && <span className="qv-badge detail-count">{detailCount} itens</span>}
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                      <svg className={`qv-expand-icon ${isExpanded ? 'rotated' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="qv-card-detail">
+                        {q.content && <p className="qv-card-content">{q.content}</p>}
+                        {q.imageUrl && <img className="qv-card-img" src={q.imageUrl} alt="" />}
+
+                        {(q.type === 'multipla' || q.type === 'multipla_multipla') && q.options.length > 0 && (
+                          <div className="qv-options-preview">
+                            {q.options.map((opt, oi) => (
+                              <div key={opt.id} className={`qv-option-row ${opt.correct ? 'correct' : ''}`}>
+                                <span className="qv-option-letter">{LETTERS[oi]}</span>
+                                <span className="qv-option-text">{opt.text}</span>
+                                {opt.correct && <svg className="qv-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {q.type === 'verdadeiro_falso' && q.statements.length > 0 && (
+                          <div className="qv-options-preview">
+                            {q.statements.map(st => (
+                              <div key={st.id} className={`qv-option-row ${st.correct ? 'correct' : ''}`}>
+                                <span className={`qv-tf-badge ${st.correct ? 'true' : 'false'}`}>{st.correct ? 'V' : 'F'}</span>
+                                <span className="qv-option-text">{st.text}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {q.type === 'ordem' && q.orderItems.length > 0 && (
+                          <div className="qv-options-preview">
+                            {[...q.orderItems].sort((a, b) => a.correctOrder - b.correctOrder).map((item, oi) => (
+                              <div key={item.id} className="qv-option-row">
+                                <span className="qv-order-num">{oi + 1}°</span>
+                                <span className="qv-option-text">{item.text}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {q.type === 'completar' && q.blanks.length > 0 && (
+                          <div className="qv-options-preview">
+                            {q.blanks.map((blank, bi) => (
+                              <div key={blank.id} className="qv-option-row correct">
+                                <span className="qv-fill-label">Lacuna {bi + 1}</span>
+                                <span className="qv-option-text">→ {blank.answer}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {q.explanation && (
+                          <div className="qv-explanation">
+                            <strong>Explicação:</strong> {q.explanation}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )
               })}
