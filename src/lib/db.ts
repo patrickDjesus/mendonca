@@ -506,6 +506,62 @@ export async function deleteVideoNote(id: string): Promise<void> {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   GOALS
+   ═══════════════════════════════════════════════════════════ */
+
+export interface Goal {
+  id: string
+  text: string
+  done: boolean
+  createdAt: number
+  completedAt: number | null
+}
+
+export async function fetchGoals(): Promise<Goal[]> {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('goals')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true })
+
+  if (error) throw error
+  return (data || []).map(row => ({
+    id: row.id as string,
+    text: row.text as string,
+    done: row.done as boolean,
+    createdAt: new Date(row.created_at as string).getTime(),
+    completedAt: row.completed_at ? new Date(row.completed_at as string).getTime() : null,
+  }))
+}
+
+export async function createGoal(text: string): Promise<Goal> {
+  const userId = await getUserId()
+  const id = uid()
+  const now = new Date().toISOString()
+  const { error } = await supabase
+    .from('goals')
+    .insert({ id, user_id: userId, text, done: false, created_at: now })
+
+  if (error) throw error
+  return { id, text, done: false, createdAt: Date.now(), completedAt: null }
+}
+
+export async function updateGoal(id: string, updates: { text?: string; done?: boolean; completedAt?: number | null }): Promise<void> {
+  const row: Record<string, unknown> = {}
+  if (updates.text !== undefined) row.text = updates.text
+  if (updates.done !== undefined) row.done = updates.done
+  if (updates.completedAt !== undefined) row.completed_at = updates.completedAt ? new Date(updates.completedAt).toISOString() : null
+  const { error } = await supabase.from('goals').update(row).eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteGoal(id: string): Promise<void> {
+  const { error } = await supabase.from('goals').delete().eq('id', id)
+  if (error) throw error
+}
+
+/* ═══════════════════════════════════════════════════════════
    COUNTS (for VisaoGeral stats)
    ═══════════════════════════════════════════════════════════ */
 

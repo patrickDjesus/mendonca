@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import philosophers from '../../data/philosophers.json'
-import { fetchMyCounts, fetchRecentActivities, type Activity } from '../../lib/db'
+import { fetchMyCounts, fetchRecentActivities, type Activity, fetchGoals, createGoal, updateGoal, deleteGoal as deleteGoalDb, type Goal } from '../../lib/db'
 
 function timeAgo(ms: number): string {
   const diff = Date.now() - ms
@@ -17,14 +17,6 @@ function timeAgo(ms: number): string {
 }
 
 const ENEM_DATE = new Date('2026-11-08T13:30:00-03:00')
-
-interface Goal {
-  id: string
-  text: string
-  done: boolean
-  createdAt: number
-  completedAt: number | null
-}
 
 function getTimeLeft() {
   const now = new Date()
@@ -81,12 +73,7 @@ export default function VisaoGeral() {
   const { userName } = useOutletContext<{ userName: string }>()
   const [timeLeft, setTimeLeft] = useState(getTimeLeft)
   const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * philosophers.length))
-  const [goals, setGoals] = useState<Goal[]>(() => {
-    try {
-      const raw = localStorage.getItem('user_goals')
-      return raw ? JSON.parse(raw) : []
-    } catch { return [] }
-  })
+  const [goals, setGoals] = useState<Goal[]>([])
   const [goalInput, setGoalInput] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
@@ -99,12 +86,9 @@ export default function VisaoGeral() {
   }, [])
 
   useEffect(() => {
-    localStorage.setItem('user_goals', JSON.stringify(goals))
-  }, [goals])
-
-  useEffect(() => {
     fetchMyCounts().then(setCounts).catch(console.error)
     fetchRecentActivities().then(setActivities).catch(console.error)
+    fetchGoals().then(setGoals).catch(console.error)
   }, [])
 
   useEffect(() => {
@@ -120,21 +104,39 @@ export default function VisaoGeral() {
     e.preventDefault()
     const text = goalInput.trim()
     if (!text) return
-    const now = Date.now()
-    setGoals(prev => [...prev, { id: crypto.randomUUID(), text, done: false, createdAt: now, completedAt: null }])
     setGoalInput('')
+    createGoal(text).then(goal => {
+      setGoals(prev => [...prev, goal])
+    }).catch(err => {
+      console.error('Erro ao salvar objetivo:', err)
+    })
   }
 
   function toggleGoal(id: string) {
+    const goal = goals.find(g => g.id === id)
+    if (!goal) return
+    const willBeDone = !goal.done
+    const newCompletedAt = willBeDone ? Date.now() : null
     setGoals(prev => prev.map(g => {
       if (g.id !== id) return g
-      const willBeDone = !g.done
-      return { ...g, done: willBeDone, completedAt: willBeDone ? Date.now() : null }
+      return { ...g, done: willBeDone, completedAt: newCompletedAt }
     }))
+    updateGoal(id, { done: willBeDone, completedAt: newCompletedAt }).catch(err => {
+      console.error('Erro ao atualizar objetivo:', err)
+      setGoals(prev => prev.map(g => {
+        if (g.id !== id) return g
+        return { ...g, done: goal.done, completedAt: goal.completedAt }
+      }))
+    })
   }
 
-  function deleteGoal(id: string) {
+  function handleDeleteGoal(id: string) {
+    const prev = goals
     setGoals(prev => prev.filter(g => g.id !== id))
+    deleteGoalDb(id).catch(err => {
+      console.error('Erro ao deletar objetivo:', err)
+      setGoals(prev)
+    })
   }
 
   function startEdit(id: string, text: string) {
@@ -144,14 +146,15 @@ export default function VisaoGeral() {
 
   function saveEdit(id: string) {
     const text = editText.trim()
-    if (!text) {
-      setEditingId(null)
-      setEditText('')
-      return
-    }
-    setGoals(prev => prev.map(g => g.id === id ? { ...g, text } : g))
     setEditingId(null)
     setEditText('')
+    if (!text) return
+    const prevGoal = goals.find(g => g.id === id)
+    setGoals(prev => prev.map(g => g.id === id ? { ...g, text } : g))
+    updateGoal(id, { text }).catch(err => {
+      console.error('Erro ao salvar edição:', err)
+      if (prevGoal) setGoals(prev => prev.map(g => g.id === id ? { ...g, text: prevGoal.text } : g))
+    })
   }
 
   function formatDuration(ms: number): string {
@@ -342,7 +345,7 @@ export default function VisaoGeral() {
                         </svg>
                       </button>
                     )}
-                    <button className="goal-action-btn delete" onClick={() => deleteGoal(g.id)} title="Excluir">
+                    <button className="goal-action-btn delete" onClick={() => handleDeleteGoal(g.id)} title="Excluir">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="3 6 5 6 21 6" />
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
