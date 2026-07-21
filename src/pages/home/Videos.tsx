@@ -262,6 +262,7 @@ export default function Videos() {
 
   const handleSeek = useCallback((seconds: number) => {
     videoPlayerRef.current?.seekTo(seconds)
+    setCurrentTime(seconds)
   }, [])
 
   const handleOpenVideo = useCallback((video: VideoMeta) => {
@@ -773,7 +774,10 @@ export default function Videos() {
               <button className="video-form-confirm" onClick={() => {
                 const sec = resumePrompt.seconds
                 setResumePrompt(null)
-                setTimeout(() => videoPlayerRef.current?.seekTo(sec), 300)
+                setTimeout(() => {
+                  videoPlayerRef.current?.seekTo(sec)
+                  setCurrentTime(sec)
+                }, 300)
               }} type="button">
                 Continuar
               </button>
