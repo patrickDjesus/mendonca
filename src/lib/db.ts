@@ -52,6 +52,7 @@ function questionToUpdateRow(q: ChallengeQuestion): Record<string, unknown> {
     order_items: q.orderItems,
     blanks: q.blanks,
     open_expected_text: q.openExpectedText || null,
+    source: q.source || null,
   }
 }
 
@@ -85,6 +86,7 @@ function rowToQuestion(row: Record<string, unknown>): ChallengeQuestion {
     orderItems: (row.order_items as ChallengeQuestion['orderItems']) || [],
     blanks: (row.blanks as ChallengeQuestion['blanks']) || [],
     openExpectedText: (row.open_expected_text as string) || undefined,
+    source: (row.source as string) || undefined,
   }
 }
 
@@ -103,6 +105,7 @@ function questionToRow(q: ChallengeQuestion, userId: string): Record<string, unk
     order_items: q.orderItems,
     blanks: q.blanks,
     open_expected_text: q.openExpectedText || null,
+    source: q.source || null,
   }
 }
 

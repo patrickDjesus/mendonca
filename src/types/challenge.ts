@@ -56,6 +56,7 @@ export interface ChallengeQuestion {
   orderItems: OrderItem[]
   blanks: CompletarBlank[]
   openExpectedText?: string
+  source?: string
 }
 
 export type ChallengeModifier =

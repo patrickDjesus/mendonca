@@ -6,7 +6,7 @@ import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import QuestionBuilder from '../../components/QuestionBuilder'
 import ChallengeBuilder from '../../components/ChallengeBuilder'
 import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, deleteQuestion, createChallenge, updateChallenge, deleteChallenge, createAttempt, upsertStreak, logActivity } from '../../lib/db'
-import { importEnemQuestions, type ImportProgress } from '../../lib/importEnem'
+import { importEnemQuestions, deleteAllEnemQuestions, updateQuestionSubject, type ImportProgress } from '../../lib/importEnem'
 import { supabase } from '../../lib/supabase'
 import '../../styles/desafios.css'
 
@@ -81,7 +81,9 @@ export default function Desafios() {
   const [showImportModal, setShowImportModal] = useState(false)
   const [importYears, setImportYears] = useState<number[]>([2023, 2022, 2021, 2020, 2019])
   const [isImporting, setIsImporting] = useState(false)
-  const [importProgress, setImportProgress] = useState<ImportProgress>({ current: 0, total: 1, year: 2023, phase: 'done' })
+  const [importProgress, setImportProgress] = useState<ImportProgress>({ current: 0, total: 1, imported: 0, skipped: 0, year: 2023, phase: 'done' })
+  const [fixingQuestionId, setFixingQuestionId] = useState<string | null>(null)
+  const reportRef = useRef<HTMLDivElement>(null)
 
   const [tableFilter, setTableFilter] = useState('')
   const [tableSubjectFilter, setTableSubjectFilter] = useState<Subject | 'Todas'>('Todas')
@@ -146,6 +148,15 @@ export default function Desafios() {
   }, [])
 
   useEffect(() => { supabase.auth.getUser().catch(() => {}) }, [])
+
+  useEffect(() => {
+    if (!fixingQuestionId) return
+    const handleClick = (e: MouseEvent) => {
+      if (reportRef.current && !reportRef.current.contains(e.target as Node)) setFixingQuestionId(null)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [fixingQuestionId])
 
   const resetQuizState = useCallback(() => { setSelectedOptionIds([]); setTfAnswers({}); setShowFeedback(false); setDragOrder([]); setFillAnswers({}); setOpenText(''); setSelfEval(null) }, [])
 
@@ -286,15 +297,31 @@ export default function Desafios() {
     if (importYears.length === 0) return
     setIsImporting(true)
     try {
-      const count = await importEnemQuestions(importYears, setImportProgress)
-      setQuestions(prev => prev)
+      const result = await importEnemQuestions(importYears, setImportProgress)
       const qs = await fetchQuestions()
       setQuestions(qs)
-      logActivity('enem_import', `Importou ${count} questões do ENEM (${importYears.join(', ')})`, 'challenge', '#50b890').catch(() => {})
+      logActivity('enem_import', `Importou ${result.imported} questões ENEM, ${result.skipped} já existiam (${importYears.join(', ')})`, 'challenge', '#50b890').catch(() => {})
     } catch (e) { console.error('Erro na importação ENEM:', e) }
     setIsImporting(false)
     setShowImportModal(false)
   }, [importYears])
+
+  const handleDeleteAllEnem = useCallback(async () => {
+    try {
+      const count = await deleteAllEnemQuestions()
+      const qs = await fetchQuestions()
+      setQuestions(qs)
+      logActivity('enem_delete', `Deletou ${count} questões ENEM`, 'challenge', '#c85050').catch(() => {})
+    } catch (e) { console.error('Erro ao deletar ENEM:', e) }
+  }, [])
+
+  const handleFixSubject = useCallback(async (questionId: string, newSubject: Subject) => {
+    try {
+      await updateQuestionSubject(questionId, newSubject)
+      setQuestions(prev => prev.map(q => q.id === questionId ? { ...q, subject: newSubject } : q))
+      setFixingQuestionId(null)
+    } catch (e) { console.error('Erro ao corrigir matéria:', e) }
+  }, [])
 
   const handleDeleteQuestionFromList = useCallback(async () => {
     if (!deleteQuestionTarget) return
@@ -357,6 +384,12 @@ export default function Desafios() {
           <div className="quiz-q-header">
             <span className="quiz-q-badge subject" style={{ background: SUBJECT_COLORS[q.subject]?.bg, color: SUBJECT_COLORS[q.subject]?.text }}>{q.subject}</span>
             <span className="quiz-q-badge type">{QUESTION_TYPE_LABELS[q.type]}</span>
+            <span className={`quiz-q-badge diff diff-${q.difficulty}`}>{DIFFICULTY_LABELS[q.difficulty]}</span>
+            {q.source === 'enem' && (
+              <span className="quiz-q-badge enem-badge" data-tooltip="Questão do ENEM. Matéria e dificuldade foram estimadas por análise de palavras-chave e podem estar imprecisas.">
+                ENEM
+              </span>
+            )}
           </div>
           {!questionHidden && <h3 className="quiz-q-title">{q.title}</h3>}
           {!questionHidden && renderQuizBody()}
@@ -365,6 +398,24 @@ export default function Desafios() {
           {showFeedback && q.explanation && <div className="quiz-explanation"><strong>Explicação:</strong> {q.explanation}</div>}
           <div className="quiz-actions">
             {!showFeedback ? <button className="quiz-confirm-btn" onClick={handleConfirmAnswer} disabled={!isAnswerReady()} type="button">Confirmar</button> : <button className="quiz-next-btn" onClick={handleNext} type="button">{currentQIndex >= activeChallenge.questionIds.length - 1 ? 'Ver resultado' : 'Próxima'}</button>}
+          </div>
+          <div className="quiz-report-wrap" ref={fixingQuestionId === q.id ? reportRef : undefined}>
+            {fixingQuestionId === q.id ? (
+              <div className="quiz-report-dropdown">
+                <span className="quiz-report-label">Corrigir matéria:</span>
+                {SUBJECTS.map(s => (
+                  <button key={s} className={`quiz-report-option ${q.subject === s ? 'current' : ''}`} onClick={() => handleFixSubject(q.id, s)} type="button">
+                    <span className="quiz-report-dot" style={{ background: SUBJECT_COLORS[s]?.bg, color: SUBJECT_COLORS[s]?.text }}>{s[0]}</span>
+                    {s}
+                  </button>
+                ))}
+                <button className="quiz-report-cancel" onClick={() => setFixingQuestionId(null)} type="button">Cancelar</button>
+              </div>
+            ) : (
+              <button className="quiz-report-btn" onClick={() => setFixingQuestionId(q.id)} type="button" title="Corrigir matéria desta questão">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" /></svg>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -673,6 +724,10 @@ export default function Desafios() {
                 <div className="enem-import-footer">
                   <span className="enem-import-count">{importYears.length} anos selecionados</span>
                   <div className="enem-import-actions">
+                    <button className="desafio-form-cancel enem-delete-all" onClick={async () => { if (confirm('Deletar TODAS as questões ENEM importadas?')) { await handleDeleteAllEnem() } }} type="button">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                      Limpar ENEM
+                    </button>
                     <button className="desafio-form-cancel" onClick={() => setShowImportModal(false)} type="button">Cancelar</button>
                     <button className="qb-save-btn" onClick={handleStartImport} disabled={importYears.length === 0} type="button">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
@@ -685,7 +740,11 @@ export default function Desafios() {
               <div className="enem-import-progress">
                 <div className="enem-progress-info">
                   <span className="enem-progress-year">ENEM {importProgress.year}</span>
-                  <span className="enem-progress-count">{importProgress.current} questões importadas</span>
+                  <span className="enem-progress-count">
+                    {importProgress.phase === 'done' 
+                      ? `Concluído! ${importProgress.imported} importadas, ${importProgress.skipped} já existiam`
+                      : `${importProgress.current} questões processadas`}
+                  </span>
                 </div>
                 <div className="enem-progress-bar">
                   <div className="enem-progress-fill" style={{ width: `${importProgress.total > 0 ? (importProgress.current / importProgress.total) * 100 : 0}%` }} />
