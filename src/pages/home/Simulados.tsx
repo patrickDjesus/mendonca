@@ -368,12 +368,22 @@ export default function Simulados() {
     stopTimer()
   }, [stopTimer])
 
-  const handleContentClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLElement
-    if (target.tagName === 'IMG' && target.classList.contains('enem-inline-img')) {
-      setLightboxImg((target as HTMLImageElement).src)
+  const questionsContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (view !== 'exam') return
+    const container = questionsContainerRef.current
+    if (!container) return
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === 'IMG' && target.classList.contains('enem-inline-img')) {
+        e.preventDefault()
+        setLightboxImg((target as HTMLImageElement).src)
+      }
     }
-  }, [])
+    container.addEventListener('click', handler, true)
+    return () => container.removeEventListener('click', handler, true)
+  }, [view, questions])
 
   if (view === 'gallery') {
     return (
@@ -477,7 +487,7 @@ export default function Simulados() {
       </div>
 
       <div className="exam-layout">
-        <div className="exam-questions">
+        <div className="exam-questions" ref={questionsContainerRef}>
           {questions.map((q, idx) => {
             const isAnswered = !!answers[q.id]
             const contextImages = q.content ? extractImageUrls(q.content) : new Set<string>()
@@ -496,7 +506,6 @@ export default function Simulados() {
                   <div
                     className="exam-q-content enem-markdown"
                     dangerouslySetInnerHTML={{ __html: renderEnemMarkdown(q.content) }}
-                    onClick={handleContentClick}
                   />
                 )}
                 {showSeparateImage && (

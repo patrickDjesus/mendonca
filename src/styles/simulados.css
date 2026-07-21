@@ -578,11 +578,12 @@
 }
 
 .simulados-lightbox img {
-  max-width: 95vw;
-  max-height: 95vh;
+  max-width: 98vw;
+  max-height: 98vh;
   border-radius: 10px;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
   object-fit: contain;
+  cursor: default;
 }
 
 .lightbox-close {
