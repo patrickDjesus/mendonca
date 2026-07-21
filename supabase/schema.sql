@@ -199,6 +199,15 @@ CREATE TABLE IF NOT EXISTS activity_log (
 
 CREATE INDEX IF NOT EXISTS idx_activity_user ON activity_log(user_id, created_at DESC);
 
+-- ── Migrations (colunas adicionadas后来) ───────────────────
+
+ALTER TABLE questions ADD COLUMN IF NOT EXISTS difficulty difficulty_type DEFAULT 'medio';
+
+ALTER TABLE challenges ADD COLUMN IF NOT EXISTS modifiers JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE challenges ADD COLUMN IF NOT EXISTS aposta_cega_min INTEGER;
+
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS paper_style JSONB;
+
 -- ── RLS (Row Level Security) ────────────────────────────────
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;

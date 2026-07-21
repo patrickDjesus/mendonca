@@ -44,7 +44,6 @@ function questionToUpdateRow(q: ChallengeQuestion): Record<string, unknown> {
     type: q.type,
     title: q.title,
     subject: q.subject,
-    difficulty: q.difficulty,
     content: q.content || null,
     image_url: q.imageUrl || null,
     explanation: q.explanation || null,
@@ -96,7 +95,6 @@ function questionToRow(q: ChallengeQuestion, userId: string): Record<string, unk
     type: q.type,
     title: q.title,
     subject: q.subject,
-    difficulty: q.difficulty,
     content: q.content || null,
     image_url: q.imageUrl || null,
     explanation: q.explanation || null,
@@ -143,8 +141,6 @@ function challengeToUpdateRow(c: Challenge): Record<string, unknown> {
     xp_base: c.xpBase,
     is_daily: c.isDaily,
     daily_date: c.dailyDate || null,
-    modifiers: c.modifiers || [],
-    aposta_cega_min: c.apostaCegaMin || null,
   }
 }
 
@@ -195,8 +191,6 @@ function challengeToRow(c: Challenge, userId: string): Record<string, unknown> {
     xp_base: c.xpBase,
     is_daily: c.isDaily,
     daily_date: c.dailyDate || null,
-    modifiers: c.modifiers || [],
-    aposta_cega_min: c.apostaCegaMin || null,
   }
 }
 
