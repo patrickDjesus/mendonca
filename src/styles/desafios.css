@@ -661,6 +661,159 @@
   margin-top: 5px;
 }
 
+/* ── Quiz View: Progress ──────────────────────── */
+
+.quiz-progress {
+  height: 3px;
+  background: rgba(200, 180, 140, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+/* ── Quiz View: Card ──────────────────────────── */
+
+.quiz-card {
+  background: #1e1a16;
+  border: 1px solid rgba(200, 180, 140, 0.08);
+  border-radius: 16px;
+  padding: 28px 30px;
+}
+
+.quiz-q-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.quiz-q-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.quiz-q-badge.type {
+  color: #8c78c8;
+  background: rgba(140, 120, 200, 0.1);
+}
+
+.quiz-q-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e8dcc8;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+
+/* ── Quiz View: True/False ────────────────────── */
+
+.quiz-tf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quiz-tf-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(200, 180, 140, 0.08);
+  background: rgba(200, 180, 140, 0.03);
+}
+
+.quiz-tf-text {
+  font-size: 14px;
+  color: #d0c4b0;
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+}
+
+.quiz-tf-btns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ── Quiz View: Order ─────────────────────────── */
+
+.quiz-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quiz-order-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(200, 180, 140, 0.08);
+  background: rgba(200, 180, 140, 0.03);
+  font-size: 14px;
+  color: #d0c4b0;
+  cursor: grab;
+}
+
+.quiz-order-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #d4a843;
+  background: rgba(212, 168, 67, 0.1);
+  flex-shrink: 0;
+}
+
+/* ── Quiz View: Fill / Open ───────────────────── */
+
+.quiz-fill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quiz-fill-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quiz-fill-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #d4a843;
+  flex-shrink: 0;
+}
+
+.quiz-open {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Quiz View: Actions ───────────────────────── */
+
+.quiz-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(200, 180, 140, 0.06);
+}
+
 .quiz-explanation {
   margin-top: 24px;
   padding: 16px 20px;
