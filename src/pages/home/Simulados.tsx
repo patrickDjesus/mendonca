@@ -3,7 +3,7 @@ import type { ChallengeQuestion, ChallengeOption } from '../../types/challenge'
 import type { Subject } from '../../types/doc'
 import '../../styles/simulados.css'
 
-const API_BASE = 'https://api.enem.dev/v1'
+const API_BASE = import.meta.env.DEV ? '/enem-api' : 'https://api.enem.dev/v1'
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F']
 
 interface EnemAlternative {

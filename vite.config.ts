@@ -6,4 +6,13 @@ export default defineConfig({
   optimizeDeps: {
     include: ['pdfjs-dist'],
   },
+  server: {
+    proxy: {
+      '/enem-api': {
+        target: 'https://api.enem.dev',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/enem-api/, '/v1'),
+      },
+    },
+  },
 })
