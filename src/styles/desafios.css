@@ -1673,6 +1673,150 @@
   background: rgba(140, 120, 200, 0.2);
 }
 
+.desafios-create-btn.import {
+  background: rgba(80, 184, 144, 0.1);
+  color: #50b890;
+}
+
+.desafios-create-btn.import:hover {
+  background: rgba(80, 184, 144, 0.2);
+}
+
+/* ── ENEM Import Modal ─────────────────────────────── */
+
+.enem-import-modal {
+  width: 520px;
+  max-width: 92vw;
+  padding: 32px;
+}
+
+.enem-import-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.enem-import-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(80, 184, 144, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+}
+
+.enem-import-icon svg {
+  width: 24px;
+  height: 24px;
+  color: #50b890;
+}
+
+.enem-import-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e8dcc8;
+  margin: 0 0 6px;
+}
+
+.enem-import-desc {
+  font-size: 13px;
+  color: #7a6a5a;
+  margin: 0;
+}
+
+.enem-import-years {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.enem-year-btn {
+  width: 60px;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid rgba(200, 180, 140, 0.1);
+  background: rgba(200, 180, 140, 0.03);
+  color: #8a7a6a;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.enem-year-btn:hover {
+  border-color: rgba(200, 180, 140, 0.2);
+  color: #b8a890;
+}
+
+.enem-year-btn.active {
+  background: rgba(80, 184, 144, 0.12);
+  border-color: rgba(80, 184, 144, 0.3);
+  color: #50b890;
+}
+
+.enem-import-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.enem-import-count {
+  font-size: 13px;
+  color: #7a6a5a;
+}
+
+.enem-import-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.enem-import-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.enem-progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.enem-progress-year {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e8dcc8;
+}
+
+.enem-progress-count {
+  font-size: 13px;
+  color: #50b890;
+  font-weight: 600;
+}
+
+.enem-progress-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(200, 180, 140, 0.08);
+  overflow: hidden;
+}
+
+.enem-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #50b890, #50cc78);
+  transition: width 0.3s ease;
+}
+
+.enem-progress-phase {
+  font-size: 12px;
+  color: #7a6a5a;
+  text-align: center;
+}
+
 /* ── Self-eval option (aberta) ─────────────────────── */
 
 .quiz-selfeval {

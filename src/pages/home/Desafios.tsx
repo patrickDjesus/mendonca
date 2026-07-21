@@ -6,6 +6,7 @@ import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import QuestionBuilder from '../../components/QuestionBuilder'
 import ChallengeBuilder from '../../components/ChallengeBuilder'
 import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, deleteQuestion, createChallenge, updateChallenge, deleteChallenge, createAttempt, upsertStreak, logActivity } from '../../lib/db'
+import { importEnemQuestions, type ImportProgress } from '../../lib/importEnem'
 import { supabase } from '../../lib/supabase'
 import '../../styles/desafios.css'
 
@@ -76,6 +77,11 @@ export default function Desafios() {
 
   const [openDropdown, setOpenDropdown] = useState<'questions' | 'challenges' | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [importYears, setImportYears] = useState<number[]>([2023, 2022, 2021, 2020, 2019])
+  const [isImporting, setIsImporting] = useState(false)
+  const [importProgress, setImportProgress] = useState<ImportProgress>({ current: 0, total: 1, year: 2023, phase: 'done' })
 
   const [tableFilter, setTableFilter] = useState('')
   const [tableSubjectFilter, setTableSubjectFilter] = useState<Subject | 'Todas'>('Todas')
@@ -275,6 +281,20 @@ export default function Desafios() {
 
   const handleEditChallenge = useCallback((challenge: Challenge) => { setEditingChallenge(challenge); setView('edit_challenge') }, [])
   const handleEditQuestionFromList = useCallback((q: ChallengeQuestion) => { setEditingQuestion(q); setView('edit_question') }, [])
+
+  const handleStartImport = useCallback(async () => {
+    if (importYears.length === 0) return
+    setIsImporting(true)
+    try {
+      const count = await importEnemQuestions(importYears, setImportProgress)
+      setQuestions(prev => prev)
+      const qs = await fetchQuestions()
+      setQuestions(qs)
+      logActivity('enem_import', `Importou ${count} questões do ENEM (${importYears.join(', ')})`, 'challenge', '#50b890').catch(() => {})
+    } catch (e) { console.error('Erro na importação ENEM:', e) }
+    setIsImporting(false)
+    setShowImportModal(false)
+  }, [importYears])
 
   const handleDeleteQuestionFromList = useCallback(async () => {
     if (!deleteQuestionTarget) return
@@ -619,7 +639,67 @@ export default function Desafios() {
             </div>
           )}
         </div>
+        <button className="desafios-create-btn import" onClick={() => setShowImportModal(true)} type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+          Importar ENEM
+        </button>
       </div>
+
+      {showImportModal && (
+        <div className="desafio-modal-overlay" onClick={() => !isImporting && setShowImportModal(false)}>
+          <div className="desafio-modal enem-import-modal" onClick={e => e.stopPropagation()}>
+            <div className="enem-import-header">
+              <div className="enem-import-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+              </div>
+              <h3 className="enem-import-title">Importar Questões ENEM</h3>
+              <p className="enem-import-desc">Selecione os anos para importar questões do ENEM (múltipla escolha).</p>
+            </div>
+
+            {!isImporting ? (
+              <>
+                <div className="enem-import-years">
+                  {[2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014, 2013, 2012, 2011, 2010, 2009].map(y => (
+                    <button
+                      key={y}
+                      className={`enem-year-btn ${importYears.includes(y) ? 'active' : ''}`}
+                      onClick={() => setImportYears(prev => prev.includes(y) ? prev.filter(x => x !== y) : [...prev, y])}
+                      type="button"
+                    >
+                      {y}
+                    </button>
+                  ))}
+                </div>
+                <div className="enem-import-footer">
+                  <span className="enem-import-count">{importYears.length} anos selecionados</span>
+                  <div className="enem-import-actions">
+                    <button className="desafio-form-cancel" onClick={() => setShowImportModal(false)} type="button">Cancelar</button>
+                    <button className="qb-save-btn" onClick={handleStartImport} disabled={importYears.length === 0} type="button">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                      Importar
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="enem-import-progress">
+                <div className="enem-progress-info">
+                  <span className="enem-progress-year">ENEM {importProgress.year}</span>
+                  <span className="enem-progress-count">{importProgress.current} questões importadas</span>
+                </div>
+                <div className="enem-progress-bar">
+                  <div className="enem-progress-fill" style={{ width: `${importProgress.total > 0 ? (importProgress.current / importProgress.total) * 100 : 0}%` }} />
+                </div>
+                <div className="enem-progress-phase">
+                  {importProgress.phase === 'fetching' && 'Baixando questões do ENEM...'}
+                  {importProgress.phase === 'inserting' && 'Salvando no banco de dados...'}
+                  {importProgress.phase === 'done' && 'Concluído!'}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {dailyChallenge && !attemptIds.has(dailyChallenge.id) && (
         <div className="desafios-daily" onClick={() => startChallenge(dailyChallenge)}>
