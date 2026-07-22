@@ -200,6 +200,12 @@ export default function Desafios() {
   const handleConfirmAnswer = useCallback(() => {
     const q = getCurrentQuestion()
     if (!q) return
+    if (q.type === 'aberta') {
+      setShowFeedback(true)
+      stopMemoryTimer()
+      setQuestionHidden(false)
+      return
+    }
     const correct = checkAnswer()
     const answer: QuestionAnswer = { questionId: q.id, type: q.type, selectedOptionIds: q.type === 'verdadeiro_falso' ? Object.values(tfAnswers) : [...selectedOptionIds], openText, orderAnswers: [...dragOrder], fillAnswers: { ...fillAnswers }, correct }
     setAnswers(prev => [...prev, answer])
@@ -250,6 +256,14 @@ export default function Desafios() {
 
   const handleBackToList = useCallback(() => { setView('list'); setActiveChallenge(null); setLastResult(null); stopTimer(); stopMemoryTimer(); setQuestionHidden(false) }, [stopTimer, stopMemoryTimer])
 
+  const handleSelfEval = useCallback((choice: 'correct' | 'wrong') => {
+    const q = getCurrentQuestion()
+    if (!q) return
+    setSelfEval(choice)
+    const answer: QuestionAnswer = { questionId: q.id, type: q.type, selectedOptionIds: [], openText, orderAnswers: [], fillAnswers: {}, correct: choice === 'correct' }
+    setAnswers(prev => [...prev, answer])
+  }, [getCurrentQuestion, openText])
+
   const handleSaveQuestion = useCallback((q: ChallengeQuestion) => {
     setQuestions(prev => {
       const idx = prev.findIndex(p => p.id === q.id)
@@ -296,6 +310,11 @@ export default function Desafios() {
     if (!q) return null
     const progress = ((currentQIndex + 1) / activeChallenge.questionIds.length) * 100
     const showMemory = activeChallenge.modifiers?.includes('memoria_curta') && !showFeedback
+    const hasCronometroEmChamas = activeChallenge.modifiers?.includes('cronometro_em_chamas')
+    const totalQuestions = activeChallenge.questionIds.length
+    const timeBudgetMs = totalQuestions * 30_000 * (hasCronometroEmChamas ? 0.5 : 1)
+    const timerPct = Math.max(0, Math.min(100, ((timeBudgetMs - elapsed) / timeBudgetMs) * 100))
+    const timerClass = timerPct > 50 ? 'safe' : timerPct > 20 ? 'warning' : 'danger'
 
     const renderQuizBody = () => {
       if (q.content && q.type !== 'completar') return <p className="quiz-content-text">{q.content}</p>
@@ -307,7 +326,7 @@ export default function Desafios() {
         case 'multipla': return (<div className="quiz-options">{q.options.map((opt, i) => <button key={opt.id} className={`quiz-option ${selectedOptionIds.includes(opt.id) ? 'selected' : ''}`} onClick={() => setSelectedOptionIds([opt.id])} type="button"><span className="quiz-option-letter">{LETTERS[i]}</span><span className="quiz-option-text">{opt.text}</span></button>)}</div>)
         case 'multipla_multipla': return (<div className="quiz-options">{q.options.map((opt, i) => <button key={opt.id} className={`quiz-option ${selectedOptionIds.includes(opt.id) ? 'selected' : ''}`} onClick={() => setSelectedOptionIds(prev => prev.includes(opt.id) ? prev.filter(x => x !== opt.id) : [...prev, opt.id])} type="button"><span className="quiz-option-letter">{LETTERS[i]}</span><span className="quiz-option-text">{opt.text}</span></button>)}</div>)
         case 'verdadeiro_falso': return (<div className="quiz-tf-list">{q.statements.map(st => (<div key={st.id} className="quiz-tf-row"><p className="quiz-tf-text">{st.text}</p><div className="quiz-tf-btns"><button className={`quiz-tf-btn ${tfAnswers[st.id] === 'true' ? 'selected' : ''}`} onClick={() => setTfAnswers(prev => ({ ...prev, [st.id]: 'true' }))} type="button">V</button><button className={`quiz-tf-btn ${tfAnswers[st.id] === 'false' ? 'selected' : ''}`} onClick={() => setTfAnswers(prev => ({ ...prev, [st.id]: 'false' }))} type="button">F</button></div></div>))}</div>)
-        case 'aberta': return (<div className="quiz-open"><textarea className="qb-textarea" value={openText} onChange={e => setOpenText(e.target.value)} placeholder="Digite sua resposta..." rows={4} /></div>)
+        case 'aberta': return (<div className="quiz-open"><textarea className="qb-textarea" value={openText} onChange={e => setOpenText(e.target.value)} placeholder="Digite sua resposta..." rows={4} readOnly={showFeedback} />{showFeedback && q.openExpectedText && <div className="quiz-open-expected"><strong>Resposta esperada:</strong> {q.openExpectedText}</div>}{showFeedback && !selfEval && (<div className="quiz-self-eval"><p className="quiz-self-eval-label">Você acertou?</p><div className="quiz-self-eval-btns"><button className="quiz-self-eval-btn correct" onClick={() => handleSelfEval('correct')} type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>Acertei</button><button className="quiz-self-eval-btn wrong" onClick={() => handleSelfEval('wrong')} type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>Errei</button></div></div>)}{showFeedback && selfEval && (<div className={`quiz-self-eval-result ${selfEval}`}><span className="quiz-self-eval-result-icon">{selfEval === 'correct' ? '✓' : '✗'}</span> {selfEval === 'correct' ? 'Marcado como certo' : 'Marcado como errado'}</div>)}</div>)
         case 'ordem': return (<div className="quiz-order-list">{dragOrder.map((id, idx) => { const item = q.orderItems.find(oi => oi.id === id); return item ? (<div key={id} className="quiz-order-item"><span className="quiz-order-num">{idx + 1}°</span><span>{item.text}</span></div>) : null })}</div>)
         case 'completar': return (<div className="quiz-fill-list">{q.blanks.map((blank, idx) => (<div key={blank.id} className="quiz-fill-row"><span className="quiz-fill-label">Lacuna {idx + 1}:</span><input className="qb-input" value={fillAnswers[blank.id] || ''} onChange={e => setFillAnswers(prev => ({ ...prev, [blank.id]: e.target.value }))} placeholder="Sua resposta..." /></div>))}</div>)
       }
@@ -324,6 +343,7 @@ export default function Desafios() {
             <span className="quiz-timer">{formatTime(elapsed)}</span>
           </div>
         </div>
+        <div className="quiz-timer-bar"><div className={`quiz-timer-bar-fill ${timerClass}`} style={{ width: `${timerPct}%` }} /></div>
         <div className="quiz-progress"><div className="quiz-progress-fill" style={{ width: `${progress}%` }} /></div>
         {showMemory && !questionHidden && (
           <div className="quiz-memory-bar">
@@ -347,7 +367,7 @@ export default function Desafios() {
           {renderTypeSpecific()}
           {showFeedback && q.explanation && <div className="quiz-explanation"><strong>Explicação:</strong> {q.explanation}</div>}
           <div className="quiz-actions">
-            {!showFeedback ? <button className="quiz-confirm-btn" onClick={handleConfirmAnswer} disabled={!isAnswerReady()} type="button">Confirmar</button> : <button className="quiz-next-btn" onClick={handleNext} type="button">{currentQIndex >= activeChallenge.questionIds.length - 1 ? 'Ver resultado' : 'Próxima'}</button>}
+            {!showFeedback ? <button className="quiz-confirm-btn" onClick={handleConfirmAnswer} disabled={!isAnswerReady()} type="button">Confirmar</button> : <button className="quiz-next-btn" onClick={handleNext} disabled={q.type === 'aberta' && !selfEval} type="button">{currentQIndex >= activeChallenge.questionIds.length - 1 ? 'Ver resultado' : 'Próxima'}</button>}
           </div>
         </div>
       </div>
