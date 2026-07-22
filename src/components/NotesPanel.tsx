@@ -7,6 +7,7 @@ import {
   updateNoteGroup,
   deleteNoteGroup,
   assignNoteToGroup,
+  assignNotesToGroup,
 } from '../lib/db'
 import { formatTimestamp } from '../utils/format'
 
@@ -83,10 +84,12 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
   const [localNotes, setLocalNotes] = useState<VideoNote[]>(notes)
   const [newGroupName, setNewGroupName] = useState('')
   const [showGroupInput, setShowGroupInput] = useState(false)
-  const [dragNoteId, setDragNoteId] = useState<string | null>(null)
+  const [dragNoteIds, setDragNoteIds] = useState<string[]>([])
   const [dragOverGroup, setDragOverGroup] = useState<string | null>(null)
   const [renamingGroupId, setRenamingGroupId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [selectMode, setSelectMode] = useState(false)
   const groupInputRef = useRef<HTMLInputElement>(null)
   const renameInputRef = useRef<HTMLInputElement>(null)
 
@@ -165,6 +168,40 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
     setFlashId(id)
   }, [onSeek])
 
+  /* ── Selection ──────────────────────────────── */
+
+  const toggleSelectMode = useCallback(() => {
+    setSelectMode(prev => !prev)
+    setSelectedIds(new Set())
+  }, [])
+
+  const toggleNoteSelection = useCallback((noteId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(noteId)) next.delete(noteId)
+      else next.add(noteId)
+      return next
+    })
+  }, [])
+
+  const selectAllVisible = useCallback(() => {
+    const allVisible = sortMode === 'timestamp' ? timestampSorted : sorted
+    setSelectedIds(prev => {
+      if (prev.size === allVisible.length) return new Set()
+      return new Set(allVisible.map(n => n.id))
+    })
+  }, [sorted, timestampSorted, sortMode])
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set())
+    setSelectMode(false)
+  }, [])
+
+  const selectedCount = selectedIds.size
+
+  /* ── Group CRUD ─────────────────────────────── */
+
   const handleCreateGroup = useCallback(async () => {
     const name = newGroupName.trim()
     if (!name || !videoId) return
@@ -209,14 +246,19 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
     setRenamingGroupId(null)
   }, [renameValue])
 
+  /* ── Drag & Drop (multi-note) ──────────────── */
+
   const handleDragStart = useCallback((e: React.DragEvent, noteId: string) => {
-    e.dataTransfer.setData('text/plain', noteId)
+    const idsToDrag = selectedIds.has(noteId)
+      ? Array.from(selectedIds)
+      : [noteId]
+    e.dataTransfer.setData('application/x-note-ids', JSON.stringify(idsToDrag))
     e.dataTransfer.effectAllowed = 'move'
-    setDragNoteId(noteId)
-  }, [])
+    setDragNoteIds(idsToDrag)
+  }, [selectedIds])
 
   const handleDragEnd = useCallback(() => {
-    setDragNoteId(null)
+    setDragNoteIds([])
     setDragOverGroup(null)
   }, [])
 
@@ -232,16 +274,28 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
 
   const handleGroupDrop = useCallback(async (e: React.DragEvent, groupId: string) => {
     e.preventDefault()
-    const noteId = e.dataTransfer.getData('text/plain')
-    if (!noteId) return
-    setDragNoteId(null)
-    setDragOverGroup(null)
+    let noteIds: string[] = []
     try {
-      await assignNoteToGroup(noteId, groupId)
-      setLocalNotes(prev => prev.map(n => n.id === noteId ? { ...n, groupId } : n))
+      const raw = e.dataTransfer.getData('application/x-note-ids')
+      if (raw) noteIds = JSON.parse(raw)
+    } catch { /* fallback */ }
+    if (!noteIds.length) {
+      const fallback = e.dataTransfer.getData('text/plain')
+      if (fallback) noteIds = [fallback]
+    }
+    if (!noteIds.length) return
+
+    setDragNoteIds([])
+    setDragOverGroup(null)
+
+    try {
+      await assignNotesToGroup(noteIds, groupId)
+      setLocalNotes(prev => prev.map(n => noteIds.includes(n.id) ? { ...n, groupId } : n))
+      setSelectedIds(new Set())
+      setSelectMode(false)
     } catch (err) {
-      console.error('Erro ao mover anotação:', err)
-      alert('Erro ao mover anotação para o grupo. Verifique se o banco de dados está configurado.')
+      console.error('Erro ao mover anotações:', err)
+      alert('Erro ao mover anotações para o grupo. Verifique se o banco de dados está configurado.')
     }
   }, [])
 
@@ -254,6 +308,20 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
       alert('Erro ao remover anotação do grupo. Verifique se o banco de dados está configurado.')
     }
   }, [])
+
+  const handleMoveSelectedToGroup = useCallback(async (groupId: string) => {
+    const ids = Array.from(selectedIds)
+    if (ids.length === 0) return
+    try {
+      await assignNotesToGroup(ids, groupId)
+      setLocalNotes(prev => prev.map(n => ids.includes(n.id) ? { ...n, groupId } : n))
+      setSelectedIds(new Set())
+      setSelectMode(false)
+    } catch (err) {
+      console.error('Erro ao mover anotações:', err)
+      alert('Erro ao mover anotações para o grupo.')
+    }
+  }, [selectedIds])
 
   const allCollapsed = sortMode === 'recent' && customGroups.length > 0 && customGroups.every(g => collapsed.has(`custom-${g.id}`))
 
@@ -268,6 +336,19 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
         </svg>
         <h3 className="notes-panel-title">Anotações</h3>
         <span className="notes-panel-count">{localNotes.length}</span>
+        {localNotes.length > 0 && (
+          <button
+            className={`notes-sort-toggle ${selectMode ? 'active' : ''}`}
+            onClick={toggleSelectMode}
+            title={selectMode ? 'Sair da seleção' : 'Selecionar anotações'}
+            type="button"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 11 12 14 22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+          </button>
+        )}
         {localNotes.length > 0 && (
           <button
             className="notes-sort-toggle"
@@ -315,6 +396,34 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
           </button>
         )}
       </div>
+
+      {/* ── Selection bar ──────────────────────── */}
+      {selectMode && (
+        <div className="notes-select-bar">
+          <button className="notes-select-all-btn" onClick={selectAllVisible} type="button">
+            {selectedCount === sorted.length ? 'Desmarcar todas' : 'Selecionar todas'}
+          </button>
+          {selectedCount > 0 && customGroups.length > 0 && (
+            <div className="notes-select-move-group">
+              <span className="notes-select-move-label">Mover para:</span>
+              {customGroups.map(g => (
+                <button
+                  key={g.id}
+                  className="notes-select-move-btn"
+                  onClick={() => handleMoveSelectedToGroup(g.id)}
+                  type="button"
+                >
+                  {g.name}
+                </button>
+              ))}
+            </div>
+          )}
+          {selectedCount > 0 && (
+            <span className="notes-select-count">{selectedCount} selecionada{selectedCount > 1 ? 's' : ''}</span>
+          )}
+          <button className="notes-select-clear-btn" onClick={clearSelection} type="button">Cancelar</button>
+        </div>
+      )}
 
       <div className="notes-input-area">
         <div className="notes-input-timestamp">
@@ -442,12 +551,15 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
                     key={note.id}
                     note={note}
                     flashId={flashId}
-                    dragNoteId={dragNoteId}
+                    dragNoteIds={dragNoteIds}
+                    selectMode={selectMode}
+                    isSelected={selectedIds.has(note.id)}
                     onSeek={handleSeek}
                     onDelete={onDelete}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
                     onRemoveFromGroup={handleRemoveFromGroup}
+                    onToggleSelect={toggleNoteSelection}
                   />
                 ))}
               </div>
@@ -477,11 +589,14 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
                     key={note.id}
                     note={note}
                     flashId={flashId}
-                    dragNoteId={dragNoteId}
+                    dragNoteIds={dragNoteIds}
+                    selectMode={selectMode}
+                    isSelected={selectedIds.has(note.id)}
                     onSeek={handleSeek}
                     onDelete={onDelete}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
+                    onToggleSelect={toggleNoteSelection}
                   />
                 ))}
               </div>
@@ -495,11 +610,14 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
             key={note.id}
             note={note}
             flashId={flashId}
-            dragNoteId={dragNoteId}
+            dragNoteIds={dragNoteIds}
+            selectMode={selectMode}
+            isSelected={selectedIds.has(note.id)}
             onSeek={handleSeek}
             onDelete={onDelete}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onToggleSelect={toggleNoteSelection}
           />
         ))}
       </div>
@@ -547,23 +665,40 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
   )
 }
 
-function NoteItem({ note, flashId, dragNoteId, onSeek, onDelete, onDragStart, onDragEnd, onRemoveFromGroup }: {
+function NoteItem({ note, flashId, dragNoteIds, selectMode, isSelected, onSeek, onDelete, onDragStart, onDragEnd, onRemoveFromGroup, onToggleSelect }: {
   note: VideoNote
   flashId: string | null
-  dragNoteId: string | null
+  dragNoteIds: string[]
+  selectMode: boolean
+  isSelected: boolean
   onSeek: (seconds: number, id: string) => void
   onDelete: (id: string) => void
   onDragStart: (e: React.DragEvent, noteId: string) => void
   onDragEnd: () => void
   onRemoveFromGroup?: (noteId: string) => void
+  onToggleSelect?: (noteId: string, e: React.MouseEvent) => void
 }) {
+  const isDragging = dragNoteIds.includes(note.id)
   return (
     <div
-      className={`notes-item ${flashId === note.id ? 'flash' : ''} ${dragNoteId === note.id ? 'dragging' : ''}`}
-      draggable
+      className={`notes-item ${flashId === note.id ? 'flash' : ''} ${isDragging ? 'dragging' : ''} ${isSelected ? 'selected' : ''}`}
+      draggable={!selectMode}
       onDragStart={e => onDragStart(e, note.id)}
       onDragEnd={onDragEnd}
     >
+      {selectMode && (
+        <button
+          className={`notes-item-checkbox ${isSelected ? 'checked' : ''}`}
+          onClick={e => onToggleSelect?.(note.id, e)}
+          type="button"
+        >
+          {isSelected && (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
+        </button>
+      )}
       <div className="notes-item-left">
         <button
           className="notes-timestamp-btn"

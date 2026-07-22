@@ -1855,6 +1855,140 @@
   height: 14px;
 }
 
+/* ── Selection Mode ─────────────────────────────────── */
+
+.notes-sort-toggle.active {
+  background: rgba(100, 180, 120, 0.15);
+  color: #64b478;
+}
+
+.notes-select-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: rgba(100, 180, 120, 0.06);
+  border-bottom: 1px solid rgba(100, 180, 120, 0.1);
+  flex-wrap: wrap;
+}
+
+.notes-select-all-btn {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(100, 180, 120, 0.2);
+  background: transparent;
+  color: #64b478;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.notes-select-all-btn:hover {
+  background: rgba(100, 180, 120, 0.1);
+}
+
+.notes-select-move-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.notes-select-move-label {
+  font-size: 11px;
+  color: #6a5a4a;
+  font-weight: 600;
+}
+
+.notes-select-move-btn {
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(200, 180, 140, 0.15);
+  background: rgba(200, 180, 140, 0.04);
+  color: #a89878;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.notes-select-move-btn:hover {
+  border-color: rgba(100, 180, 120, 0.3);
+  background: rgba(100, 180, 120, 0.08);
+  color: #64b478;
+}
+
+.notes-select-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64b478;
+  white-space: nowrap;
+}
+
+.notes-select-clear-btn {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(200, 80, 80, 0.2);
+  background: transparent;
+  color: #c85050;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.notes-select-clear-btn:hover {
+  background: rgba(200, 80, 80, 0.08);
+}
+
+/* ── Note Item Checkbox ────────────────────────────── */
+
+.notes-item-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 1.5px solid rgba(200, 180, 140, 0.2);
+  background: rgba(200, 180, 140, 0.04);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 8px;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.notes-item-checkbox:hover {
+  border-color: rgba(100, 180, 120, 0.4);
+  background: rgba(100, 180, 120, 0.08);
+}
+
+.notes-item-checkbox.checked {
+  background: rgba(100, 180, 120, 0.2);
+  border-color: rgba(100, 180, 120, 0.5);
+}
+
+.notes-item-checkbox svg {
+  width: 12px;
+  height: 12px;
+  color: #64b478;
+}
+
+.notes-item.selected {
+  background: rgba(100, 180, 120, 0.05);
+  border-color: rgba(100, 180, 120, 0.15);
+}
+
+.notes-item.selected .notes-item-text {
+  color: #b0d8b8;
+}
+
 /* ── Watch View Responsive ───────────────────────────── */
 
 @media (max-width: 1100px) {

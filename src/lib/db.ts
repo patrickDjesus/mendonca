@@ -556,6 +556,7 @@ export async function createVideoNote(note: VideoNote): Promise<VideoNote> {
       video_id: note.videoId,
       text: note.text,
       timestamp: Math.round(note.timestamp),
+      group_id: note.groupId ?? null,
     })
 
   if (error) {
@@ -568,6 +569,12 @@ export async function createVideoNote(note: VideoNote): Promise<VideoNote> {
 export async function deleteVideoNote(id: string): Promise<void> {
   const userId = await getUserId()
   const { error } = await supabase.from('video_notes').delete().eq('id', id).eq('user_id', userId)
+  if (error) throw error
+}
+
+export async function deleteAllVideoNotes(videoId: string): Promise<void> {
+  const userId = await getUserId()
+  const { error } = await supabase.from('video_notes').delete().eq('video_id', videoId).eq('user_id', userId)
   if (error) throw error
 }
 
@@ -642,6 +649,17 @@ export async function assignNoteToGroup(noteId: string, groupId: string | null):
     .from('video_notes')
     .update({ group_id: groupId })
     .eq('id', noteId)
+    .eq('user_id', userId)
+  if (error) throw error
+}
+
+export async function assignNotesToGroup(noteIds: string[], groupId: string | null): Promise<void> {
+  if (noteIds.length === 0) return
+  const userId = await getUserId()
+  const { error } = await supabase
+    .from('video_notes')
+    .update({ group_id: groupId })
+    .in('id', noteIds)
     .eq('user_id', userId)
   if (error) throw error
 }

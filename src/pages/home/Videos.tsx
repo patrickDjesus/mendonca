@@ -5,7 +5,7 @@ import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import VideoPlayer, { type VideoPlayerHandle } from '../../components/VideoPlayer'
 import NotesPanel from '../../components/NotesPanel'
 import { extractYoutubeId } from '../../utils/youtube'
-import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, updateVideoDuration, logActivity, recordAction } from '../../lib/db'
+import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, deleteAllVideoNotes, updateVideoDuration, logActivity, recordAction } from '../../lib/db'
 import '../../styles/videos.css'
 
 import { formatTimestamp } from '../../utils/format'
@@ -161,6 +161,7 @@ export default function Videos() {
   const handleDelete = useCallback(async (id: string) => {
     try {
       await deleteVideo(id)
+      await deleteAllVideoNotes(id)
     } catch (e) {
       console.error('Erro ao deletar vídeo:', e)
     }

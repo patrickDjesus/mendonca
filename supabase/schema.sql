@@ -246,6 +246,7 @@ CREATE POLICY "videos_delete" ON videos FOR DELETE USING (auth.uid() = user_id);
 -- Video Notes: owner full access
 CREATE POLICY "video_notes_select" ON video_notes FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "video_notes_insert" ON video_notes FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "video_notes_update" ON video_notes FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "video_notes_delete" ON video_notes FOR DELETE USING (auth.uid() = user_id);
 
 -- Questions: owner full access, everyone can read (for challenges)
