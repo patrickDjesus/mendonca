@@ -1521,6 +1521,340 @@
   height: 12px;
 }
 
+/* ── Sort Toggle ────────────────────────────────────── */
+
+.notes-sort-toggle {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(200, 180, 140, 0.06);
+  color: #8a7a6a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.notes-sort-toggle:hover {
+  background: rgba(200, 180, 140, 0.12);
+  color: #c8b898;
+}
+
+.notes-sort-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Note Groups ────────────────────────────────────── */
+
+.notes-group {
+  border-bottom: 1px solid rgba(200, 180, 140, 0.05);
+}
+
+.notes-group:last-child {
+  border-bottom: none;
+}
+
+.notes-group-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: none;
+  background: rgba(200, 180, 140, 0.03);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  color: inherit;
+  font: inherit;
+}
+
+.notes-group-header:hover {
+  background: rgba(200, 180, 140, 0.06);
+}
+
+.notes-group-chevron {
+  width: 14px;
+  height: 14px;
+  color: #6a5a4a;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.notes-group-header.collapsed .notes-group-chevron {
+  transform: rotate(-90deg);
+}
+
+.notes-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8a7a6a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex: 1;
+  text-align: left;
+}
+
+.notes-group-count {
+  font-size: 10px;
+  font-weight: 700;
+  color: #5a4a3a;
+  background: rgba(200, 180, 140, 0.08);
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+.notes-group-body {
+  overflow: hidden;
+  max-height: 2000px;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
+  opacity: 1;
+}
+
+.notes-group-body.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* ── Custom Group ───────────────────────────────────── */
+
+.notes-group-custom {
+  border: 1px solid rgba(200, 180, 140, 0.06);
+  border-radius: 8px;
+  margin: 0 12px 6px;
+  background: rgba(200, 180, 140, 0.02);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.notes-group-custom.drag-over {
+  border-color: rgba(200, 140, 60, 0.4);
+  background: rgba(200, 140, 60, 0.06);
+}
+
+.notes-group-custom .notes-group-header {
+  border-radius: 7px 7px 0 0;
+}
+
+.notes-group-custom .notes-group-body {
+  padding: 0 6px 4px;
+}
+
+.notes-group-icon {
+  width: 13px;
+  height: 13px;
+  color: #daa03c;
+  flex-shrink: 0;
+}
+
+.notes-group-rename-input {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #e8dcc8;
+  background: rgba(200, 180, 140, 0.08);
+  border: 1px solid rgba(200, 180, 140, 0.2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  outline: none;
+  font: inherit;
+}
+
+.notes-group-rename-input:focus {
+  border-color: rgba(200, 140, 60, 0.4);
+}
+
+.notes-group-menu-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: #5a4a3a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.notes-group-header:hover .notes-group-menu-btn {
+  opacity: 1;
+}
+
+.notes-group-menu-btn:hover {
+  background: rgba(200, 180, 140, 0.1);
+  color: #a89878;
+}
+
+.notes-group-menu-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.notes-group-delete-btn:hover {
+  color: #c85050;
+  background: rgba(200, 80, 80, 0.1);
+}
+
+.notes-group-empty-drop {
+  padding: 16px;
+  text-align: center;
+  font-size: 11px;
+  color: #4a3a2a;
+  border: 1px dashed rgba(200, 180, 140, 0.12);
+  border-radius: 6px;
+  margin: 4px 6px;
+}
+
+/* ── Ungroup button ─────────────────────────────────── */
+
+.notes-ungroup-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #4a3a2a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s ease;
+}
+
+.notes-item:hover .notes-ungroup-btn {
+  opacity: 1;
+}
+
+.notes-ungroup-btn:hover {
+  background: rgba(200, 180, 140, 0.1);
+  color: #a89878;
+}
+
+.notes-ungroup-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ── Drag states ────────────────────────────────────── */
+
+.notes-item.dragging {
+  opacity: 0.4;
+}
+
+/* ── Create Group Bar ───────────────────────────────── */
+
+.notes-create-group-area {
+  padding: 10px 18px;
+  border-top: 1px solid rgba(200, 180, 140, 0.06);
+}
+
+.notes-create-group-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px dashed rgba(200, 180, 140, 0.15);
+  background: transparent;
+  color: #6a5a4a;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.notes-create-group-btn:hover {
+  border-color: rgba(200, 140, 60, 0.3);
+  color: #a89878;
+  background: rgba(200, 140, 60, 0.04);
+}
+
+.notes-create-group-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.notes-create-group-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.notes-create-group-input {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(200, 180, 140, 0.15);
+  background: rgba(200, 180, 140, 0.04);
+  color: #e8dcc8;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.notes-create-group-input:focus {
+  border-color: rgba(200, 140, 60, 0.4);
+}
+
+.notes-create-group-input::placeholder {
+  color: #4a3a2a;
+}
+
+.notes-create-group-confirm,
+.notes-create-group-cancel {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.notes-create-group-confirm {
+  background: rgba(100, 180, 100, 0.15);
+  color: #6ab86a;
+}
+
+.notes-create-group-confirm:hover:not(:disabled) {
+  background: rgba(100, 180, 100, 0.25);
+}
+
+.notes-create-group-confirm:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.notes-create-group-cancel {
+  background: rgba(200, 80, 80, 0.1);
+  color: #c85050;
+}
+
+.notes-create-group-cancel:hover {
+  background: rgba(200, 80, 80, 0.2);
+}
+
+.notes-create-group-confirm svg,
+.notes-create-group-cancel svg {
+  width: 14px;
+  height: 14px;
+}
+
 /* ── Watch View Responsive ───────────────────────────── */
 
 @media (max-width: 1100px) {

@@ -648,6 +648,7 @@ export default function Videos() {
             <NotesPanel
               notes={notes}
               currentTime={currentTime}
+              videoId={watchingVideo.id}
               videoTitle={watchingVideo.title}
               onAdd={handleAddNote}
               onDelete={handleDeleteNote}

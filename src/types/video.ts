@@ -20,4 +20,5 @@ export interface VideoNote {
   text: string
   timestamp: number
   createdAt: number
+  groupId?: string | null
 }

@@ -495,6 +495,7 @@ export async function fetchVideoNotes(videoId: string): Promise<VideoNote[]> {
     text: row.text as string,
     timestamp: row.timestamp as number,
     createdAt: new Date(row.created_at as string).getTime(),
+    groupId: row.group_id as string | null,
   }))
 }
 
@@ -520,6 +521,81 @@ export async function createVideoNote(note: VideoNote): Promise<VideoNote> {
 export async function deleteVideoNote(id: string): Promise<void> {
   const userId = await getUserId()
   const { error } = await supabase.from('video_notes').delete().eq('id', id).eq('user_id', userId)
+  if (error) throw error
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NOTE GROUPS
+   ═══════════════════════════════════════════════════════════ */
+
+export interface NoteGroup {
+  id: string
+  videoId: string
+  name: string
+  sortOrder: number
+  createdAt: number
+}
+
+export async function fetchNoteGroups(videoId: string): Promise<NoteGroup[]> {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('note_groups')
+    .select('*')
+    .eq('video_id', videoId)
+    .eq('user_id', userId)
+    .order('sort_order', { ascending: true })
+
+  if (error) throw error
+  return (data || []).map(row => ({
+    id: row.id as string,
+    videoId: row.video_id as string,
+    name: row.name as string,
+    sortOrder: row.sort_order as number,
+    createdAt: new Date(row.created_at as string).getTime(),
+  }))
+}
+
+export async function createNoteGroup(group: NoteGroup): Promise<NoteGroup> {
+  const userId = await getUserId()
+  const { error } = await supabase
+    .from('note_groups')
+    .insert({
+      id: group.id,
+      user_id: userId,
+      video_id: group.videoId,
+      name: group.name,
+      sort_order: group.sortOrder,
+    })
+  if (error) throw error
+  return group
+}
+
+export async function updateNoteGroup(id: string, patch: { name?: string; sortOrder?: number }): Promise<void> {
+  const userId = await getUserId()
+  const update: Record<string, unknown> = {}
+  if (patch.name !== undefined) update.name = patch.name
+  if (patch.sortOrder !== undefined) update.sort_order = patch.sortOrder
+  const { error } = await supabase
+    .from('note_groups')
+    .update(update)
+    .eq('id', id)
+    .eq('user_id', userId)
+  if (error) throw error
+}
+
+export async function deleteNoteGroup(id: string): Promise<void> {
+  const userId = await getUserId()
+  const { error } = await supabase.from('note_groups').delete().eq('id', id).eq('user_id', userId)
+  if (error) throw error
+}
+
+export async function assignNoteToGroup(noteId: string, groupId: string | null): Promise<void> {
+  const userId = await getUserId()
+  const { error } = await supabase
+    .from('video_notes')
+    .update({ group_id: groupId })
+    .eq('id', noteId)
+    .eq('user_id', userId)
   if (error) throw error
 }
 
