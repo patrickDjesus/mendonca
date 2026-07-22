@@ -182,6 +182,7 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
       setShowGroupInput(false)
     } catch (e) {
       console.error('Erro ao criar grupo:', e)
+      alert('Erro ao criar grupo. Verifique se o banco de dados está configurado (tabela note_groups).')
     }
   }, [newGroupName, videoId, customGroups.length])
 
@@ -192,6 +193,7 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
       setLocalNotes(prev => prev.map(n => n.groupId === groupId ? { ...n, groupId: null } : n))
     } catch (e) {
       console.error('Erro ao deletar grupo:', e)
+      alert('Erro ao deletar grupo.')
     }
   }, [])
 
@@ -239,6 +241,7 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
       setLocalNotes(prev => prev.map(n => n.id === noteId ? { ...n, groupId } : n))
     } catch (err) {
       console.error('Erro ao mover anotação:', err)
+      alert('Erro ao mover anotação para o grupo. Verifique se o banco de dados está configurado.')
     }
   }, [])
 
@@ -248,6 +251,7 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
       setLocalNotes(prev => prev.map(n => n.id === noteId ? { ...n, groupId: null } : n))
     } catch (err) {
       console.error('Erro ao remover do grupo:', err)
+      alert('Erro ao remover anotação do grupo. Verifique se o banco de dados está configurado.')
     }
   }, [])
 
