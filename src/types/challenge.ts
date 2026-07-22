@@ -132,4 +132,12 @@ export interface UserStreak {
   longestStreak: number
   lastChallengeDate: string | null
   totalXp: number
+  totalWatchSeconds: number
+  videosWatched: number
+  docsCreated: number
+  challengesCompleted: number
+  simuladosCompleted: number
+  notesCreated: number
+  loginDays: number
+  lastLoginDate: string | null
 }

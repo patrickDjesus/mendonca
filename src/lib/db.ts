@@ -277,6 +277,14 @@ export async function fetchStreak(): Promise<UserStreak> {
       longestStreak: 0,
       lastChallengeDate: null,
       totalXp: 0,
+      totalWatchSeconds: 0,
+      videosWatched: 0,
+      docsCreated: 0,
+      challengesCompleted: 0,
+      simuladosCompleted: 0,
+      notesCreated: 0,
+      loginDays: 0,
+      lastLoginDate: null,
     }
   }
 
@@ -285,6 +293,14 @@ export async function fetchStreak(): Promise<UserStreak> {
     longestStreak: data.longest_streak,
     lastChallengeDate: data.last_challenge_date,
     totalXp: data.total_xp,
+    totalWatchSeconds: data.total_watch_seconds || 0,
+    videosWatched: data.videos_watched || 0,
+    docsCreated: data.docs_created || 0,
+    challengesCompleted: data.challenges_completed || 0,
+    simuladosCompleted: data.simulados_completed || 0,
+    notesCreated: data.notes_created || 0,
+    loginDays: data.login_days || 0,
+    lastLoginDate: data.last_login_date || null,
   }
 }
 
@@ -298,6 +314,14 @@ export async function upsertStreak(s: UserStreak): Promise<void> {
       longest_streak: s.longestStreak,
       last_challenge_date: s.lastChallengeDate,
       total_xp: s.totalXp,
+      total_watch_seconds: s.totalWatchSeconds,
+      videos_watched: s.videosWatched,
+      docs_created: s.docsCreated,
+      challenges_completed: s.challengesCompleted,
+      simulados_completed: s.simuladosCompleted,
+      notes_created: s.notesCreated,
+      login_days: s.loginDays,
+      last_login_date: s.lastLoginDate,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' })
 
@@ -716,4 +740,128 @@ export async function fetchRecentActivities(limit = 8): Promise<Activity[]> {
     color: row.color as string,
     createdAt: new Date(row.created_at as string).getTime(),
   }))
+}
+
+/* ═══════════════════════════════════════════════════════════
+   XP & LEVEL SYSTEM
+   ═══════════════════════════════════════════════════════════ */
+
+const LEVEL_THRESHOLDS = [0, 100, 300, 600, 1000, 1600, 2400, 3500, 5000, 7000, 10000, 14000, 19000, 25000, 32000, 40000, 50000, 62000, 76000, 92000]
+
+export function getLevel(xp: number): number {
+  for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
+    if (xp >= LEVEL_THRESHOLDS[i]) return i + 1
+  }
+  return 1
+}
+
+export function getLevelProgress(xp: number): { level: number; current: number; needed: number; percent: number } {
+  const level = getLevel(xp)
+  const current = LEVEL_THRESHOLDS[level - 1] || 0
+  const needed = LEVEL_THRESHOLDS[level] || LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1] + 20000
+  const percent = Math.min(100, ((xp - current) / (needed - current)) * 100)
+  return { level, current, needed, percent }
+}
+
+export function getRank(xp: number): { title: string; tier: number; color: string } {
+  if (xp >= 10000) return { title: 'Lenda', tier: 6, color: '#ff6b6b' }
+  if (xp >= 5000) return { title: 'Mestre', tier: 5, color: '#daa03c' }
+  if (xp >= 2000) return { title: 'Erudito', tier: 4, color: '#b450b4' }
+  if (xp >= 800) return { title: 'Estudioso', tier: 3, color: '#508cc8' }
+  if (xp >= 200) return { title: 'Aprendiz', tier: 2, color: '#50b478' }
+  return { title: 'Iniciante', tier: 1, color: '#6a5a4a' }
+}
+
+export const XP_REWARDS = {
+  CREATE_DOC: 50,
+  WATCH_VIDEO_PER_MIN: 2,
+  COMPLETE_CHALLENGE: 100,
+  DAILY_LOGIN: 10,
+  CREATE_NOTE: 5,
+  COMPLETE_SIMULADO: 200,
+}
+
+export async function awardXp(amount: number): Promise<{ newXp: number; leveledUp: boolean }> {
+  const streak = await fetchStreak()
+  const oldLevel = getLevel(streak.totalXp)
+  const newXp = streak.totalXp + amount
+  const newLevel = getLevel(newXp)
+  streak.totalXp = newXp
+  await upsertStreak(streak)
+  return { newXp, leveledUp: newLevel > oldLevel }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ACHIEVEMENTS
+   ═══════════════════════════════════════════════════════════ */
+
+export interface UserAchievement {
+  achievementId: string
+  unlockedAt: number
+}
+
+export async function fetchUserAchievements(): Promise<UserAchievement[]> {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('user_achievements')
+    .select('*')
+    .eq('user_id', userId)
+    .order('unlocked_at', { ascending: false })
+
+  if (error) throw error
+  return (data || []).map(row => ({
+    achievementId: row.achievement_id as string,
+    unlockedAt: new Date(row.unlocked_at as string).getTime(),
+  }))
+}
+
+export async function unlockAchievement(achievementId: string): Promise<boolean> {
+  const userId = await getUserId()
+  const { data: existing } = await supabase
+    .from('user_achievements')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('achievement_id', achievementId)
+    .maybeSingle()
+
+  if (existing) return false
+
+  const { error } = await supabase
+    .from('user_achievements')
+    .insert({ user_id: userId, achievement_id: achievementId })
+
+  if (error) throw error
+  return true
+}
+
+export async function incrementStreakField(field: string, amount = 1): Promise<void> {
+  const userId = await getUserId()
+  const streak = await fetchStreak()
+  const key = field as keyof UserStreak
+  const current = (streak[key] as number) || 0
+  ;(streak as Record<string, unknown>)[key] = current + amount
+  await upsertStreak(streak)
+}
+
+export async function checkAndUnlockAchievements(): Promise<string[]> {
+  const streak = await fetchStreak()
+  const newlyUnlocked: string[] = []
+
+  const checks: Array<{ id: string; condition: boolean }> = [
+    { id: 'foco_de_aco', condition: streak.currentStreak >= 7 },
+    { id: 'o_cinefilo', condition: streak.videosWatched >= 50 },
+    { id: 'escriba_digital', condition: streak.notesCreated >= 10 },
+    { id: 'arquivista', condition: streak.docsCreated >= 1 },
+    { id: 'biblioteca_alexandria', condition: streak.docsCreated >= 20 },
+    { id: 'maratonista_enem', condition: streak.simuladosCompleted >= 1 },
+  ]
+
+  for (const check of checks) {
+    if (check.condition) {
+      const wasNew = await unlockAchievement(check.id)
+      if (wasNew) newlyUnlocked.push(check.id)
+    }
+  }
+
+  return newlyUnlocked
 }

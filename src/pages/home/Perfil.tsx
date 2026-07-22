@@ -1,8 +1,8 @@
-import { useEffect, useState, type JSX } from 'react'
+import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { fetchMyCounts, fetchRecentActivities, type Activity } from '../../lib/db'
-import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
+import { fetchMyCounts, fetchRecentActivities, fetchStreak, fetchUserAchievements, type Activity, getLevelProgress, getRank } from '../../lib/db'
+import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES, CATEGORY_ICONS, type Achievement } from '../../data/achievements'
 import '../../styles/perfil.css'
 
 function timeAgo(ms: number): string {
@@ -23,26 +23,6 @@ function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/)
   if (parts.length === 1) return parts[0][0].toUpperCase()
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-}
-
-function getRank(xp: number): { title: string; tier: number; color: string } {
-  if (xp >= 5000) return { title: 'Mestre', tier: 5, color: '#daa03c' }
-  if (xp >= 2000) return { title: 'Erudito', tier: 4, color: '#b450b4' }
-  if (xp >= 800) return { title: 'Estudioso', tier: 3, color: '#508cc8' }
-  if (xp >= 200) return { title: 'Aprendiz', tier: 2, color: '#50b478' }
-  return { title: 'Iniciante', tier: 1, color: '#6a5a4a' }
-}
-
-function getLevelProgress(xp: number): number {
-  const thresholds = [0, 200, 800, 2000, 5000]
-  for (let i = thresholds.length - 1; i >= 0; i--) {
-    if (xp >= thresholds[i]) {
-      const current = thresholds[i]
-      const next = thresholds[i + 1] || thresholds[i] + 3000
-      return Math.min(100, ((xp - current) / (next - current)) * 100)
-    }
-  }
-  return 0
 }
 
 function ActIcon({ icon, color }: { icon: string; color: string }) {
@@ -79,6 +59,8 @@ export default function Perfil() {
   const [counts, setCounts] = useState({ docs: 0, challenges: 0, videos: 0, xp: 0, streak: 0 })
   const [activities, setActivities] = useState<Activity[]>([])
   const [subjectCounts, setSubjectCounts] = useState<Record<string, number>>({})
+  const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set())
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -91,25 +73,32 @@ export default function Perfil() {
       setActivities(acts)
       const subMap: Record<string, number> = {}
       for (const a of acts) {
-        for (const s of SUBJECTS) {
-          if (a.title.includes(s)) {
-            subMap[s] = (subMap[s] || 0) + 1
-          }
+        const subjects = ['Física', 'Química', 'Biologia', 'Matemática', 'Linguagens', 'Ciências Humanas', 'Ciências da Natureza', 'Geografia', 'História', 'Filosofia']
+        for (const s of subjects) {
+          if (a.title.includes(s)) subMap[s] = (subMap[s] || 0) + 1
         }
       }
       setSubjectCounts(subMap)
     }).catch(console.error)
+    fetchUserAchievements().then(ua => {
+      setUnlockedIds(new Set(ua.map(a => a.achievementId)))
+    }).catch(console.error)
   }, [])
 
+  const levelInfo = getLevelProgress(counts.xp)
   const rank = getRank(counts.xp)
-  const levelProgress = getLevelProgress(counts.xp)
+  const greeting = userName || 'estudante'
   const maxSubjectCount = Math.max(1, ...Object.values(subjectCounts))
 
-  const greeting = userName || 'estudante'
+  const filteredAchievements = activeCategory
+    ? ACHIEVEMENTS.filter(a => a.category === activeCategory)
+    : ACHIEVEMENTS
+  const unlockedCount = ACHIEVEMENTS.filter(a => unlockedIds.has(a.id)).length
+  const totalBonusPct = unlockedCount * 10
 
   return (
     <div className="perfil-page">
-      {/* ── Hero Card ─────────────────────────────────── */}
+      {/* Hero Card */}
       <div className="perfil-hero">
         <div className="perfil-hero-bg">
           <div className="perfil-hero-orb perfil-orb-1" />
@@ -125,7 +114,7 @@ export default function Perfil() {
               </div>
             </div>
             <div className="perfil-avatar-badge" style={{ background: rank.color }}>
-              {rank.tier}
+              {levelInfo.level}
             </div>
           </div>
 
@@ -142,23 +131,33 @@ export default function Perfil() {
                 </svg>
                 Membro desde {createdAt}
               </span>
+              <span className="perfil-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                {unlockedCount}/{ACHIEVEMENTS.length} conquistas
+              </span>
             </div>
           </div>
         </div>
 
-        {/* ── Rank + Level Bar ──────────────────────────── */}
+        {/* Rank + Level Bar */}
         <div className="perfil-rank-section">
           <div className="perfil-rank-label">
             <span className="perfil-rank-title" style={{ color: rank.color }}>{rank.title}</span>
             <span className="perfil-rank-xp">{counts.xp.toLocaleString('pt-BR')} XP</span>
           </div>
           <div className="perfil-level-bar">
-            <div className="perfil-level-fill" style={{ width: `${levelProgress}%`, background: rank.color }} />
+            <div className="perfil-level-fill" style={{ width: `${levelInfo.percent}%`, background: rank.color }} />
+          </div>
+          <div className="perfil-level-info">
+            <span>Nível {levelInfo.level}</span>
+            <span>{(levelInfo.needed - levelInfo.current).toLocaleString('pt-BR')} XP para próximo nível</span>
           </div>
         </div>
       </div>
 
-      {/* ── Stats Row ─────────────────────────────────── */}
+      {/* Stats Row */}
       <div className="perfil-stats">
         <div className="perfil-stat-card">
           <div className="perfil-stat-icon" style={{ background: 'rgba(218,160,60,0.15)', color: '#daa03c' }}>
@@ -204,7 +203,68 @@ export default function Perfil() {
         </div>
       </div>
 
-      {/* ── Subject Mastery ────────────────────────────── */}
+      {/* Achievements Section */}
+      <div className="perfil-section perfil-achievements-section">
+        <div className="perfil-section-header">
+          <h2 className="perfil-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="8" r="7" />
+              <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+            </svg>
+            Conquistas
+          </h2>
+          <span className="perfil-achievement-bonus">+{totalBonusPct}% XP</span>
+        </div>
+
+        <div className="perfil-achievement-cats">
+          <button
+            className={`perfil-ach-cat ${activeCategory === null ? 'active' : ''}`}
+            onClick={() => setActiveCategory(null)}
+            type="button"
+          >
+            Todas
+          </button>
+          {ACHIEVEMENT_CATEGORIES.map(cat => (
+            <button
+              key={cat}
+              className={`perfil-ach-cat ${activeCategory === cat ? 'active' : ''}`}
+              onClick={() => setActiveCategory(cat)}
+              type="button"
+            >
+              {CATEGORY_ICONS[cat]} {cat}
+            </button>
+          ))}
+        </div>
+
+        <div className="perfil-achievement-grid">
+          {filteredAchievements.map(ach => {
+            const unlocked = unlockedIds.has(ach.id)
+            return (
+              <div key={ach.id} className={`perfil-achievement-card ${unlocked ? 'unlocked' : 'locked'}`}>
+                <div className="perfil-ach-icon">{ach.icon}</div>
+                <div className="perfil-ach-info">
+                  <span className="perfil-ach-name">{ach.name}</span>
+                  <span className="perfil-ach-desc">{ach.description}</span>
+                </div>
+                <div className="perfil-ach-badge">
+                  {unlocked ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Subject Mastery */}
       {Object.keys(subjectCounts).length > 0 && (
         <div className="perfil-section">
           <h2 className="perfil-section-title">
@@ -216,22 +276,25 @@ export default function Perfil() {
             Matérias mais estudadas
           </h2>
           <div className="perfil-subjects">
-            {SUBJECTS.filter(s => subjectCounts[s]).sort((a, b) => (subjectCounts[b] || 0) - (subjectCounts[a] || 0)).map(subject => {
-              const colors = SUBJECT_COLORS[subject]
+            {Object.keys(subjectCounts).sort((a, b) => (subjectCounts[b] || 0) - (subjectCounts[a] || 0)).map(subject => {
+              const colors: Record<string, { text: string }> = {
+                'Física': { text: '#508cc8' }, 'Química': { text: '#50b478' }, 'Biologia': { text: '#50b450' },
+                'Matemática': { text: '#c88c3c' }, 'Linguagens': { text: '#b450b4' }, 'Ciências Humanas': { text: '#c86450' },
+                'Ciências da Natureza': { text: '#50b890' }, 'Geografia': { text: '#3ca064' }, 'História': { text: '#c86450' },
+                'Filosofia': { text: '#8c78c8' },
+              }
+              const c = colors[subject] || { text: '#6a5a4a' }
               const count = subjectCounts[subject] || 0
               const pct = Math.round((count / maxSubjectCount) * 100)
               return (
                 <div key={subject} className="perfil-subject-row">
                   <div className="perfil-subject-info">
-                    <div className="perfil-subject-dot" style={{ background: colors.text }} />
+                    <div className="perfil-subject-dot" style={{ background: c.text }} />
                     <span className="perfil-subject-name">{subject}</span>
                     <span className="perfil-subject-count">{count}</span>
                   </div>
                   <div className="perfil-subject-bar">
-                    <div
-                      className="perfil-subject-fill"
-                      style={{ width: `${pct}%`, background: colors.text }}
-                    />
+                    <div className="perfil-subject-fill" style={{ width: `${pct}%`, background: c.text }} />
                   </div>
                 </div>
               )
@@ -240,7 +303,7 @@ export default function Perfil() {
         </div>
       )}
 
-      {/* ── Activity Feed ──────────────────────────────── */}
+      {/* Activity Feed */}
       <div className="perfil-section">
         <h2 className="perfil-section-title">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
