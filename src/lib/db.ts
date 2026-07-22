@@ -972,7 +972,7 @@ export async function checkModeHardcore(challengeId: string, isWin: boolean, mod
   }
 }
 
-export async function checkMasoquista(challengeId: string, isWin: boolean, wrongCount: number): Promise<void> {
+export async function checkMasoquista(challengeId: string, isWin: boolean): Promise<void> {
   if (!isWin) return
   const userId = await getUserId()
   const { data: attempts } = await supabase
@@ -1122,10 +1122,4 @@ export async function adminGetStats(): Promise<{ totalUsers: number; totalDocs: 
     totalChallenges: Number(row?.total_challenges || 0),
     totalVideos: Number(row?.total_videos || 0),
   }
-}
-
-export async function checkIsAdmin(): Promise<boolean> {
-  const userId = await getUserId()
-  const { data } = await supabase.from('profiles').select('is_admin').eq('id', userId).maybeSingle()
-  return data?.is_admin === true
 }

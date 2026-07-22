@@ -224,7 +224,7 @@ export default function Desafios() {
       logActivity('challenge_done', `${isWin ? 'Acertou' : 'Errou'} "${activeChallenge.title}" (${correctCount}/${activeChallenge.questionIds.length})`, 'challenge', isWin ? '#b450b4' : '#c86450').catch(() => {})
       recordAction('challenge', { challengeWin: isWin }).catch(() => {})
       checkModeHardcore(activeChallenge.id, correctCount > wrongCount, activeChallenge.modifiers?.length || 0).catch(() => {})
-      checkMasoquista(activeChallenge.id, isWin, wrongCount).catch(() => {})
+      checkMasoquista(activeChallenge.id, isWin).catch(() => {})
       setView('results')
       stopMemoryTimer()
     } else {
