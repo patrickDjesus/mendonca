@@ -71,9 +71,10 @@ interface Props {
   onAdd: (note: VideoNote) => Promise<boolean>
   onDelete: (id: string) => void
   onSeek: (seconds: number) => void
+  onGroupChange?: (notes: VideoNote[]) => void
 }
 
-export default function NotesPanel({ notes, currentTime, videoId, videoTitle, onAdd, onDelete, onSeek }: Props) {
+export default function NotesPanel({ notes, currentTime, videoId, videoTitle, onAdd, onDelete, onSeek, onGroupChange }: Props) {
   const [input, setInput] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
   const [flashId, setFlashId] = useState<string | null>(null)
@@ -93,7 +94,16 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
   const groupInputRef = useRef<HTMLInputElement>(null)
   const renameInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => { setLocalNotes(notes) }, [notes])
+  useEffect(() => {
+    setLocalNotes(prev => {
+      const prevMap = new Map(prev.map(n => [n.id, n.groupId]))
+      if (prevMap.size === 0) return notes
+      return notes.map(n => ({
+        ...n,
+        groupId: prevMap.has(n.id) ? (prevMap.get(n.id) ?? null) : n.groupId,
+      }))
+    })
+  }, [notes])
 
   useEffect(() => {
     if (!videoId) return
@@ -227,12 +237,16 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
     try {
       await deleteNoteGroup(groupId)
       setCustomGroups(prev => prev.filter(g => g.id !== groupId))
-      setLocalNotes(prev => prev.map(n => n.groupId === groupId ? { ...n, groupId: null } : n))
+      setLocalNotes(prev => {
+        const next = prev.map(n => n.groupId === groupId ? { ...n, groupId: null } : n)
+        onGroupChange?.(next)
+        return next
+      })
     } catch (e) {
       console.error('Erro ao deletar grupo:', e)
       alert('Erro ao deletar grupo.')
     }
-  }, [])
+  }, [onGroupChange])
 
   const handleRenameGroup = useCallback(async (groupId: string) => {
     const name = renameValue.trim()
@@ -290,38 +304,50 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
 
     try {
       await assignNotesToGroup(noteIds, groupId)
-      setLocalNotes(prev => prev.map(n => noteIds.includes(n.id) ? { ...n, groupId } : n))
+      setLocalNotes(prev => {
+        const next = prev.map(n => noteIds.includes(n.id) ? { ...n, groupId } : n)
+        onGroupChange?.(next)
+        return next
+      })
       setSelectedIds(new Set())
       setSelectMode(false)
     } catch (err) {
       console.error('Erro ao mover anotações:', err)
       alert('Erro ao mover anotações para o grupo. Verifique se o banco de dados está configurado.')
     }
-  }, [])
+  }, [onGroupChange])
 
   const handleRemoveFromGroup = useCallback(async (noteId: string) => {
     try {
       await assignNoteToGroup(noteId, null)
-      setLocalNotes(prev => prev.map(n => n.id === noteId ? { ...n, groupId: null } : n))
+      setLocalNotes(prev => {
+        const next = prev.map(n => n.id === noteId ? { ...n, groupId: null } : n)
+        onGroupChange?.(next)
+        return next
+      })
     } catch (err) {
       console.error('Erro ao remover do grupo:', err)
       alert('Erro ao remover anotação do grupo. Verifique se o banco de dados está configurado.')
     }
-  }, [])
+  }, [onGroupChange])
 
   const handleMoveSelectedToGroup = useCallback(async (groupId: string) => {
     const ids = Array.from(selectedIds)
     if (ids.length === 0) return
     try {
       await assignNotesToGroup(ids, groupId)
-      setLocalNotes(prev => prev.map(n => ids.includes(n.id) ? { ...n, groupId } : n))
+      setLocalNotes(prev => {
+        const next = prev.map(n => ids.includes(n.id) ? { ...n, groupId } : n)
+        onGroupChange?.(next)
+        return next
+      })
       setSelectedIds(new Set())
       setSelectMode(false)
     } catch (err) {
       console.error('Erro ao mover anotações:', err)
       alert('Erro ao mover anotações para o grupo.')
     }
-  }, [selectedIds])
+  }, [selectedIds, onGroupChange])
 
   const allCollapsed = sortMode === 'recent' && customGroups.length > 0 && customGroups.every(g => collapsed.has(`custom-${g.id}`))
 

@@ -288,6 +288,10 @@ export default function Videos() {
     setCurrentTime(seconds)
   }, [])
 
+  const handleNoteGroupChange = useCallback((updatedNotes: VideoNote[]) => {
+    setNotes(updatedNotes)
+  }, [])
+
   const handleOpenVideo = useCallback((video: VideoMeta) => {
     if (dragMoved.current) return
     setWatchingVideo(video)
@@ -658,6 +662,7 @@ export default function Videos() {
               onAdd={handleAddNote}
               onDelete={handleDeleteNote}
               onSeek={handleSeek}
+              onGroupChange={handleNoteGroupChange}
             />
           </div>
         </div>

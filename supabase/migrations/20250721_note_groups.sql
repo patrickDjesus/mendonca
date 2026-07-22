@@ -35,19 +35,47 @@ CREATE INDEX IF NOT EXISTS idx_video_notes_group
 ALTER TABLE note_groups ENABLE ROW LEVEL SECURITY;
 
 -- Usuário só enxerga seus próprios grupos
-CREATE POLICY "select_own_groups"
-  ON note_groups FOR SELECT
-  USING (auth.uid() = user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE policyname = 'select_own_groups' AND tablename = 'note_groups'
+  ) THEN
+    CREATE POLICY "select_own_groups"
+      ON note_groups FOR SELECT
+      USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
-CREATE POLICY "insert_own_groups"
-  ON note_groups FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE policyname = 'insert_own_groups' AND tablename = 'note_groups'
+  ) THEN
+    CREATE POLICY "insert_own_groups"
+      ON note_groups FOR INSERT
+      WITH CHECK (auth.uid() = user_id);
+  END IF;
+END $$;
 
-CREATE POLICY "update_own_groups"
-  ON note_groups FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE policyname = 'update_own_groups' AND tablename = 'note_groups'
+  ) THEN
+    CREATE POLICY "update_own_groups"
+      ON note_groups FOR UPDATE
+      USING (auth.uid() = user_id)
+      WITH CHECK (auth.uid() = user_id);
+  END IF;
+END $$;
 
-CREATE POLICY "delete_own_groups"
-  ON note_groups FOR DELETE
-  USING (auth.uid() = user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE policyname = 'delete_own_groups' AND tablename = 'note_groups'
+  ) THEN
+    CREATE POLICY "delete_own_groups"
+      ON note_groups FOR DELETE
+      USING (auth.uid() = user_id);
+  END IF;
+END $$;
