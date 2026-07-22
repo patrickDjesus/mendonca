@@ -20,7 +20,7 @@ export default function HomePage() {
       }
       setUserName(user.user_metadata?.name || user.email || '')
       recordAction('login').catch(() => {})
-      checkIsAdmin().then(admin => { if (mounted) setIsAdmin(admin) }).catch(() => {})
+      checkIsAdmin().then(admin => { if (mounted) setIsAdmin(admin) }).catch(e => { console.error('Erro ao verificar admin:', e) })
     }
     getUser()
     return () => { mounted = false }
