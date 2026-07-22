@@ -1,18 +1,28 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { checkIsAdmin, adminListUsers, adminSetUserRole, adminDeleteUser, adminGetStats, type AdminUserProfile } from '../../lib/db'
+import {
+  checkIsAdmin, adminListUsers, adminSetUserRole, adminDeleteUser, adminGetStats,
+  adminListUsersFull, adminSetUserXP, adminUnlockAchievementForUser, adminRemoveAchievementForUser,
+  adminGetUserAchievements, adminDeleteUserDocuments, adminDeleteUserVideos,
+  adminDeleteUserNotes, adminDeleteUserChallenges, adminResetUserStreak, adminPurgeUserData,
+  type AdminUserProfile, type AdminFullUser,
+} from '../../lib/db'
+import { ACHIEVEMENTS, ACHIEVEMENT_MAP } from '../../data/achievements'
 import { pushNotification } from '../../components/NotificationProvider'
 import '../../styles/admin.css'
+
+type Tab = 'users' | 'tools' | 'stats'
 
 export default function Admin() {
   const navigate = useNavigate()
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
   const [users, setUsers] = useState<AdminUserProfile[]>([])
+  const [fullUsers, setFullUsers] = useState<AdminFullUser[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [editingUser, setEditingUser] = useState<AdminUserProfile | null>(null)
   const [stats, setStats] = useState({ totalUsers: 0, totalDocs: 0, totalChallenges: 0, totalVideos: 0 })
-  const [tab, setTab] = useState<'users' | 'stats' | 'settings'>('users')
+  const [tab, setTab] = useState<Tab>('users')
   const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
@@ -34,7 +44,19 @@ export default function Admin() {
       setStats(prev => ({ ...prev, totalUsers: data.length }))
     } catch (e) {
       console.error('Erro ao listar usuários:', e)
-      pushNotification({ type: 'info', title: 'Erro', message: 'Não foi possível listar os usuários.' })
+      pushNotification({ type: 'info', title: 'Erro', message: 'Não foi possível listar os usuários. Verifique se as funções RPC foram criadas no Supabase.' })
+    }
+    setLoading(false)
+  }
+
+  const loadFullUsers = async () => {
+    setLoading(true)
+    try {
+      const data = await adminListUsersFull()
+      setFullUsers(data)
+    } catch (e) {
+      console.error('Erro ao listar usuários:', e)
+      pushNotification({ type: 'info', title: 'Erro', message: 'Não foi possível carregar dados completos.' })
     }
     setLoading(false)
   }
@@ -49,6 +71,7 @@ export default function Admin() {
     try {
       await adminSetUserRole(userId, role)
       setUsers(prev => prev.map(u => u.userId === userId ? { ...u, isAdmin: role === 'admin' } : u))
+      setFullUsers(prev => prev.map(u => u.userId === userId ? { ...u, isAdmin: role === 'admin' } : u))
       pushNotification({ type: 'info', title: 'Papel atualizado', message: `Usuário agora é "${role}".` })
     } catch (e) {
       console.error('Erro ao atualizar papel:', e)
@@ -64,6 +87,7 @@ export default function Admin() {
     try {
       await adminDeleteUser(userId)
       setUsers(prev => prev.filter(u => u.userId !== userId))
+      setFullUsers(prev => prev.filter(u => u.userId !== userId))
       pushNotification({ type: 'info', title: 'Usuário deletado', message: 'O usuário foi removido.' })
     } catch (e) {
       console.error('Erro ao deletar:', e)
@@ -84,7 +108,7 @@ export default function Admin() {
           <span className="admin-denied-icon">🔒</span>
           <h3>Acesso Negado</h3>
           <p>Você não tem permissão de administrador.</p>
-          <button className="admin-btn primary" onClick={() => navigate('/home')}>Voltar</button>
+          <button className="admin-btn primary" onClick={() => navigate('/home')} type="button">Voltar</button>
         </div>
       </div>
     )
@@ -113,11 +137,11 @@ export default function Admin() {
         <button className={`admin-tab ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')} type="button">
           Usuários ({users.length})
         </button>
+        <button className={`admin-tab ${tab === 'tools' ? 'active' : ''}`} onClick={() => { setTab('tools'); if (fullUsers.length === 0) loadFullUsers() }} type="button">
+          Ferramentas
+        </button>
         <button className={`admin-tab ${tab === 'stats' ? 'active' : ''}`} onClick={() => setTab('stats')} type="button">
           Estatísticas
-        </button>
-        <button className={`admin-tab ${tab === 'settings' ? 'active' : ''}`} onClick={() => setTab('settings')} type="button">
-          Configurações
         </button>
       </div>
 
@@ -177,6 +201,8 @@ export default function Admin() {
         </div>
       )}
 
+      {tab === 'tools' && <ToolsTab fullUsers={fullUsers} setFullUsers={setFullUsers} loadFullUsers={loadFullUsers} loading={loading} />}
+
       {tab === 'stats' && (
         <div className="admin-section">
           <div className="admin-stats-grid">
@@ -195,29 +221,6 @@ export default function Admin() {
             <div className="admin-stat-card">
               <span className="admin-stat-value">{stats.totalVideos}</span>
               <span className="admin-stat-label">Vídeos</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {tab === 'settings' && (
-        <div className="admin-section">
-          <div className="admin-settings-card">
-            <h3>Configurações Gerais</h3>
-            <p className="admin-settings-hint">Painel de configurações do administrador.</p>
-            <div className="admin-settings-list">
-              <div className="admin-settings-item">
-                <span>Modo manutenção</span>
-                <span className="admin-role-badge">Em breve</span>
-              </div>
-              <div className="admin-settings-item">
-                <span>Notificações em massa</span>
-                <span className="admin-role-badge">Em breve</span>
-              </div>
-              <div className="admin-settings-item">
-                <span>Backup do banco</span>
-                <span className="admin-role-badge">Em breve</span>
-              </div>
             </div>
           </div>
         </div>
@@ -256,6 +259,278 @@ export default function Admin() {
               <button className="admin-btn secondary" onClick={() => setEditingUser(null)} type="button">Fechar</button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOOLS TAB
+   ═══════════════════════════════════════════════════════════ */
+
+function ToolsTab({ fullUsers, setFullUsers, loadFullUsers, loading }: { fullUsers: AdminFullUser[]; setFullUsers: React.Dispatch<React.SetStateAction<AdminFullUser[]>>; loadFullUsers: () => void; loading: boolean }) {
+  const [selectedUserId, setSelectedUserId] = useState<string>('')
+  const [toolLoading, setToolLoading] = useState(false)
+  const [xpInput, setXpInput] = useState('')
+  const [userAchievements, setUserAchievements] = useState<Set<string>>(new Set())
+  const [showAchievements, setShowAchievements] = useState(false)
+
+  const selectedUser = fullUsers.find(u => u.userId === selectedUserId)
+
+  const loadUserAchievements = useCallback(async (userId: string) => {
+    try {
+      const data = await adminGetUserAchievements(userId)
+      setUserAchievements(new Set(data.map(a => a.achievementId)))
+    } catch (e) {
+      console.error(e)
+      setUserAchievements(new Set())
+    }
+  }, [])
+
+  const handleSelectUser = useCallback(async (userId: string) => {
+    setSelectedUserId(userId)
+    setShowAchievements(false)
+    setUserAchievements(new Set())
+    if (userId) {
+      await loadUserAchievements(userId)
+      setShowAchievements(true)
+    }
+  }, [loadUserAchievements])
+
+  const handleSetXP = useCallback(async () => {
+    if (!selectedUserId || !xpInput) return
+    setToolLoading(true)
+    try {
+      const xp = parseInt(xpInput)
+      if (isNaN(xp) || xp < 0) {
+        pushNotification({ type: 'info', title: 'Erro', message: 'Valor de XP inválido.' })
+        return
+      }
+      await adminSetUserXP(selectedUserId, xp)
+      setFullUsers(prev => prev.map(u => u.userId === selectedUserId ? { ...u, totalXp: xp } : u))
+      setXpInput('')
+      pushNotification({ type: 'info', title: 'XP atualizado', message: `XP definido para ${xp.toLocaleString()}.` })
+    } catch (e) {
+      console.error(e)
+      pushNotification({ type: 'info', title: 'Erro', message: 'Não foi possível atualizar o XP.' })
+    }
+    setToolLoading(false)
+  }, [selectedUserId, xpInput, setFullUsers])
+
+  const handleToggleAchievement = useCallback(async (achievementId: string) => {
+    if (!selectedUserId) return
+    setToolLoading(true)
+    try {
+      if (userAchievements.has(achievementId)) {
+        await adminRemoveAchievementForUser(selectedUserId, achievementId)
+        setUserAchievements(prev => { const n = new Set(prev); n.delete(achievementId); return n })
+        pushNotification({ type: 'info', title: 'Conquista removida', message: `Removida de ${selectedUser?.name || 'usuário'}.` })
+      } else {
+        await adminUnlockAchievementForUser(selectedUserId, achievementId)
+        setUserAchievements(prev => new Set(prev).add(achievementId))
+        pushNotification({ type: 'achievement', title: 'Conquista desbloqueada!', message: `Definida para ${selectedUser?.name || 'usuário'}.`, icon: ACHIEVEMENT_MAP.get(achievementId)?.icon })
+      }
+    } catch (e) {
+      console.error(e)
+      pushNotification({ type: 'info', title: 'Erro', message: 'Não foi possível alterar a conquista.' })
+    }
+    setToolLoading(false)
+  }, [selectedUserId, userAchievements, selectedUser, setFullUsers])
+
+  const handleMassDelete = useCallback(async (type: 'docs' | 'videos' | 'notes' | 'challenges') => {
+    if (!selectedUserId) return
+    const labels = { docs: 'documentos', videos: 'vídeos', notes: 'anotações', challenges: 'desafios' }
+    if (!confirm(`Tem certeza que deseja deletar todos os ${labels[type]} deste usuário?`)) return
+    setToolLoading(true)
+    try {
+      let count = 0
+      if (type === 'docs') count = await adminDeleteUserDocuments(selectedUserId)
+      else if (type === 'videos') count = await adminDeleteUserVideos(selectedUserId)
+      else if (type === 'notes') count = await adminDeleteUserNotes(selectedUserId)
+      else if (type === 'challenges') count = await adminDeleteUserChallenges(selectedUserId)
+      pushNotification({ type: 'info', title: 'Deletado', message: `${count} ${labels[type]} removidos.` })
+      loadFullUsers()
+    } catch (e) {
+      console.error(e)
+      pushNotification({ type: 'info', title: 'Erro', message: 'Não foi possível deletar.' })
+    }
+    setToolLoading(false)
+  }, [selectedUserId, loadFullUsers])
+
+  const handleResetStreak = useCallback(async () => {
+    if (!selectedUserId) return
+    if (!confirm('Resetar todo o streak e conquistas deste usuário?')) return
+    setToolLoading(true)
+    try {
+      await adminResetUserStreak(selectedUserId)
+      setUserAchievements(new Set())
+      setFullUsers(prev => prev.map(u => u.userId === selectedUserId ? { ...u, totalXp: 0, currentStreak: 0 } : u))
+      pushNotification({ type: 'info', title: 'Resetado', message: 'Streak e conquistas zerados.' })
+    } catch (e) {
+      console.error(e)
+      pushNotification({ type: 'info', title: 'Erro', message: 'Não foi possível resetar.' })
+    }
+    setToolLoading(false)
+  }, [selectedUserId, setFullUsers])
+
+  const handleSetRole = useCallback(async (userId: string, role: 'admin' | 'user') => {
+    setToolLoading(true)
+    try {
+      await adminSetUserRole(userId, role)
+      setFullUsers(prev => prev.map(u => u.userId === userId ? { ...u, isAdmin: role === 'admin' } : u))
+      pushNotification({ type: 'info', title: 'Papel atualizado', message: `Usuário agora é "${role}".` })
+    } catch (e) {
+      console.error('Erro ao atualizar papel:', e)
+      pushNotification({ type: 'info', title: 'Erro', message: 'Não foi possível atualizar o papel.' })
+    }
+    setToolLoading(false)
+  }, [setFullUsers])
+
+  const handlePurgeAll = useCallback(async () => {
+    if (!selectedUserId) return
+    if (!confirm('ATENÇÃO: Isso vai DELETAR TODOS os dados deste usuário (docs, vídeos, notas, desafios, streak, conquistas). A conta será mantida. Continuar?')) return
+    if (!confirm('Tem ABSOLUTA certeza? Esta ação é irreversível.')) return
+    setToolLoading(true)
+    try {
+      await adminPurgeUserData(selectedUserId)
+      setUserAchievements(new Set())
+      setFullUsers(prev => prev.map(u => u.userId === selectedUserId ? { ...u, totalXp: 0, currentStreak: 0, docsCreated: 0, videosWatched: 0, challengesCompleted: 0, simuladosCompleted: 0, notesCreated: 0 } : u))
+      pushNotification({ type: 'info', title: 'Dados purgados', message: 'Todos os dados do usuário foram removidos.' })
+    } catch (e) {
+      console.error(e)
+      pushNotification({ type: 'info', title: 'Erro', message: 'Não foi possível purgar os dados.' })
+    }
+    setToolLoading(false)
+  }, [selectedUserId, setFullUsers])
+
+  return (
+    <div className="admin-section">
+      <div className="admin-toolbar">
+        <select
+          className="admin-search"
+          value={selectedUserId}
+          onChange={e => handleSelectUser(e.target.value)}
+        >
+          <option value="">Selecionar usuário...</option>
+          {fullUsers.map(u => (
+            <option key={u.userId} value={u.userId}>
+              {u.name || u.email} {u.isAdmin ? '(Admin)' : ''} — {u.totalXp.toLocaleString()} XP
+            </option>
+          ))}
+        </select>
+        <button className="admin-btn secondary" onClick={loadFullUsers} disabled={loading} type="button">
+          {loading ? 'Carregando...' : 'Atualizar'}
+        </button>
+      </div>
+
+      {!selectedUser && (
+        <div className="admin-empty">Selecione um usuário para gerenciar.</div>
+      )}
+
+      {selectedUser && (
+        <div className="admin-tools-grid">
+          {/* User Info Card */}
+          <div className="admin-tool-card">
+            <h4>Informações</h4>
+            <div className="admin-tool-info">
+              <p><strong>{selectedUser.name || 'Sem nome'}</strong></p>
+              <p className="admin-email">{selectedUser.email}</p>
+              <span className={`admin-role-badge role-${selectedUser.isAdmin ? 'admin' : 'user'}`}>
+                {selectedUser.isAdmin ? 'Admin' : 'Usuário'}
+              </span>
+            </div>
+            <div className="admin-tool-stats">
+              <div><span className="admin-tool-stat-val">{selectedUser.totalXp.toLocaleString()}</span><span className="admin-tool-stat-lbl">XP</span></div>
+              <div><span className="admin-tool-stat-val">{selectedUser.currentStreak}</span><span className="admin-tool-stat-lbl">Streak</span></div>
+              <div><span className="admin-tool-stat-val">{selectedUser.loginDays}</span><span className="admin-tool-stat-lbl">Dias</span></div>
+            </div>
+            <div className="admin-tool-actions">
+              <button className={`admin-btn ${selectedUser.isAdmin ? 'secondary' : 'primary'}`} onClick={() => handleSetRole(selectedUserId, selectedUser.isAdmin ? 'user' : 'admin')} disabled={toolLoading} type="button">
+                {selectedUser.isAdmin ? 'Remover Admin' : 'Tornar Admin'}
+              </button>
+            </div>
+          </div>
+
+          {/* XP Manager */}
+          <div className="admin-tool-card">
+            <h4>XP</h4>
+            <div className="admin-tool-row">
+              <span>Atual: <strong>{selectedUser.totalXp.toLocaleString()}</strong> XP</span>
+            </div>
+            <div className="admin-tool-row">
+              <input
+                className="admin-search"
+                type="number"
+                min="0"
+                value={xpInput}
+                onChange={e => setXpInput(e.target.value)}
+                placeholder="Novo valor de XP"
+              />
+              <button className="admin-btn primary" onClick={handleSetXP} disabled={toolLoading || !xpInput} type="button">
+                Definir XP
+              </button>
+            </div>
+          </div>
+
+          {/* Mass Delete */}
+          <div className="admin-tool-card">
+            <h4>Apagar em Massa</h4>
+            <div className="admin-tool-row admin-tool-grid-2">
+              <button className="admin-btn danger" onClick={() => handleMassDelete('docs')} disabled={toolLoading} type="button">
+                Deletar Docs ({selectedUser.docsCreated})
+              </button>
+              <button className="admin-btn danger" onClick={() => handleMassDelete('videos')} disabled={toolLoading} type="button">
+                Deletar Vídeos ({selectedUser.videosWatched})
+              </button>
+              <button className="admin-btn danger" onClick={() => handleMassDelete('notes')} disabled={toolLoading} type="button">
+                Deletar Notas ({selectedUser.notesCreated})
+              </button>
+              <button className="admin-btn danger" onClick={() => handleMassDelete('challenges')} disabled={toolLoading} type="button">
+                Deletar Desafios ({selectedUser.challengesCompleted})
+              </button>
+            </div>
+          </div>
+
+          {/* Reset & Purge */}
+          <div className="admin-tool-card">
+            <h4>Zona de Perigo</h4>
+            <div className="admin-tool-row admin-tool-col">
+              <button className="admin-btn danger" onClick={handleResetStreak} disabled={toolLoading} type="button">
+                Resetar Streak e Conquistas
+              </button>
+              <button className="admin-btn danger" onClick={handlePurgeAll} disabled={toolLoading} type="button">
+                Purgar Todos os Dados
+              </button>
+              <p className="admin-tool-hint">Estas ações são irreversíveis.</p>
+            </div>
+          </div>
+
+          {/* Achievements */}
+          {showAchievements && (
+            <div className="admin-tool-card admin-tool-card-wide">
+              <h4>Conquistas ({userAchievements.size}/{ACHIEVEMENTS.length})</h4>
+              <div className="admin-achievements-grid">
+                {ACHIEVEMENTS.map(a => {
+                  const unlocked = userAchievements.has(a.id)
+                  return (
+                    <button
+                      key={a.id}
+                      className={`admin-achievement-item ${unlocked ? 'unlocked' : ''}`}
+                      onClick={() => handleToggleAchievement(a.id)}
+                      disabled={toolLoading}
+                      type="button"
+                      title={a.description}
+                    >
+                      <span className="admin-ach-icon">{a.icon}</span>
+                      <span className="admin-ach-name">{a.name}</span>
+                      <span className="admin-ach-badge">{unlocked ? '✓' : '○'}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

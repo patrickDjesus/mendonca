@@ -1123,3 +1123,101 @@ export async function adminGetStats(): Promise<{ totalUsers: number; totalDocs: 
     totalVideos: Number(row?.total_videos || 0),
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN TOOLS
+   ═══════════════════════════════════════════════════════════ */
+
+export interface AdminFullUser {
+  userId: string
+  name: string
+  email: string
+  isAdmin: boolean
+  createdAt: string
+  totalXp: number
+  currentStreak: number
+  docsCreated: number
+  videosWatched: number
+  challengesCompleted: number
+  simuladosCompleted: number
+  notesCreated: number
+  loginDays: number
+}
+
+export async function adminListUsersFull(): Promise<AdminFullUser[]> {
+  const { data, error } = await supabase.rpc('admin_list_users_full')
+  if (error) throw error
+  return (data || []).map((row: Record<string, unknown>) => ({
+    userId: row.user_id as string,
+    name: row.user_name as string || '',
+    email: row.user_email as string || '',
+    isAdmin: row.is_admin as boolean,
+    createdAt: row.created_at as string,
+    totalXp: Number(row.total_xp || 0),
+    currentStreak: Number(row.current_streak || 0),
+    docsCreated: Number(row.docs_created || 0),
+    videosWatched: Number(row.videos_watched || 0),
+    challengesCompleted: Number(row.challenges_completed || 0),
+    simuladosCompleted: Number(row.simulados_completed || 0),
+    notesCreated: Number(row.notes_created || 0),
+    loginDays: Number(row.login_days || 0),
+  }))
+}
+
+export async function adminSetUserXP(userId: string, xp: number): Promise<void> {
+  const { error } = await supabase.rpc('admin_set_user_xp', { target_user_id: userId, new_xp: xp })
+  if (error) throw error
+}
+
+export async function adminUnlockAchievementForUser(userId: string, achievementId: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_unlock_achievement', { target_user_id: userId, achievement: achievementId })
+  if (error) throw error
+}
+
+export async function adminRemoveAchievementForUser(userId: string, achievementId: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_remove_achievement', { target_user_id: userId, achievement: achievementId })
+  if (error) throw error
+}
+
+export async function adminGetUserAchievements(userId: string): Promise<{ achievementId: string; unlockedAt: number }[]> {
+  const { data, error } = await supabase.rpc('admin_get_user_achievements', { target_user_id: userId })
+  if (error) throw error
+  return (data || []).map((row: Record<string, unknown>) => ({
+    achievementId: row.achievement_id as string,
+    unlockedAt: new Date(row.unlocked_at as string).getTime(),
+  }))
+}
+
+export async function adminDeleteUserDocuments(userId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('admin_delete_user_documents', { target_user_id: userId })
+  if (error) throw error
+  return Number(data || 0)
+}
+
+export async function adminDeleteUserVideos(userId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('admin_delete_user_videos', { target_user_id: userId })
+  if (error) throw error
+  return Number(data || 0)
+}
+
+export async function adminDeleteUserNotes(userId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('admin_delete_user_notes', { target_user_id: userId })
+  if (error) throw error
+  return Number(data || 0)
+}
+
+export async function adminDeleteUserChallenges(userId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('admin_delete_user_challenges', { target_user_id: userId })
+  if (error) throw error
+  return Number(data || 0)
+}
+
+export async function adminResetUserStreak(userId: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_reset_user_streak', { target_user_id: userId })
+  if (error) throw error
+}
+
+export async function adminPurgeUserData(userId: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_purge_user_data', { target_user_id: userId })
+  if (error) throw error
+}

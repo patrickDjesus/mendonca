@@ -404,3 +404,189 @@
   justify-content: center;
   padding: 80px 20px;
 }
+
+/* ================================
+   Tools Tab
+   ================================ */
+.admin-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.admin-tool-card {
+  background: #1a1612;
+  border: 1px solid rgba(200, 180, 140, 0.08);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.admin-tool-card h4 {
+  color: #e8dcc8;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.admin-tool-card-wide {
+  grid-column: 1 / -1;
+}
+
+.admin-tool-info {
+  margin-bottom: 14px;
+}
+
+.admin-tool-info p {
+  color: #e8dcc8;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.admin-tool-info .admin-email {
+  margin-bottom: 8px;
+}
+
+.admin-tool-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.admin-tool-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-tool-stat-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: #daa03c;
+}
+
+.admin-tool-stat-lbl {
+  font-size: 10px;
+  color: #6a5a4a;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.admin-tool-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-tool-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #c8b898;
+  font-size: 13px;
+}
+
+.admin-tool-row:last-child {
+  margin-bottom: 0;
+}
+
+.admin-tool-row .admin-search {
+  flex: 1;
+}
+
+.admin-tool-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.admin-tool-col {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.admin-tool-hint {
+  color: #6a5a4a;
+  font-size: 11px;
+  margin: 4px 0 0;
+}
+
+/* Achievements grid in tools */
+.admin-achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.admin-achievements-grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.admin-achievements-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-achievements-grid::-webkit-scrollbar-thumb {
+  background: rgba(200, 180, 140, 0.15);
+  border-radius: 4px;
+}
+
+.admin-achievement-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #221e1a;
+  border: 1px solid rgba(200, 180, 140, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.admin-achievement-item:hover {
+  background: #2a2418;
+  border-color: rgba(200, 180, 140, 0.15);
+}
+
+.admin-achievement-item.unlocked {
+  background: rgba(180, 80, 180, 0.08);
+  border-color: rgba(180, 80, 180, 0.2);
+}
+
+.admin-achievement-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-ach-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.admin-ach-name {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: #c8b898;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-ach-badge {
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.admin-achievement-item:not(.unlocked) .admin-ach-badge {
+  color: #6a5a4a;
+}
+
+.admin-achievement-item.unlocked .admin-ach-badge {
+  color: #b450b4;
+}
