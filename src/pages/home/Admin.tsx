@@ -55,8 +55,24 @@ export default function Admin() {
       const data = await adminListUsersFull()
       setFullUsers(data)
     } catch (e) {
-      console.error('Erro ao listar usuários:', e)
-      pushNotification({ type: 'info', title: 'Erro', message: 'Não foi possível carregar dados completos.' })
+      console.warn('admin_list_users_full falhou, tentando fallback:', e)
+      try {
+        const data = await adminListUsers()
+        setFullUsers(data.map(u => ({
+          ...u,
+          totalXp: 0,
+          currentStreak: 0,
+          docsCreated: 0,
+          videosWatched: 0,
+          challengesCompleted: 0,
+          simuladosCompleted: 0,
+          notesCreated: 0,
+          loginDays: 0,
+        })))
+      } catch (e2) {
+        console.error('Erro ao listar usuários:', e2)
+        pushNotification({ type: 'info', title: 'Erro', message: 'Execute o SQL RUN_THIS_ADMIN.sql no Supabase.' })
+      }
     }
     setLoading(false)
   }
@@ -404,8 +420,17 @@ function ToolsTab({ fullUsers, setFullUsers, loadFullUsers, loading }: { fullUse
     setToolLoading(false)
   }, [selectedUserId, setFullUsers])
 
+  const needsMigration = fullUsers.length > 0 && fullUsers.every(u => u.totalXp === 0 && u.currentStreak === 0 && u.docsCreated === 0)
+
   return (
     <div className="admin-section">
+      {needsMigration && (
+        <div className="admin-tool-card" style={{ marginBottom: 16, borderColor: 'rgba(200, 160, 60, 0.3)', background: 'rgba(218, 160, 60, 0.05)' }}>
+          <p style={{ color: '#daa03c', fontSize: 13, margin: 0 }}>
+            ⚠️ Execute o arquivo <strong>RUN_THIS_ADMIN.sql</strong> no SQL Editor do Supabase para dados completos (XP, streak, conquistas).
+          </p>
+        </div>
+      )}
       <div className="admin-toolbar">
         <select
           className="admin-search"
