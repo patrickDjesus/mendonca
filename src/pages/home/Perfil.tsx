@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type JSX } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { fetchMyCounts, fetchRecentActivities, type Activity } from '../../lib/db'
@@ -103,7 +103,6 @@ export default function Perfil() {
 
   const rank = getRank(counts.xp)
   const levelProgress = getLevelProgress(counts.xp)
-  const totalContent = counts.docs + counts.challenges + counts.videos
   const maxSubjectCount = Math.max(1, ...Object.values(subjectCounts))
 
   const greeting = userName || 'estudante'
