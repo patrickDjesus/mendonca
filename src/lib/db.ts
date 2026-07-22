@@ -285,6 +285,13 @@ export async function fetchStreak(): Promise<UserStreak> {
       notesCreated: 0,
       loginDays: 0,
       lastLoginDate: null,
+      videosWatchedToday: 0,
+      videosWatchedDate: null,
+      watchedSubjects: [],
+      completedSimuladoYears: [],
+      bestSimuladoScore: 0,
+      simuladosThisWeek: 0,
+      lastSimuladoWeek: null,
     }
   }
 
@@ -301,6 +308,13 @@ export async function fetchStreak(): Promise<UserStreak> {
     notesCreated: data.notes_created || 0,
     loginDays: data.login_days || 0,
     lastLoginDate: data.last_login_date || null,
+    videosWatchedToday: data.videos_watched_today || 0,
+    videosWatchedDate: data.videos_watched_date || null,
+    watchedSubjects: data.watched_subjects || [],
+    completedSimuladoYears: data.completed_simulado_years || [],
+    bestSimuladoScore: data.best_simulado_score || 0,
+    simuladosThisWeek: data.simulados_this_week || 0,
+    lastSimuladoWeek: data.last_simulado_week || null,
   }
 }
 
@@ -322,6 +336,13 @@ export async function upsertStreak(s: UserStreak): Promise<void> {
       notes_created: s.notesCreated,
       login_days: s.loginDays,
       last_login_date: s.lastLoginDate,
+      videos_watched_today: s.videosWatchedToday,
+      videos_watched_date: s.videosWatchedDate,
+      watched_subjects: s.watchedSubjects,
+      completed_simulado_years: s.completedSimuladoYears,
+      best_simulado_score: s.bestSimuladoScore,
+      simulados_this_week: s.simuladosThisWeek,
+      last_simulado_week: s.lastSimuladoWeek,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' })
 
@@ -834,25 +855,70 @@ export async function unlockAchievement(achievementId: string): Promise<boolean>
   return true
 }
 
+function getISOWeek(date: Date): string {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7))
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+  return `${d.getUTCFullYear()}-W${String(Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)).padStart(2, '0')}`
+}
+
 export async function incrementStreakField(field: string, amount = 1): Promise<void> {
   const streak = await fetchStreak()
   const key = field as keyof UserStreak
+
+  if (field === 'loginDays') {
+    const today = new Date().toISOString().split('T')[0]
+    if (streak.lastLoginDate === today) return
+    streak.lastLoginDate = today
+    streak.currentStreak += 1
+    if (streak.currentStreak > streak.longestStreak) {
+      streak.longestStreak = streak.currentStreak
+    }
+  }
+
+  if (field === 'videosWatched') {
+    const today = new Date().toISOString().split('T')[0]
+    if (streak.videosWatchedDate !== today) {
+      streak.videosWatchedToday = 0
+      streak.videosWatchedDate = today
+    }
+    streak.videosWatchedToday += amount
+  }
+
+  if (field === 'simuladosCompleted') {
+    const week = getISOWeek(new Date())
+    if (streak.lastSimuladoWeek !== week) {
+      streak.simuladosThisWeek = 0
+      streak.lastSimuladoWeek = week
+    }
+    streak.simuladosThisWeek += amount
+  }
+
   const current = (streak[key] as number) || 0
-  ;(streak as unknown as Record<string, number>)[key] = current + amount
+  ;(streak as unknown as Record<string, unknown>)[key] = current + amount
   await upsertStreak(streak)
 }
 
 export async function checkAndUnlockAchievements(): Promise<string[]> {
   const streak = await fetchStreak()
   const newlyUnlocked: string[] = []
+  const ALL_SUBJECTS = ['Física', 'Química', 'Biologia', 'Matemática', 'Linguagens', 'Ciências Humanas', 'Ciências da Natureza', 'Geografia', 'História', 'Filosofia']
+  const ALL_ENEM_YEARS = [2019, 2020, 2021, 2022, 2023, 2024]
 
   const checks: Array<{ id: string; condition: boolean }> = [
+    { id: 'primeiro_passo', condition: streak.loginDays >= 1 },
     { id: 'foco_de_aco', condition: streak.currentStreak >= 7 },
     { id: 'o_cinefilo', condition: streak.videosWatched >= 50 },
+    { id: 'polimata', condition: ALL_SUBJECTS.every(s => streak.watchedSubjects.includes(s)) },
     { id: 'escriba_digital', condition: streak.notesCreated >= 10 },
+    { id: 'sessao_pipoca', condition: streak.videosWatchedToday >= 5 },
     { id: 'arquivista', condition: streak.docsCreated >= 1 },
     { id: 'biblioteca_alexandria', condition: streak.docsCreated >= 20 },
     { id: 'maratonista_enem', condition: streak.simuladosCompleted >= 1 },
+    { id: 'viajante_tempo', condition: ALL_ENEM_YEARS.every(y => streak.completedSimuladoYears.includes(y)) },
+    { id: 'precisao_cirurgica', condition: streak.bestSimuladoScore >= 80 },
+    { id: 'resistencia_ferro', condition: streak.simuladosThisWeek >= 2 },
+    { id: 'aceitando_desafio', condition: streak.challengesCompleted >= 1 },
   ]
 
   for (const check of checks) {
@@ -862,5 +928,115 @@ export async function checkAndUnlockAchievements(): Promise<string[]> {
     }
   }
 
+  // mestre_cerimonias: challenge played by 10+ distinct users
+  const myChallengeIds = (await supabase.from('challenges').select('id').eq('user_id', await getUserId())).data?.map(c => c.id as string) || []
+  if (myChallengeIds.length > 0) {
+    const { data: playerRows } = await supabase
+      .from('challenge_attempts')
+      .select('user_id')
+      .in('challenge_id', myChallengeIds)
+    if (playerRows) {
+      const uniqueUsers = new Set(playerRows.map(r => r.user_id as string))
+      if (uniqueUsers.size >= 10) {
+        const wasNew = await unlockAchievement('mestre_cerimonias')
+        if (wasNew) newlyUnlocked.push('mestre_cerimonias')
+      }
+    }
+  }
+
   return newlyUnlocked
+}
+
+export async function checkModeHardcore(challengeId: string, isWin: boolean, modifierCount: number): Promise<void> {
+  if (!isWin || modifierCount < 2) return
+  const { data } = await supabase.from('challenges').select('difficulty').eq('id', challengeId).single()
+  if (data?.difficulty === 'dificil') {
+    await unlockAchievement('modo_hardcore')
+  }
+}
+
+export async function checkMasoquista(challengeId: string, isWin: boolean): Promise<void> {
+  if (!isWin) return
+  const userId = await getUserId()
+  const { data: attempts } = await supabase
+    .from('challenge_attempts')
+    .select('id, wrong_count')
+    .eq('challenge_id', challengeId)
+    .eq('user_id', userId)
+    .order('completed_at', { ascending: false })
+    .limit(4)
+
+  if (!attempts || attempts.length < 4) return
+
+  // attempts[0] = current win (just created), attempts[1..3] = 3 prior
+  const threePrior = attempts.slice(1, 4)
+  if (threePrior.length === 3 && threePrior.every(a => a.wrong_count > 0)) {
+    await unlockAchievement('masoquista')
+  }
+}
+
+export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' | 'simulado' | 'login', meta?: { watchMinutes?: number; subject?: string; simuladoYear?: number; simuladoScore?: number; docPages?: number }): Promise<void> {
+  const fieldMap: Record<string, string> = {
+    doc: 'docsCreated',
+    video: 'videosWatched',
+    challenge: 'challengesCompleted',
+    note: 'notesCreated',
+    simulado: 'simuladosCompleted',
+    login: 'loginDays',
+  }
+  const field = fieldMap[type]
+  if (field) await incrementStreakField(field)
+
+  if (type === 'video' && meta?.watchMinutes) {
+    await incrementStreakField('totalWatchSeconds', meta.watchMinutes * 60)
+  }
+
+  if (type === 'video' && meta?.subject) {
+    const streak = await fetchStreak()
+    if (!streak.watchedSubjects.includes(meta.subject)) {
+      streak.watchedSubjects = [...streak.watchedSubjects, meta.subject]
+      await upsertStreak(streak)
+    }
+  }
+
+  if (type === 'simulado' && meta?.simuladoYear) {
+    const streak = await fetchStreak()
+    if (!streak.completedSimuladoYears.includes(meta.simuladoYear)) {
+      streak.completedSimuladoYears = [...streak.completedSimuladoYears, meta.simuladoYear]
+    }
+    if (meta.simuladoScore && meta.simuladoScore > streak.bestSimuladoScore) {
+      streak.bestSimuladoScore = meta.simuladoScore
+    }
+    await upsertStreak(streak)
+  }
+
+  const xpMap: Record<string, number> = {
+    doc: XP_REWARDS.CREATE_DOC,
+    video: XP_REWARDS.WATCH_VIDEO_PER_MIN * (meta?.watchMinutes || 1),
+    challenge: XP_REWARDS.COMPLETE_CHALLENGE,
+    note: XP_REWARDS.CREATE_NOTE,
+    simulado: XP_REWARDS.COMPLETE_SIMULADO,
+    login: XP_REWARDS.DAILY_LOGIN,
+  }
+  const xp = xpMap[type]
+  if (xp) await awardXp(xp)
+
+  await checkAndUnlockAchievements()
+}
+
+export async function checkMaterialOuro(docContent: unknown[]): Promise<void> {
+  if (!docContent || docContent.length === 0) return
+  let totalChars = 0
+  for (const block of docContent) {
+    const b = block as Record<string, unknown>
+    const contentArr = b.content as Array<Record<string, unknown>> | undefined
+    if (contentArr) {
+      for (const inline of contentArr) {
+        totalChars += ((inline.text as string) || '').length
+      }
+    }
+  }
+  if (totalChars >= 30000) {
+    await unlockAchievement('material_ouro')
+  }
 }

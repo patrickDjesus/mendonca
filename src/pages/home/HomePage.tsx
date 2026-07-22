@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { recordAction } from '../../lib/db'
 import '../../styles/home.css'
 
 export default function HomePage() {
@@ -17,6 +18,7 @@ export default function HomePage() {
         return
       }
       setUserName(user.user_metadata?.name || user.email || '')
+      recordAction('login').catch(() => {})
     }
     getUser()
     return () => { mounted = false }

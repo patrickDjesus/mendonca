@@ -5,7 +5,7 @@ import DocCard from '../../components/DocCard'
 import AddDocCard from '../../components/AddDocCard'
 import '../../styles/documentos.css'
 import { generatePdfThumbnail } from '../../utils/pdfThumbnails'
-import { fetchMyDocs, fetchPublicDocs, createDoc, updateDoc, deleteDoc, logActivity } from '../../lib/db'
+import { fetchMyDocs, fetchPublicDocs, createDoc, updateDoc, deleteDoc, logActivity, recordAction, checkMaterialOuro } from '../../lib/db'
 
 const DocEditor = lazy(() => import('../../components/DocEditor'))
 const PdfViewer = lazy(() => import('../../components/PdfViewer'))
@@ -77,6 +77,7 @@ export default function Documentos() {
     setEditingDoc(null)
     try {
       await updateDoc(updated)
+      if (updated.content) checkMaterialOuro(updated.content).catch(() => {})
     } catch (e) {
       console.error('Erro ao salvar documento:', e)
       setMyDocs(previousDocs)
@@ -113,6 +114,7 @@ export default function Documentos() {
       setMyDocs(prev => [newDoc, ...prev])
       setEditingDoc(newDoc)
       logActivity('doc_created', `Criou "${newDoc.title}"`, 'book', '#508cc8').catch(() => {})
+      recordAction('doc').catch(() => {})
     } catch (e) {
       console.error('Erro ao salvar documento:', e)
     }
@@ -149,6 +151,7 @@ export default function Documentos() {
         createDoc(newDoc).then(() => {
           setMyDocs(prev => [newDoc, ...prev])
           logActivity('doc_created', `Fez upload de "${newDoc.title}"`, 'book', '#508cc8').catch(() => {})
+          recordAction('doc').catch(() => {})
           generatePdfThumbnail(file).then(thumb => {
             if (thumb) {
               setMyDocs(prev => prev.map(d => d.id === newDocId ? { ...d, thumbnail: thumb } : d))

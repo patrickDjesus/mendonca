@@ -5,11 +5,11 @@ import type { Subject } from '../../types/doc'
 import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import QuestionBuilder from '../../components/QuestionBuilder'
 import ChallengeBuilder from '../../components/ChallengeBuilder'
-import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, deleteQuestion, createChallenge, updateChallenge, deleteChallenge, createAttempt, upsertStreak, logActivity } from '../../lib/db'
+import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, deleteQuestion, createChallenge, updateChallenge, deleteChallenge, createAttempt, upsertStreak, logActivity, recordAction, checkModeHardcore, checkMasoquista } from '../../lib/db'
 import { supabase } from '../../lib/supabase'
 import '../../styles/desafios.css'
 
-const EMPTY_STREAK: UserStreak = { currentStreak: 0, longestStreak: 0, lastChallengeDate: null, totalXp: 0, totalWatchSeconds: 0, videosWatched: 0, docsCreated: 0, challengesCompleted: 0, simuladosCompleted: 0, notesCreated: 0, loginDays: 0, lastLoginDate: null }
+const EMPTY_STREAK: UserStreak = { currentStreak: 0, longestStreak: 0, lastChallengeDate: null, totalXp: 0, totalWatchSeconds: 0, videosWatched: 0, docsCreated: 0, challengesCompleted: 0, simuladosCompleted: 0, notesCreated: 0, loginDays: 0, lastLoginDate: null, videosWatchedToday: 0, videosWatchedDate: null, watchedSubjects: [], completedSimuladoYears: [], bestSimuladoScore: 0, simuladosThisWeek: 0, lastSimuladoWeek: null }
 const DIFFICULTY_LABELS: Record<ChallengeDifficulty, string> = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil' }
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F']
 
@@ -222,6 +222,9 @@ export default function Desafios() {
       setStreak(ns)
       createAttempt(attempt).catch(() => {}); upsertStreak(ns).catch(() => {})
       logActivity('challenge_done', `${correctCount > wrongCount ? 'Acertou' : 'Errou'} "${activeChallenge.title}" (${correctCount}/${activeChallenge.questionIds.length})`, 'challenge', correctCount > wrongCount ? '#b450b4' : '#c86450').catch(() => {})
+      recordAction('challenge').catch(() => {})
+      checkModeHardcore(activeChallenge.id, correctCount > wrongCount, activeChallenge.modifiers?.length || 0).catch(() => {})
+      checkMasoquista(activeChallenge.id, correctCount > wrongCount).catch(() => {})
       setView('results')
       stopMemoryTimer()
     } else {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { ChallengeQuestion, ChallengeOption } from '../../types/challenge'
 import type { Subject } from '../../types/doc'
+import { recordAction } from '../../lib/db'
 import '../../styles/simulados.css'
 
 const API_BASE = import.meta.env.DEV ? '/enem-api' : 'https://api.enem.dev/v1'
@@ -375,8 +376,15 @@ export default function Simulados() {
 
   const handleFinish = useCallback(() => {
     stopTimer()
+    const correct = questions.filter(q => {
+      const selected = answers[q.id]
+      return selected && q.options.find(o => o.id === selected)?.correct
+    }).length
+    const total = questions.length
+    const score = total > 0 ? Math.round((correct / total) * 100) : 0
+    recordAction('simulado', { simuladoYear: selectedYear || undefined, simuladoScore: score }).catch(() => {})
     setView('gallery')
-  }, [stopTimer])
+  }, [stopTimer, questions, answers, selectedYear])
 
   const questionsContainerRef = useRef<HTMLDivElement>(null)
 

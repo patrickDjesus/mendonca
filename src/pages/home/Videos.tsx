@@ -5,7 +5,7 @@ import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import VideoPlayer, { type VideoPlayerHandle } from '../../components/VideoPlayer'
 import NotesPanel from '../../components/NotesPanel'
 import { extractYoutubeId } from '../../utils/youtube'
-import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, updateVideoDuration, logActivity } from '../../lib/db'
+import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, updateVideoDuration, logActivity, recordAction } from '../../lib/db'
 import '../../styles/videos.css'
 
 import { formatTimestamp } from '../../utils/format'
@@ -175,21 +175,31 @@ export default function Videos() {
     }
   }, [watchingVideo])
 
+  const handleLeaveVideo = useCallback(() => {
+    if (watchingVideo && watchTimeAccum > 0) {
+      const minutes = Math.floor(watchTimeAccum / 60)
+      if (minutes >= 1) {
+        recordAction('video', { watchMinutes: minutes, subject: watchingVideo.subject }).catch(() => {})
+      }
+    }
+    setWatchingVideo(null)
+    setNotes([])
+    setCurrentTime(0)
+    setDuration(0)
+    setWatchTimeAccum(0)
+    setIsPlaying(false)
+  }, [watchingVideo, watchTimeAccum])
+
   useEffect(() => {
     if (!watchingVideo) return
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setWatchingVideo(null)
-        setNotes([])
-        setCurrentTime(0)
-        setDuration(0)
-        setWatchTimeAccum(0)
-        setIsPlaying(false)
+        handleLeaveVideo()
       }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
-  }, [watchingVideo])
+  }, [watchingVideo, handleLeaveVideo])
 
   useEffect(() => {
     fetchVideos().then(setVideos).catch(console.error)
@@ -250,6 +260,7 @@ export default function Videos() {
     try {
       await createVideoNote(fullNote)
       setNotes(prev => [...prev, fullNote])
+      recordAction('note').catch(() => {})
       return true
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
@@ -533,14 +544,7 @@ export default function Videos() {
                 <h2 className="video-watch-title">{watchingVideo.title}</h2>
                 <button
                   className="video-watch-back"
-                  onClick={() => {
-                    setWatchingVideo(null)
-                    setNotes([])
-                    setCurrentTime(0)
-                    setDuration(0)
-                    setWatchTimeAccum(0)
-                    setIsPlaying(false)
-                  }}
+                  onClick={handleLeaveVideo}
                   type="button"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
