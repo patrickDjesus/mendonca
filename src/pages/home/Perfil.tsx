@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type JSX } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { fetchMyCounts, fetchRecentActivities, fetchStreak, fetchUserAchievements, type Activity, getLevelProgress, getRank } from '../../lib/db'
-import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES, CATEGORY_ICONS, type Achievement } from '../../data/achievements'
+import { fetchMyCounts, fetchRecentActivities, fetchUserAchievements, type Activity, getLevelProgress, getRank } from '../../lib/db'
+import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES, CATEGORY_ICONS } from '../../data/achievements'
 import '../../styles/perfil.css'
 
 function timeAgo(ms: number): string {

@@ -9,7 +9,7 @@ import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQues
 import { supabase } from '../../lib/supabase'
 import '../../styles/desafios.css'
 
-const EMPTY_STREAK: UserStreak = { currentStreak: 0, longestStreak: 0, lastChallengeDate: null, totalXp: 0 }
+const EMPTY_STREAK: UserStreak = { currentStreak: 0, longestStreak: 0, lastChallengeDate: null, totalXp: 0, totalWatchSeconds: 0, videosWatched: 0, docsCreated: 0, challengesCompleted: 0, simuladosCompleted: 0, notesCreated: 0, loginDays: 0, lastLoginDate: null }
 const DIFFICULTY_LABELS: Record<ChallengeDifficulty, string> = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil' }
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F']
 
@@ -218,7 +218,7 @@ export default function Desafios() {
       const { score, xpEarned } = calculateScore(correctCount, wrongCount, totalTimeMs, activeChallenge.questionIds.length, activeChallenge.difficulty)
       const attempt: ChallengeAttempt = { id: crypto.randomUUID(), challengeId: activeChallenge.id, answers: [...answers], totalTimeMs, correctCount, wrongCount, score, xpEarned, completedAt: Date.now() }
       setAttempts(prev => [...prev, attempt]); setLastResult(attempt)
-      const ns = { currentStreak: correctCount > wrongCount ? streak.currentStreak + 1 : 0, longestStreak: correctCount > wrongCount ? Math.max(streak.longestStreak, streak.currentStreak + 1) : streak.longestStreak, totalXp: streak.totalXp + xpEarned, lastChallengeDate: new Date().toISOString().split('T')[0] }
+      const ns: UserStreak = { ...streak, currentStreak: correctCount > wrongCount ? streak.currentStreak + 1 : 0, longestStreak: correctCount > wrongCount ? Math.max(streak.longestStreak, streak.currentStreak + 1) : streak.longestStreak, totalXp: streak.totalXp + xpEarned, lastChallengeDate: new Date().toISOString().split('T')[0] }
       setStreak(ns)
       createAttempt(attempt).catch(() => {}); upsertStreak(ns).catch(() => {})
       logActivity('challenge_done', `${correctCount > wrongCount ? 'Acertou' : 'Errou'} "${activeChallenge.title}" (${correctCount}/${activeChallenge.questionIds.length})`, 'challenge', correctCount > wrongCount ? '#b450b4' : '#c86450').catch(() => {})

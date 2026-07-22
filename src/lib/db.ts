@@ -835,11 +835,10 @@ export async function unlockAchievement(achievementId: string): Promise<boolean>
 }
 
 export async function incrementStreakField(field: string, amount = 1): Promise<void> {
-  const userId = await getUserId()
   const streak = await fetchStreak()
   const key = field as keyof UserStreak
   const current = (streak[key] as number) || 0
-  ;(streak as Record<string, unknown>)[key] = current + amount
+  ;(streak as unknown as Record<string, number>)[key] = current + amount
   await upsertStreak(streak)
 }
 
