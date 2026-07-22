@@ -68,7 +68,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: 'viajante_tempo',
     category: 'Simulados',
     name: 'Viajante do Tempo',
-    description: 'Completar todos os simulados oficiais de 2019 a 2024.',
+    description: 'Completar todos os simulados oficiais de 2019 a 2023.',
     icon: '⏳',
     xpBonus: 10,
   },

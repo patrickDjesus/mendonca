@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
+import { NotificationProvider } from './components/NotificationProvider'
 import AuthPage from './pages/AuthPage'
 import HomePage from './pages/home/HomePage'
 import VisaoGeral from './pages/home/VisaoGeral'
@@ -9,6 +10,7 @@ import Videos from './pages/home/Videos'
 import Desafios from './pages/home/Desafios'
 import Simulados from './pages/home/Simulados'
 import Perfil from './pages/home/Perfil'
+import Admin from './pages/home/Admin'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
@@ -39,18 +41,21 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/auth" element={<AuthPage />} />
-      <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>}>
-        <Route index element={<VisaoGeral />} />
-        <Route path="documentos" element={<Documentos />} />
-        <Route path="videos" element={<Videos />} />
-        <Route path="desafios" element={<Desafios />} />
-        <Route path="simulados" element={<Simulados />} />
-        <Route path="perfil" element={<Perfil />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/auth" replace />} />
-    </Routes>
+    <NotificationProvider>
+      <Routes>
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>}>
+          <Route index element={<VisaoGeral />} />
+          <Route path="documentos" element={<Documentos />} />
+          <Route path="videos" element={<Videos />} />
+          <Route path="desafios" element={<Desafios />} />
+          <Route path="simulados" element={<Simulados />} />
+          <Route path="perfil" element={<Perfil />} />
+          <Route path="admin" element={<Admin />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/auth" replace />} />
+      </Routes>
+    </NotificationProvider>
   )
 }
 

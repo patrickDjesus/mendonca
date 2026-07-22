@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { recordAction } from '../../lib/db'
+import { recordAction, checkIsAdmin } from '../../lib/db'
 import '../../styles/home.css'
 
 export default function HomePage() {
   const navigate = useNavigate()
   const [userName, setUserName] = useState('')
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -19,6 +20,7 @@ export default function HomePage() {
       }
       setUserName(user.user_metadata?.name || user.email || '')
       recordAction('login').catch(() => {})
+      checkIsAdmin().then(admin => { if (mounted) setIsAdmin(admin) }).catch(() => {})
     }
     getUser()
     return () => { mounted = false }
@@ -88,6 +90,15 @@ export default function HomePage() {
             </svg>
             <span>Perfil</span>
           </NavLink>
+
+          {isAdmin && (
+            <NavLink to="/home/admin" className={({ isActive }) => `sidebar-item sidebar-item-admin ${isActive ? 'active' : ''}`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              <span>Admin</span>
+            </NavLink>
+          )}
         </nav>
 
         <div className="sidebar-divider" />

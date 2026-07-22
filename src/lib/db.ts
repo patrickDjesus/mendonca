@@ -1,4 +1,6 @@
 import { supabase } from './supabase'
+import { pushNotification } from '../components/NotificationProvider'
+import { ACHIEVEMENT_MAP } from '../data/achievements'
 import type { ChallengeQuestion, Challenge, ChallengeAttempt, UserStreak, ChallengeModifier } from '../types/challenge'
 import type { DocMeta, Subject } from '../types/doc'
 import type { VideoMeta, VideoNote } from '../types/video'
@@ -809,6 +811,13 @@ export async function awardXp(amount: number): Promise<{ newXp: number; leveledU
   const newLevel = getLevel(newXp)
   streak.totalXp = newXp
   await upsertStreak(streak)
+  if (newLevel > oldLevel) {
+    pushNotification({
+      type: 'level_up',
+      title: 'Subiu de nível!',
+      message: `Você agora é nível ${newLevel}! (+${amount} XP)`,
+    })
+  }
   return { newXp, leveledUp: newLevel > oldLevel }
 }
 
@@ -852,6 +861,17 @@ export async function unlockAchievement(achievementId: string): Promise<boolean>
     .insert({ user_id: userId, achievement_id: achievementId })
 
   if (error) throw error
+
+  const achievement = ACHIEVEMENT_MAP.get(achievementId)
+  if (achievement) {
+    pushNotification({
+      type: 'achievement',
+      title: 'Conquista desbloqueada!',
+      message: `${achievement.icon} ${achievement.name} — ${achievement.description}`,
+      icon: achievement.icon,
+    })
+  }
+
   return true
 }
 
@@ -870,10 +890,6 @@ export async function incrementStreakField(field: string, amount = 1): Promise<v
     const today = new Date().toISOString().split('T')[0]
     if (streak.lastLoginDate === today) return
     streak.lastLoginDate = today
-    streak.currentStreak += 1
-    if (streak.currentStreak > streak.longestStreak) {
-      streak.longestStreak = streak.currentStreak
-    }
   }
 
   if (field === 'videosWatched') {
@@ -903,7 +919,7 @@ export async function checkAndUnlockAchievements(): Promise<string[]> {
   const streak = await fetchStreak()
   const newlyUnlocked: string[] = []
   const ALL_SUBJECTS = ['Física', 'Química', 'Biologia', 'Matemática', 'Linguagens', 'Ciências Humanas', 'Ciências da Natureza', 'Geografia', 'História', 'Filosofia']
-  const ALL_ENEM_YEARS = [2019, 2020, 2021, 2022, 2023, 2024]
+  const ALL_ENEM_YEARS = [2019, 2020, 2021, 2022, 2023]
 
   const checks: Array<{ id: string; condition: boolean }> = [
     { id: 'primeiro_passo', condition: streak.loginDays >= 1 },
@@ -935,6 +951,7 @@ export async function checkAndUnlockAchievements(): Promise<string[]> {
       .from('challenge_attempts')
       .select('user_id')
       .in('challenge_id', myChallengeIds)
+      .neq('user_id', await getUserId())
     if (playerRows) {
       const uniqueUsers = new Set(playerRows.map(r => r.user_id as string))
       if (uniqueUsers.size >= 10) {
@@ -955,7 +972,7 @@ export async function checkModeHardcore(challengeId: string, isWin: boolean, mod
   }
 }
 
-export async function checkMasoquista(challengeId: string, isWin: boolean): Promise<void> {
+export async function checkMasoquista(challengeId: string, isWin: boolean, wrongCount: number): Promise<void> {
   if (!isWin) return
   const userId = await getUserId()
   const { data: attempts } = await supabase
@@ -964,18 +981,18 @@ export async function checkMasoquista(challengeId: string, isWin: boolean): Prom
     .eq('challenge_id', challengeId)
     .eq('user_id', userId)
     .order('completed_at', { ascending: false })
-    .limit(4)
+    .limit(3)
 
-  if (!attempts || attempts.length < 4) return
+  if (!attempts || attempts.length < 3) return
 
-  // attempts[0] = current win (just created), attempts[1..3] = 3 prior
-  const threePrior = attempts.slice(1, 4)
-  if (threePrior.length === 3 && threePrior.every(a => a.wrong_count > 0)) {
+  // The 3 most recent attempts BEFORE the current win must all be losses
+  const allLosses = attempts.every(a => a.wrong_count > 0)
+  if (allLosses) {
     await unlockAchievement('masoquista')
   }
 }
 
-export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' | 'simulado' | 'login', meta?: { watchMinutes?: number; subject?: string; simuladoYear?: number; simuladoScore?: number; docPages?: number }): Promise<void> {
+export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' | 'simulado' | 'login', meta?: { watchMinutes?: number; subject?: string; simuladoYear?: number; simuladoScore?: number; docPages?: number; challengeWin?: boolean }): Promise<void> {
   const fieldMap: Record<string, string> = {
     doc: 'docsCreated',
     video: 'videosWatched',
@@ -984,31 +1001,45 @@ export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' 
     simulado: 'simuladosCompleted',
     login: 'loginDays',
   }
+
+  const streak = await fetchStreak()
+
   const field = fieldMap[type]
-  if (field) await incrementStreakField(field)
+  if (field) {
+    const key = field as keyof UserStreak
+    const current = (streak[key] as number) || 0
+    ;(streak as unknown as Record<string, unknown>)[key] = current + 1
+  }
 
   if (type === 'video' && meta?.watchMinutes) {
-    await incrementStreakField('totalWatchSeconds', meta.watchMinutes * 60)
+    streak.totalWatchSeconds += meta.watchMinutes * 60
   }
 
   if (type === 'video' && meta?.subject) {
-    const streak = await fetchStreak()
     if (!streak.watchedSubjects.includes(meta.subject)) {
       streak.watchedSubjects = [...streak.watchedSubjects, meta.subject]
-      await upsertStreak(streak)
     }
   }
 
+  if (type === 'challenge' && meta?.challengeWin !== undefined) {
+    const isWin = meta.challengeWin
+    streak.currentStreak = isWin ? streak.currentStreak + 1 : 0
+    if (isWin) {
+      streak.longestStreak = Math.max(streak.longestStreak, streak.currentStreak)
+    }
+    streak.lastChallengeDate = new Date().toISOString().split('T')[0]
+  }
+
   if (type === 'simulado' && meta?.simuladoYear) {
-    const streak = await fetchStreak()
     if (!streak.completedSimuladoYears.includes(meta.simuladoYear)) {
       streak.completedSimuladoYears = [...streak.completedSimuladoYears, meta.simuladoYear]
     }
     if (meta.simuladoScore && meta.simuladoScore > streak.bestSimuladoScore) {
       streak.bestSimuladoScore = meta.simuladoScore
     }
-    await upsertStreak(streak)
   }
+
+  await upsertStreak(streak)
 
   const xpMap: Record<string, number> = {
     doc: XP_REWARDS.CREATE_DOC,
@@ -1039,4 +1070,62 @@ export async function checkMaterialOuro(docContent: unknown[]): Promise<void> {
   if (totalChars >= 30000) {
     await unlockAchievement('material_ouro')
   }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN FUNCTIONS
+   ═══════════════════════════════════════════════════════════ */
+
+export interface AdminUserProfile {
+  userId: string
+  name: string
+  email: string
+  isAdmin: boolean
+  createdAt: string
+}
+
+export async function checkIsAdmin(): Promise<boolean> {
+  const userId = await getUserId()
+  const { data } = await supabase.from('profiles').select('is_admin').eq('id', userId).maybeSingle()
+  return data?.is_admin === true
+}
+
+export async function adminListUsers(): Promise<AdminUserProfile[]> {
+  const { data, error } = await supabase.rpc('admin_list_users')
+  if (error) throw error
+  return (data || []).map((row: Record<string, unknown>) => ({
+    userId: row.user_id as string,
+    name: row.user_name as string || '',
+    email: row.user_email as string || '',
+    isAdmin: row.is_admin as boolean,
+    createdAt: row.created_at as string,
+  }))
+}
+
+export async function adminSetUserRole(userId: string, role: 'admin' | 'user'): Promise<void> {
+  const { error } = await supabase.rpc('admin_set_user_role', { target_user_id: userId, new_role: role })
+  if (error) throw error
+}
+
+export async function adminDeleteUser(userId: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_delete_user', { target_user_id: userId })
+  if (error) throw error
+}
+
+export async function adminGetStats(): Promise<{ totalUsers: number; totalDocs: number; totalChallenges: number; totalVideos: number }> {
+  const { data, error } = await supabase.rpc('admin_stats')
+  if (error) throw error
+  const row = data?.[0] as Record<string, unknown> | undefined
+  return {
+    totalUsers: Number(row?.total_users || 0),
+    totalDocs: Number(row?.total_docs || 0),
+    totalChallenges: Number(row?.total_challenges || 0),
+    totalVideos: Number(row?.total_videos || 0),
+  }
+}
+
+export async function checkIsAdmin(): Promise<boolean> {
+  const userId = await getUserId()
+  const { data } = await supabase.from('profiles').select('is_admin').eq('id', userId).maybeSingle()
+  return data?.is_admin === true
 }

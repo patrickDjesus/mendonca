@@ -5,7 +5,7 @@ import type { Subject } from '../../types/doc'
 import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import QuestionBuilder from '../../components/QuestionBuilder'
 import ChallengeBuilder from '../../components/ChallengeBuilder'
-import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, deleteQuestion, createChallenge, updateChallenge, deleteChallenge, createAttempt, upsertStreak, logActivity, recordAction, checkModeHardcore, checkMasoquista } from '../../lib/db'
+import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, deleteQuestion, createChallenge, updateChallenge, deleteChallenge, createAttempt, logActivity, recordAction, checkModeHardcore, checkMasoquista } from '../../lib/db'
 import { supabase } from '../../lib/supabase'
 import '../../styles/desafios.css'
 
@@ -218,13 +218,13 @@ export default function Desafios() {
       const { score, xpEarned } = calculateScore(correctCount, wrongCount, totalTimeMs, activeChallenge.questionIds.length, activeChallenge.difficulty)
       const attempt: ChallengeAttempt = { id: crypto.randomUUID(), challengeId: activeChallenge.id, answers: [...answers], totalTimeMs, correctCount, wrongCount, score, xpEarned, completedAt: Date.now() }
       setAttempts(prev => [...prev, attempt]); setLastResult(attempt)
-      const ns: UserStreak = { ...streak, currentStreak: correctCount > wrongCount ? streak.currentStreak + 1 : 0, longestStreak: correctCount > wrongCount ? Math.max(streak.longestStreak, streak.currentStreak + 1) : streak.longestStreak, totalXp: streak.totalXp + xpEarned, lastChallengeDate: new Date().toISOString().split('T')[0] }
-      setStreak(ns)
-      createAttempt(attempt).catch(() => {}); upsertStreak(ns).catch(() => {})
-      logActivity('challenge_done', `${correctCount > wrongCount ? 'Acertou' : 'Errou'} "${activeChallenge.title}" (${correctCount}/${activeChallenge.questionIds.length})`, 'challenge', correctCount > wrongCount ? '#b450b4' : '#c86450').catch(() => {})
-      recordAction('challenge').catch(() => {})
+      const isWin = correctCount > wrongCount
+      setStreak(prev => ({ ...prev, currentStreak: isWin ? prev.currentStreak + 1 : 0, longestStreak: isWin ? Math.max(prev.longestStreak, prev.currentStreak + 1) : prev.longestStreak, lastChallengeDate: new Date().toISOString().split('T')[0] }))
+      createAttempt(attempt).catch(() => {})
+      logActivity('challenge_done', `${isWin ? 'Acertou' : 'Errou'} "${activeChallenge.title}" (${correctCount}/${activeChallenge.questionIds.length})`, 'challenge', isWin ? '#b450b4' : '#c86450').catch(() => {})
+      recordAction('challenge', { challengeWin: isWin }).catch(() => {})
       checkModeHardcore(activeChallenge.id, correctCount > wrongCount, activeChallenge.modifiers?.length || 0).catch(() => {})
-      checkMasoquista(activeChallenge.id, correctCount > wrongCount).catch(() => {})
+      checkMasoquista(activeChallenge.id, isWin, wrongCount).catch(() => {})
       setView('results')
       stopMemoryTimer()
     } else {
