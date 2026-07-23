@@ -99,11 +99,13 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
   const [customGroups, setCustomGroups] = useState<NoteGroup[]>([])
   const [localNotes, setLocalNotes] = useState<VideoNote[]>(notes)
   const [newGroupName, setNewGroupName] = useState('')
+  const [newGroupParentId, setNewGroupParentId] = useState<string | null>(null)
   const [showGroupInput, setShowGroupInput] = useState(false)
   const [dragNoteIds, setDragNoteIds] = useState<string[]>([])
   const [dragOverGroup, setDragOverGroup] = useState<string | null>(null)
   const [renamingGroupId, setRenamingGroupId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
+  const [movingGroupId, setMovingGroupId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [selectMode, setSelectMode] = useState(false)
   const [copiedNotes, setCopiedNotes] = useState(false)
@@ -240,13 +242,14 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
   const handleCreateGroup = useCallback(async (parentId?: string | null) => {
     const name = (parentId ? subGroupName : newGroupName).trim()
     if (!name || !videoId) return
+    const effectiveParentId = parentId !== undefined ? (parentId ?? null) : newGroupParentId
     const group: NoteGroup = {
       id: crypto.randomUUID(),
       videoId,
       name,
       sortOrder: customGroups.length,
       createdAt: Date.now(),
-      parentId: parentId ?? null,
+      parentId: effectiveParentId,
     }
     try {
       await createNoteGroup(group)
@@ -255,11 +258,12 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
       setSubGroupName('')
       setShowGroupInput(false)
       setCreatingSubGroupOf(null)
+      setNewGroupParentId(null)
     } catch (e) {
       console.error('Erro ao criar grupo:', e)
       alert('Erro ao criar grupo. Verifique se o banco de dados está configurado (tabela note_groups).')
     }
-  }, [newGroupName, subGroupName, videoId, customGroups.length])
+  }, [newGroupName, subGroupName, videoId, customGroups.length, newGroupParentId])
 
   const handleDeleteGroup = useCallback(async (groupId: string) => {
     try {
@@ -440,6 +444,19 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
       console.error('Erro ao mover grupo:', err)
     }
   }, [])
+
+  const handleMoveGroupInto = useCallback(async (groupId: string, targetParentId: string | null) => {
+    if (groupId === targetParentId) return
+    if (targetParentId && isDescendant(groupId, targetParentId)) return
+    try {
+      await updateNoteGroup(groupId, { parentId: targetParentId })
+      setCustomGroups(prev => prev.map(g => g.id === groupId ? { ...g, parentId: targetParentId } : g))
+      setMovingGroupId(null)
+    } catch (err) {
+      console.error('Erro ao mover grupo:', err)
+      alert('Erro ao mover grupo.')
+    }
+  }, [isDescendant])
 
   const allCollapsed = sortMode === 'recent' && customGroups.length > 0 && customGroups.every(g => collapsed.has(`custom-${g.id}`))
 
@@ -648,6 +665,10 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
             onConfirmSubGroup={() => handleCreateGroup(creatingSubGroupOf)}
             onSubGroupNameChange={setSubGroupName}
             onMoveToRoot={handleMoveGroupToRoot}
+            onMoveGroupInto={handleMoveGroupInto}
+            movingGroupId={movingGroupId}
+            setMovingGroupId={setMovingGroupId}
+            isDescendant={isDescendant}
             setRenameValue={setRenameValue}
           />
         ))}
@@ -710,49 +731,66 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
       {/* Create group bar */}
       <div className="notes-create-group-area">
         {showGroupInput || creatingSubGroupOf !== null ? (
-          <div className="notes-create-group-row">
-            <input
-              ref={groupInputRef}
-              className="notes-create-group-input"
-              placeholder={creatingSubGroupOf !== null ? 'Nome do sub-grupo...' : 'Nome do grupo...'}
-              value={creatingSubGroupOf !== null ? subGroupName : newGroupName}
-              onChange={e => creatingSubGroupOf !== null ? setSubGroupName(e.target.value) : setNewGroupName(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  if (creatingSubGroupOf !== null) handleCreateGroup(creatingSubGroupOf)
-                  else handleCreateGroup()
-                }
-                if (e.key === 'Escape') {
+          <>
+            <div className="notes-create-group-row">
+              <input
+                ref={groupInputRef}
+                className="notes-create-group-input"
+                placeholder={creatingSubGroupOf !== null ? 'Nome do sub-grupo...' : 'Nome do grupo...'}
+                value={creatingSubGroupOf !== null ? subGroupName : newGroupName}
+                onChange={e => creatingSubGroupOf !== null ? setSubGroupName(e.target.value) : setNewGroupName(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    if (creatingSubGroupOf !== null) handleCreateGroup(creatingSubGroupOf)
+                    else handleCreateGroup()
+                  }
+                  if (e.key === 'Escape') {
+                    if (creatingSubGroupOf !== null) { setCreatingSubGroupOf(null); setSubGroupName('') }
+                    else { setShowGroupInput(false); setNewGroupName(''); setNewGroupParentId(null) }
+                  }
+                }}
+                type="text"
+              />
+              <button
+                className="notes-create-group-confirm"
+                onClick={() => creatingSubGroupOf !== null ? handleCreateGroup(creatingSubGroupOf) : handleCreateGroup()}
+                disabled={creatingSubGroupOf !== null ? !subGroupName.trim() : !newGroupName.trim()}
+                type="button"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+              <button
+                className="notes-create-group-cancel"
+                onClick={() => {
                   if (creatingSubGroupOf !== null) { setCreatingSubGroupOf(null); setSubGroupName('') }
-                  else { setShowGroupInput(false); setNewGroupName('') }
-                }
-              }}
-              type="text"
-            />
-            <button
-              className="notes-create-group-confirm"
-              onClick={() => creatingSubGroupOf !== null ? handleCreateGroup(creatingSubGroupOf) : handleCreateGroup()}
-              disabled={creatingSubGroupOf !== null ? !subGroupName.trim() : !newGroupName.trim()}
-              type="button"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </button>
-            <button
-              className="notes-create-group-cancel"
-              onClick={() => {
-                if (creatingSubGroupOf !== null) { setCreatingSubGroupOf(null); setSubGroupName('') }
-                else { setShowGroupInput(false); setNewGroupName('') }
-              }}
-              type="button"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
+                  else { setShowGroupInput(false); setNewGroupName(''); setNewGroupParentId(null) }
+                }}
+                type="button"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            {creatingSubGroupOf === null && customGroups.length > 0 && (
+              <div className="notes-create-group-parent-row">
+                <span className="notes-create-group-parent-label">Dentro de:</span>
+                <select
+                  className="notes-create-group-parent-select"
+                  value={newGroupParentId ?? ''}
+                  onChange={e => setNewGroupParentId(e.target.value || null)}
+                >
+                  <option value="">Raiz (sem pai)</option>
+                  {rootGroups.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </>
         ) : (
           <button className="notes-create-group-btn" onClick={() => setShowGroupInput(true)} type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -807,6 +845,10 @@ interface NestedGroupProps {
   onConfirmSubGroup: () => void
   onSubGroupNameChange: (name: string) => void
   onMoveToRoot: (groupId: string) => void
+  onMoveGroupInto: (groupId: string, targetParentId: string | null) => void
+  movingGroupId: string | null
+  setMovingGroupId: (id: string | null) => void
+  isDescendant: (ancestorId: string, descendantId: string) => boolean
   setRenameValue: (v: string) => void
 }
 
@@ -819,7 +861,7 @@ function NestedGroupRenderer({
   onSeek, onDelete, onDragStart, onDragEnd, onRemoveFromGroup, onToggleSelect,
   onGroupDragStart, onGroupDragEnd, onGroupDragOverId, onGroupDropOnGroup,
   onStartSubGroup, onCancelSubGroup, onConfirmSubGroup, onSubGroupNameChange,
-  onMoveToRoot, setRenameValue,
+  onMoveToRoot, onMoveGroupInto, movingGroupId, setMovingGroupId, isDescendant, setRenameValue,
 }: NestedGroupProps) {
   const isCollapsed = collapsed.has(`custom-${group.id}`)
   const children = allGroups.filter(g => g.parentId === group.id)
@@ -937,6 +979,47 @@ function NestedGroupRenderer({
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
+        <div className="notes-group-move-wrapper">
+          <button
+            className="notes-group-menu-btn"
+            onClick={e => {
+              e.stopPropagation()
+              setMovingGroupId(movingGroupId === group.id ? null : group.id)
+            }}
+            title="Mover para..."
+            type="button"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 3 21 3 21 9" />
+              <polyline points="9 21 3 21 3 15" />
+              <line x1="21" y1="3" x2="14" y2="10" />
+              <line x1="3" y1="21" x2="10" y2="14" />
+            </svg>
+          </button>
+          {movingGroupId === group.id && (
+            <div className="notes-group-move-dropdown" onClick={e => e.stopPropagation()}>
+              <button
+                className="notes-group-move-option"
+                onClick={() => { onMoveGroupInto(group.id, null); setMovingGroupId(null) }}
+                type="button"
+              >
+                Raiz
+              </button>
+              {allGroups
+                .filter(g => g.id !== group.id && !isDescendant(group.id, g.id))
+                .map(g => (
+                  <button
+                    key={g.id}
+                    className={`notes-group-move-option ${g.parentId === group.id ? 'current-parent' : ''}`}
+                    onClick={() => { onMoveGroupInto(group.id, g.id); setMovingGroupId(null) }}
+                    type="button"
+                  >
+                    {g.parentId === group.id ? '↓ ' : ''}{g.name}
+                  </button>
+                ))}
+            </div>
+          )}
+        </div>
       </button>
       <div className={`notes-group-body ${isCollapsed ? 'collapsed' : ''}`}>
         {groupNotes.length === 0 && children.length === 0 && (
@@ -1001,6 +1084,10 @@ function NestedGroupRenderer({
             onConfirmSubGroup={onConfirmSubGroup}
             onSubGroupNameChange={onSubGroupNameChange}
             onMoveToRoot={onMoveToRoot}
+            onMoveGroupInto={onMoveGroupInto}
+            movingGroupId={movingGroupId}
+            setMovingGroupId={setMovingGroupId}
+            isDescendant={isDescendant}
             setRenameValue={setRenameValue}
           />
         ))}
