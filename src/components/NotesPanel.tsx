@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import type { VideoNote } from '../types/video'
 import type { NoteGroup } from '../lib/db'
 import {
@@ -107,8 +107,14 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [selectMode, setSelectMode] = useState(false)
   const [copiedNotes, setCopiedNotes] = useState(false)
+  const [creatingSubGroupOf, setCreatingSubGroupOf] = useState<string | null>(null)
+  const [subGroupName, setSubGroupName] = useState('')
+  const [dragGroupId, setDragGroupId] = useState<string | null>(null)
+  const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null)
   const groupInputRef = useRef<HTMLInputElement>(null)
   const renameInputRef = useRef<HTMLInputElement>(null)
+  const customGroupsRef = useRef(customGroups)
+  customGroupsRef.current = customGroups
 
   useEffect(() => {
     setLocalNotes(prev => {
@@ -128,6 +134,9 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
 
   useEffect(() => { if (showGroupInput) groupInputRef.current?.focus() }, [showGroupInput])
   useEffect(() => { if (renamingGroupId) renameInputRef.current?.focus() }, [renamingGroupId])
+  useEffect(() => { if (creatingSubGroupOf !== null) groupInputRef.current?.focus() }, [creatingSubGroupOf])
+
+  const rootGroups = useMemo(() => customGroups.filter(g => !g.parentId), [customGroups])
 
   const sorted = [...localNotes].sort((a, b) =>
     sortMode === 'recent'
@@ -228,8 +237,8 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
 
   /* ── Group CRUD ─────────────────────────────── */
 
-  const handleCreateGroup = useCallback(async () => {
-    const name = newGroupName.trim()
+  const handleCreateGroup = useCallback(async (parentId?: string | null) => {
+    const name = (parentId ? subGroupName : newGroupName).trim()
     if (!name || !videoId) return
     const group: NoteGroup = {
       id: crypto.randomUUID(),
@@ -237,22 +246,31 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
       name,
       sortOrder: customGroups.length,
       createdAt: Date.now(),
+      parentId: parentId ?? null,
     }
     try {
       await createNoteGroup(group)
       setCustomGroups(prev => [...prev, group])
       setNewGroupName('')
+      setSubGroupName('')
       setShowGroupInput(false)
+      setCreatingSubGroupOf(null)
     } catch (e) {
       console.error('Erro ao criar grupo:', e)
       alert('Erro ao criar grupo. Verifique se o banco de dados está configurado (tabela note_groups).')
     }
-  }, [newGroupName, videoId, customGroups.length])
+  }, [newGroupName, subGroupName, videoId, customGroups.length])
 
   const handleDeleteGroup = useCallback(async (groupId: string) => {
     try {
       await deleteNoteGroup(groupId)
-      setCustomGroups(prev => prev.filter(g => g.id !== groupId))
+      setCustomGroups(prev => {
+        const deleted = prev.find(g => g.id === groupId)
+        const parentId = deleted?.parentId ?? null
+        return prev
+          .filter(g => g.id !== groupId)
+          .map(g => g.parentId === groupId ? { ...g, parentId } : g)
+      })
       setLocalNotes(prev => {
         const next = prev.map(n => n.groupId === groupId ? { ...n, groupId: null } : n)
         onGroupChange?.(next)
@@ -298,12 +316,16 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
     setDragOverGroup(groupId)
   }, [])
 
-  const handleGroupDragLeave = useCallback(() => {
+  const handleGroupDragLeave = useCallback((e: React.DragEvent) => {
+    const related = e.relatedTarget as HTMLElement | null
+    const current = e.currentTarget as HTMLElement
+    if (related && current.contains(related)) return
     setDragOverGroup(null)
   }, [])
 
   const handleGroupDrop = useCallback(async (e: React.DragEvent, groupId: string) => {
     e.preventDefault()
+    if (e.dataTransfer.types.contains('application/x-group-id')) return
     let noteIds: string[] = []
     try {
       const raw = e.dataTransfer.getData('application/x-note-ids')
@@ -364,6 +386,60 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
       alert('Erro ao mover anotações para o grupo.')
     }
   }, [selectedIds, onGroupChange])
+
+  /* ── Group Drag & Drop ────────────────────── */
+
+  const handleGroupDragStart = useCallback((e: React.DragEvent, groupId: string) => {
+    e.dataTransfer.setData('application/x-group-id', groupId)
+    e.dataTransfer.effectAllowed = 'move'
+    setDragGroupId(groupId)
+  }, [])
+
+  const handleGroupDragEnd = useCallback(() => {
+    setDragGroupId(null)
+    setDragOverGroupId(null)
+  }, [])
+
+  const isDescendant = useCallback((ancestorId: string, descendantId: string): boolean => {
+    const map = new Map(customGroupsRef.current.map(g => [g.id, g.parentId]))
+    let current: string | undefined = descendantId
+    while (current) {
+      if (current === ancestorId) return true
+      current = map.get(current) ?? undefined
+    }
+    return false
+  }, [])
+
+  const handleGroupDropOnGroup = useCallback(async (e: React.DragEvent, targetGroupId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    let draggedGroupId: string | null = null
+    try {
+      const raw = e.dataTransfer.getData('application/x-group-id')
+      if (raw) draggedGroupId = raw
+    } catch { /* fallback */ }
+    setDragGroupId(null)
+    setDragOverGroupId(null)
+    if (!draggedGroupId || draggedGroupId === targetGroupId) return
+    if (isDescendant(draggedGroupId, targetGroupId)) return
+
+    try {
+      await updateNoteGroup(draggedGroupId, { parentId: targetGroupId })
+      setCustomGroups(prev => prev.map(g => g.id === draggedGroupId ? { ...g, parentId: targetGroupId } : g))
+    } catch (err) {
+      console.error('Erro ao mover grupo:', err)
+      alert('Erro ao mover grupo.')
+    }
+  }, [isDescendant])
+
+  const handleMoveGroupToRoot = useCallback(async (groupId: string) => {
+    try {
+      await updateNoteGroup(groupId, { parentId: null })
+      setCustomGroups(prev => prev.map(g => g.id === groupId ? { ...g, parentId: null } : g))
+    } catch (err) {
+      console.error('Erro ao mover grupo:', err)
+    }
+  }, [])
 
   const allCollapsed = sortMode === 'recent' && customGroups.length > 0 && customGroups.every(g => collapsed.has(`custom-${g.id}`))
 
@@ -530,103 +606,51 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
           </div>
         )}
 
-        {/* Custom groups */}
-        {sortMode === 'recent' && customGroups.map(group => {
-          const isCollapsed = collapsed.has(`custom-${group.id}`)
-          const groupNotes = sorted.filter(n => n.groupId === group.id)
-          return (
-            <div
-              key={group.id}
-              className={`notes-group notes-group-custom ${dragOverGroup === group.id ? 'drag-over' : ''}`}
-              onDragOver={e => handleGroupDragOver(e, group.id)}
-              onDragLeave={handleGroupDragLeave}
-              onDrop={e => handleGroupDrop(e, group.id)}
-            >
-              <button
-                className={`notes-group-header ${isCollapsed ? 'collapsed' : ''}`}
-                onClick={() => toggleGroup(`custom-${group.id}`)}
-                type="button"
-              >
-                <svg className="notes-group-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-                <svg className="notes-group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                </svg>
-                {renamingGroupId === group.id ? (
-                  <input
-                    ref={renameInputRef}
-                    className="notes-group-rename-input"
-                    value={renameValue}
-                    onChange={e => setRenameValue(e.target.value)}
-                    onBlur={() => handleRenameGroup(group.id)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') handleRenameGroup(group.id)
-                      if (e.key === 'Escape') setRenamingGroupId(null)
-                    }}
-                    onClick={e => e.stopPropagation()}
-                    type="text"
-                  />
-                ) : (
-                  <span className="notes-group-label">{group.name}</span>
-                )}
-                <span className="notes-group-count">{groupNotes.length}</span>
-                <button
-                  className="notes-group-menu-btn"
-                  onClick={e => {
-                    e.stopPropagation()
-                    setRenamingGroupId(group.id)
-                    setRenameValue(group.name)
-                  }}
-                  title="Renomear"
-                  type="button"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                  </svg>
-                </button>
-                <button
-                  className="notes-group-menu-btn notes-group-delete-btn"
-                  onClick={e => {
-                    e.stopPropagation()
-                    handleDeleteGroup(group.id)
-                  }}
-                  title="Remover grupo"
-                  type="button"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </button>
-              <div className={`notes-group-body ${isCollapsed ? 'collapsed' : ''}`}>
-                {groupNotes.length === 0 && (
-                  <div className="notes-group-empty-drop">
-                    Arraste anotações aqui
-                  </div>
-                )}
-                {groupNotes.map(note => (
-                  <NoteItem
-                    key={note.id}
-                    note={note}
-                    flashId={flashId}
-                    dragNoteIds={dragNoteIds}
-                    selectMode={selectMode}
-                    isSelected={selectedIds.has(note.id)}
-                    onSeek={handleSeek}
-                    onDelete={onDelete}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onRemoveFromGroup={handleRemoveFromGroup}
-                    onToggleSelect={toggleNoteSelection}
-                  />
-                ))}
-              </div>
-            </div>
-          )
-        })}
+        {/* Custom groups (nested) */}
+        {sortMode === 'recent' && rootGroups.map(group => (
+          <NestedGroupRenderer
+            key={group.id}
+            group={group}
+            depth={0}
+            allGroups={customGroups}
+            sorted={sorted}
+            collapsed={collapsed}
+            flashId={flashId}
+            dragNoteIds={dragNoteIds}
+            dragOverGroup={dragOverGroup}
+            dragGroupId={dragGroupId}
+            dragOverGroupId={dragOverGroupId}
+            selectMode={selectMode}
+            selectedIds={selectedIds}
+            renamingGroupId={renamingGroupId}
+            renameValue={renameValue}
+            subGroupName={subGroupName}
+            creatingSubGroupOf={creatingSubGroupOf}
+            onToggleGroup={toggleGroup}
+            onRenameStart={(id, name) => { setRenamingGroupId(id); setRenameValue(name) }}
+            onRenameGroup={handleRenameGroup}
+            onDeleteGroup={handleDeleteGroup}
+            onDragOver={handleGroupDragOver}
+            onDragLeave={handleGroupDragLeave}
+            onDrop={handleGroupDrop}
+            onSeek={handleSeek}
+            onDelete={onDelete}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onRemoveFromGroup={handleRemoveFromGroup}
+            onToggleSelect={toggleNoteSelection}
+            onGroupDragStart={handleGroupDragStart}
+            onGroupDragEnd={handleGroupDragEnd}
+            onGroupDragOverId={setDragOverGroupId}
+            onGroupDropOnGroup={handleGroupDropOnGroup}
+            onStartSubGroup={(parentId) => { setCreatingSubGroupOf(parentId); setSubGroupName('') }}
+            onCancelSubGroup={() => { setCreatingSubGroupOf(null); setSubGroupName('') }}
+            onConfirmSubGroup={() => handleCreateGroup(creatingSubGroupOf)}
+            onSubGroupNameChange={setSubGroupName}
+            onMoveToRoot={handleMoveGroupToRoot}
+            setRenameValue={setRenameValue}
+          />
+        ))}
 
         {/* Date-based groups (ungrouped notes) */}
         {sortMode === 'recent' && dateGroups.map(group => {
@@ -685,26 +709,44 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
 
       {/* Create group bar */}
       <div className="notes-create-group-area">
-        {showGroupInput ? (
+        {showGroupInput || creatingSubGroupOf !== null ? (
           <div className="notes-create-group-row">
             <input
               ref={groupInputRef}
               className="notes-create-group-input"
-              placeholder="Nome do grupo..."
-              value={newGroupName}
-              onChange={e => setNewGroupName(e.target.value)}
+              placeholder={creatingSubGroupOf !== null ? 'Nome do sub-grupo...' : 'Nome do grupo...'}
+              value={creatingSubGroupOf !== null ? subGroupName : newGroupName}
+              onChange={e => creatingSubGroupOf !== null ? setSubGroupName(e.target.value) : setNewGroupName(e.target.value)}
               onKeyDown={e => {
-                if (e.key === 'Enter') handleCreateGroup()
-                if (e.key === 'Escape') { setShowGroupInput(false); setNewGroupName('') }
+                if (e.key === 'Enter') {
+                  if (creatingSubGroupOf !== null) handleCreateGroup(creatingSubGroupOf)
+                  else handleCreateGroup()
+                }
+                if (e.key === 'Escape') {
+                  if (creatingSubGroupOf !== null) { setCreatingSubGroupOf(null); setSubGroupName('') }
+                  else { setShowGroupInput(false); setNewGroupName('') }
+                }
               }}
               type="text"
             />
-            <button className="notes-create-group-confirm" onClick={handleCreateGroup} disabled={!newGroupName.trim()} type="button">
+            <button
+              className="notes-create-group-confirm"
+              onClick={() => creatingSubGroupOf !== null ? handleCreateGroup(creatingSubGroupOf) : handleCreateGroup()}
+              disabled={creatingSubGroupOf !== null ? !subGroupName.trim() : !newGroupName.trim()}
+              type="button"
+            >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </button>
-            <button className="notes-create-group-cancel" onClick={() => { setShowGroupInput(false); setNewGroupName('') }} type="button">
+            <button
+              className="notes-create-group-cancel"
+              onClick={() => {
+                if (creatingSubGroupOf !== null) { setCreatingSubGroupOf(null); setSubGroupName('') }
+                else { setShowGroupInput(false); setNewGroupName('') }
+              }}
+              type="button"
+            >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
@@ -721,6 +763,247 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
             Criar grupo
           </button>
         )}
+      </div>
+    </div>
+  )
+}
+
+interface NestedGroupProps {
+  group: NoteGroup
+  depth: number
+  allGroups: NoteGroup[]
+  sorted: VideoNote[]
+  collapsed: Set<string>
+  flashId: string | null
+  dragNoteIds: string[]
+  dragOverGroup: string | null
+  dragGroupId: string | null
+  dragOverGroupId: string | null
+  selectMode: boolean
+  selectedIds: Set<string>
+  renamingGroupId: string | null
+  renameValue: string
+  subGroupName: string
+  creatingSubGroupOf: string | null
+  onToggleGroup: (key: string) => void
+  onRenameStart: (id: string, name: string) => void
+  onRenameGroup: (id: string) => void
+  onDeleteGroup: (id: string) => void
+  onDragOver: (e: React.DragEvent, groupId: string) => void
+  onDragLeave: () => void
+  onDrop: (e: React.DragEvent, groupId: string) => void
+  onSeek: (seconds: number, id: string) => void
+  onDelete: (id: string) => void
+  onDragStart: (e: React.DragEvent, noteId: string) => void
+  onDragEnd: () => void
+  onRemoveFromGroup: (noteId: string) => void
+  onToggleSelect: (noteId: string, e: React.MouseEvent) => void
+  onGroupDragStart: (e: React.DragEvent, groupId: string) => void
+  onGroupDragEnd: () => void
+  onGroupDragOverId: (id: string | null) => void
+  onGroupDropOnGroup: (e: React.DragEvent, targetGroupId: string) => void
+  onStartSubGroup: (parentId: string) => void
+  onCancelSubGroup: () => void
+  onConfirmSubGroup: () => void
+  onSubGroupNameChange: (name: string) => void
+  onMoveToRoot: (groupId: string) => void
+  setRenameValue: (v: string) => void
+}
+
+function NestedGroupRenderer({
+  group, depth, allGroups, sorted, collapsed, flashId, dragNoteIds,
+  dragOverGroup, dragGroupId, dragOverGroupId, selectMode, selectedIds,
+  renamingGroupId, renameValue, subGroupName, creatingSubGroupOf,
+  onToggleGroup, onRenameStart, onRenameGroup, onDeleteGroup,
+  onDragOver, onDragLeave, onDrop,
+  onSeek, onDelete, onDragStart, onDragEnd, onRemoveFromGroup, onToggleSelect,
+  onGroupDragStart, onGroupDragEnd, onGroupDragOverId, onGroupDropOnGroup,
+  onStartSubGroup, onCancelSubGroup, onConfirmSubGroup, onSubGroupNameChange,
+  onMoveToRoot, setRenameValue,
+}: NestedGroupProps) {
+  const isCollapsed = collapsed.has(`custom-${group.id}`)
+  const children = allGroups.filter(g => g.parentId === group.id)
+
+  const countAllNotes = useCallback((groupId: string): number => {
+    const direct = sorted.filter(n => n.groupId === groupId).length
+    const childGroups = allGroups.filter(g => g.parentId === groupId)
+    let childCount = 0
+    for (const cg of childGroups) {
+      childCount += countAllNotes(cg.id)
+    }
+    return direct + childCount
+  }, [sorted, allGroups])
+
+  const totalNotes = countAllNotes(group.id)
+  const groupNotes = sorted.filter(n => n.groupId === group.id)
+  const isBeingDragged = dragGroupId === group.id
+  const isDragOver = dragOverGroup === group.id || dragOverGroupId === group.id
+
+  return (
+    <div
+      className={`notes-group notes-group-custom ${isDragOver ? 'drag-over' : ''} ${isBeingDragged ? 'dragging' : ''} ${depth > 0 ? 'notes-group-nested' : ''}`}
+      style={depth > 0 ? { marginLeft: depth * 16 } : undefined}
+      onDragOver={e => onDragOver(e, group.id)}
+      onDragLeave={onDragLeave}
+      onDrop={e => onDrop(e, group.id)}
+    >
+      <button
+        className={`notes-group-header ${isCollapsed ? 'collapsed' : ''}`}
+        onClick={() => onToggleGroup(`custom-${group.id}`)}
+        draggable
+        onDragStart={e => onGroupDragStart(e, group.id)}
+        onDragEnd={onGroupDragEnd}
+        type="button"
+      >
+        <svg className="notes-group-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+        <svg className="notes-group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+        </svg>
+        {renamingGroupId === group.id ? (
+          <input
+            className="notes-group-rename-input"
+            value={renameValue}
+            onChange={e => setRenameValue(e.target.value)}
+            onBlur={() => { if (renamingGroupId === group.id) onRenameGroup(group.id) }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') onRenameGroup(group.id)
+              if (e.key === 'Escape') onRenameStart('', '')
+            }}
+            onClick={e => e.stopPropagation()}
+            type="text"
+            autoFocus
+          />
+        ) : (
+          <span className="notes-group-label">{group.name}</span>
+        )}
+        <span className="notes-group-count">{totalNotes}</span>
+        <button
+          className="notes-group-menu-btn"
+          onClick={e => {
+            e.stopPropagation()
+            onStartSubGroup(group.id)
+          }}
+          title="Criar sub-grupo"
+          type="button"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+        <button
+          className="notes-group-menu-btn"
+          onClick={e => {
+            e.stopPropagation()
+            onRenameStart(group.id, group.name)
+          }}
+          title="Renomear"
+          type="button"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        </button>
+        {group.parentId && (
+          <button
+            className="notes-group-menu-btn"
+            onClick={e => {
+              e.stopPropagation()
+              onMoveToRoot(group.id)
+            }}
+            title="Mover para raiz"
+            type="button"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 7 6" />
+              <path d="M3 12h4l3-8 4 16 3-8h4" />
+            </svg>
+          </button>
+        )}
+        <button
+          className="notes-group-menu-btn notes-group-delete-btn"
+          onClick={e => {
+            e.stopPropagation()
+            onDeleteGroup(group.id)
+          }}
+          title="Remover grupo"
+          type="button"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </button>
+      <div className={`notes-group-body ${isCollapsed ? 'collapsed' : ''}`}>
+        {groupNotes.length === 0 && children.length === 0 && (
+          <div className="notes-group-empty-drop">
+            Arraste anotações aqui
+          </div>
+        )}
+        {groupNotes.map(note => (
+          <NoteItem
+            key={note.id}
+            note={note}
+            flashId={flashId}
+            dragNoteIds={dragNoteIds}
+            selectMode={selectMode}
+            isSelected={selectedIds.has(note.id)}
+            onSeek={onSeek}
+            onDelete={onDelete}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onRemoveFromGroup={onRemoveFromGroup}
+            onToggleSelect={onToggleSelect}
+          />
+        ))}
+        {children.map(child => (
+          <NestedGroupRenderer
+            key={child.id}
+            group={child}
+            depth={depth + 1}
+            allGroups={allGroups}
+            sorted={sorted}
+            collapsed={collapsed}
+            flashId={flashId}
+            dragNoteIds={dragNoteIds}
+            dragOverGroup={dragOverGroup}
+            dragGroupId={dragGroupId}
+            dragOverGroupId={dragOverGroupId}
+            selectMode={selectMode}
+            selectedIds={selectedIds}
+            renamingGroupId={renamingGroupId}
+            renameValue={renameValue}
+            subGroupName={subGroupName}
+            creatingSubGroupOf={creatingSubGroupOf}
+            onToggleGroup={onToggleGroup}
+            onRenameStart={onRenameStart}
+            onRenameGroup={onRenameGroup}
+            onDeleteGroup={onDeleteGroup}
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            onDrop={onDrop}
+            onSeek={onSeek}
+            onDelete={onDelete}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onRemoveFromGroup={onRemoveFromGroup}
+            onToggleSelect={onToggleSelect}
+            onGroupDragStart={onGroupDragStart}
+            onGroupDragEnd={onGroupDragEnd}
+            onGroupDragOverId={onGroupDragOverId}
+            onGroupDropOnGroup={onGroupDropOnGroup}
+            onStartSubGroup={onStartSubGroup}
+            onCancelSubGroup={onCancelSubGroup}
+            onConfirmSubGroup={onConfirmSubGroup}
+            onSubGroupNameChange={onSubGroupNameChange}
+            onMoveToRoot={onMoveToRoot}
+            setRenameValue={setRenameValue}
+          />
+        ))}
       </div>
     </div>
   )

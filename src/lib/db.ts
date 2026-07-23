@@ -588,6 +588,7 @@ export interface NoteGroup {
   name: string
   sortOrder: number
   createdAt: number
+  parentId?: string | null
 }
 
 export async function fetchNoteGroups(videoId: string): Promise<NoteGroup[]> {
@@ -606,6 +607,7 @@ export async function fetchNoteGroups(videoId: string): Promise<NoteGroup[]> {
     name: row.name as string,
     sortOrder: row.sort_order as number,
     createdAt: new Date(row.created_at as string).getTime(),
+    parentId: row.parent_id as string | null ?? null,
   }))
 }
 
@@ -619,16 +621,18 @@ export async function createNoteGroup(group: NoteGroup): Promise<NoteGroup> {
       video_id: group.videoId,
       name: group.name,
       sort_order: group.sortOrder,
+      parent_id: group.parentId ?? null,
     })
   if (error) throw error
   return group
 }
 
-export async function updateNoteGroup(id: string, patch: { name?: string; sortOrder?: number }): Promise<void> {
+export async function updateNoteGroup(id: string, patch: { name?: string; sortOrder?: number; parentId?: string | null }): Promise<void> {
   const userId = await getUserId()
   const update: Record<string, unknown> = {}
   if (patch.name !== undefined) update.name = patch.name
   if (patch.sortOrder !== undefined) update.sort_order = patch.sortOrder
+  if (patch.parentId !== undefined) update.parent_id = patch.parentId
   const { error } = await supabase
     .from('note_groups')
     .update(update)
@@ -639,8 +643,11 @@ export async function updateNoteGroup(id: string, patch: { name?: string; sortOr
 
 export async function deleteNoteGroup(id: string): Promise<void> {
   const userId = await getUserId()
-  const { error } = await supabase.from('note_groups').delete().eq('id', id).eq('user_id', userId)
-  if (error) throw error
+  const { error } = await supabase.rpc('delete_group_promote_children', { group_id: id })
+  if (error) {
+    const { error: delErr } = await supabase.from('note_groups').delete().eq('id', id).eq('user_id', userId)
+    if (delErr) throw delErr
+  }
 }
 
 export async function assignNoteToGroup(noteId: string, groupId: string | null): Promise<void> {
