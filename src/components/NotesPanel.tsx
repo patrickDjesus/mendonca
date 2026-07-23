@@ -78,6 +78,23 @@ function groupNotesByDate(notes: VideoNote[]) {
   return groups
 }
 
+function buildGroupTreeOptions(
+  groups: NoteGroup[],
+  parentId: string | null,
+  excludeId: string | null,
+  depth: number,
+  isDescendantCheck: (ancestorId: string, descendantId: string) => boolean,
+): { id: string | null; name: string; depth: number; disabled: boolean }[] {
+  const result: { id: string | null; name: string; depth: number; disabled: boolean }[] = []
+  const children = groups.filter(g => g.parentId === parentId)
+  for (const child of children) {
+    if (excludeId && (child.id === excludeId || isDescendantCheck(excludeId, child.id))) continue
+    result.push({ id: child.id, name: child.name, depth, disabled: false })
+    result.push(...buildGroupTreeOptions(groups, child.id, excludeId, depth + 1, isDescendantCheck))
+  }
+  return result
+}
+
 interface Props {
   notes: VideoNote[]
   currentTime: number
@@ -784,8 +801,8 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
                   onChange={e => setNewGroupParentId(e.target.value || null)}
                 >
                   <option value="">Raiz (sem pai)</option>
-                  {rootGroups.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
+                  {buildGroupTreeOptions(customGroups, null, null, 0, () => false).map(opt => (
+                    <option key={opt.id} value={opt.id ?? ''}>{'\u00A0'.repeat(opt.depth * 3)}{'└ '.repeat(opt.depth ? 1 : 0)}{opt.name}</option>
                   ))}
                 </select>
               </div>
@@ -866,6 +883,20 @@ function NestedGroupRenderer({
   const isCollapsed = collapsed.has(`custom-${group.id}`)
   const children = allGroups.filter(g => g.parentId === group.id)
 
+  const parentPath = useMemo(() => {
+    const path: string[] = []
+    let current: string | undefined = group.parentId ?? undefined
+    const map = new Map(allGroups.map(g => [g.id, g]))
+    let safety = 0
+    while (current && safety < 10) {
+      const g = map.get(current)
+      if (g) { path.unshift(g.name); current = g.parentId ?? undefined }
+      else break
+      safety++
+    }
+    return path
+  }, [group.parentId, allGroups])
+
   const countAllNotes = useCallback((groupId: string): number => {
     const direct = sorted.filter(n => n.groupId === groupId).length
     const childGroups = allGroups.filter(g => g.parentId === groupId)
@@ -883,12 +914,13 @@ function NestedGroupRenderer({
 
   return (
     <div
-      className={`notes-group notes-group-custom ${isDragOver ? 'drag-over' : ''} ${isBeingDragged ? 'dragging' : ''} ${depth > 0 ? 'notes-group-nested' : ''}`}
+      className={`notes-group notes-group-custom depth-${Math.min(depth, 3)} ${isDragOver ? 'drag-over' : ''} ${isBeingDragged ? 'dragging' : ''} ${depth > 0 ? 'notes-group-nested' : ''}`}
       style={depth > 0 ? { marginLeft: depth * 16 } : undefined}
       onDragOver={e => onDragOver(e, group.id)}
       onDragLeave={onDragLeave}
       onDrop={e => onDrop(e, group.id)}
     >
+      {depth > 0 && <div className="notes-group-depth-bar" />}
       <button
         className={`notes-group-header ${isCollapsed ? 'collapsed' : ''}`}
         onClick={() => onToggleGroup(`custom-${group.id}`)}
@@ -918,7 +950,10 @@ function NestedGroupRenderer({
             autoFocus
           />
         ) : (
-          <span className="notes-group-label">{group.name}</span>
+          <span className="notes-group-label">
+            {group.name}
+            {parentPath.length > 0 && <span className="notes-group-parent-path">{parentPath.join(' › ')}</span>}
+          </span>
         )}
         <span className="notes-group-count">{totalNotes}</span>
         <button
@@ -1003,20 +1038,20 @@ function NestedGroupRenderer({
                 onClick={() => { onMoveGroupInto(group.id, null); setMovingGroupId(null) }}
                 type="button"
               >
-                Raiz
+                Raiz (sem pai)
               </button>
-              {allGroups
-                .filter(g => g.id !== group.id && !isDescendant(group.id, g.id))
-                .map(g => (
-                  <button
-                    key={g.id}
-                    className={`notes-group-move-option ${g.parentId === group.id ? 'current-parent' : ''}`}
-                    onClick={() => { onMoveGroupInto(group.id, g.id); setMovingGroupId(null) }}
-                    type="button"
-                  >
-                    {g.parentId === group.id ? '↓ ' : ''}{g.name}
-                  </button>
-                ))}
+              {buildGroupTreeOptions(allGroups, null, group.id, 0, isDescendant).map(opt => (
+                <button
+                  key={opt.id}
+                  className={`notes-group-move-option ${opt.id === group.parentId ? 'current-parent' : ''}`}
+                  onClick={() => { onMoveGroupInto(group.id, opt.id!); setMovingGroupId(null) }}
+                  type="button"
+                  style={{ paddingLeft: 8 + opt.depth * 16 }}
+                >
+                  {opt.id === group.parentId && <span className="notes-move-current-indicator">atual → </span>}
+                  {opt.name}
+                </button>
+              ))}
             </div>
           )}
         </div>
