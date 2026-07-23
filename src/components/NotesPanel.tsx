@@ -325,7 +325,7 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
 
   const handleGroupDrop = useCallback(async (e: React.DragEvent, groupId: string) => {
     e.preventDefault()
-    if (e.dataTransfer.types.contains('application/x-group-id')) return
+    if (e.dataTransfer.types.includes('application/x-group-id')) return
     let noteIds: string[] = []
     try {
       const raw = e.dataTransfer.getData('application/x-note-ids')
@@ -790,7 +790,7 @@ interface NestedGroupProps {
   onRenameGroup: (id: string) => void
   onDeleteGroup: (id: string) => void
   onDragOver: (e: React.DragEvent, groupId: string) => void
-  onDragLeave: () => void
+  onDragLeave: (e: React.DragEvent) => void
   onDrop: (e: React.DragEvent, groupId: string) => void
   onSeek: (seconds: number, id: string) => void
   onDelete: (id: string) => void

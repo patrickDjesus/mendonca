@@ -904,13 +904,6 @@ export async function unlockAchievement(achievementId: string): Promise<boolean>
   return true
 }
 
-function getISOWeek(date: Date): string {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
-  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7))
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
-  return `${d.getUTCFullYear()}-W${String(Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)).padStart(2, '0')}`
-}
-
 export async function checkAndUnlockAchievements(): Promise<string[]> {
   const streak = await fetchStreak()
   const newlyUnlocked: string[] = []
