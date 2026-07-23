@@ -103,6 +103,29 @@
   color: #7a6a5a;
 }
 
+.simulado-card-badge.resumable {
+  background: rgba(212, 168, 67, 0.15);
+  color: #d4a843;
+}
+
+.simulado-card-info.resumable-info {
+  color: #d4a843;
+  font-weight: 600;
+}
+
+.simulado-card-info.resumable-info svg {
+  color: #d4a843;
+}
+
+.simulado-card-btn.resume {
+  background: rgba(100, 180, 120, 0.12);
+  color: #64b478;
+}
+
+.simulado-card-btn.resume:hover {
+  background: rgba(100, 180, 120, 0.22);
+}
+
 .simulado-card-body {
   display: flex;
   flex-direction: column;

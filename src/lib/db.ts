@@ -672,6 +672,7 @@ export interface Goal {
   id: string
   text: string
   done: boolean
+  color?: string
   createdAt: number
   completedAt: number | null
 }
@@ -689,21 +690,24 @@ export async function fetchGoals(): Promise<Goal[]> {
     id: row.id as string,
     text: row.text as string,
     done: row.done as boolean,
+    color: (row.color as string) || undefined,
     createdAt: new Date(row.created_at as string).getTime(),
     completedAt: row.completed_at ? new Date(row.completed_at as string).getTime() : null,
   }))
 }
 
-export async function createGoal(text: string): Promise<Goal> {
+export async function createGoal(text: string, color?: string): Promise<Goal> {
   const userId = await getUserId()
   const id = uid()
   const now = new Date().toISOString()
+  const insertData: Record<string, unknown> = { id, user_id: userId, text, done: false, created_at: now }
+  if (color) insertData.color = color
   const { error } = await supabase
     .from('goals')
-    .insert({ id, user_id: userId, text, done: false, created_at: now })
+    .insert(insertData)
 
   if (error) throw error
-  return { id, text, done: false, createdAt: Date.now(), completedAt: null }
+  return { id, text, done: false, color, createdAt: Date.now(), completedAt: null }
 }
 
 export async function updateGoal(id: string, updates: { text?: string; done?: boolean; completedAt?: number | null }): Promise<void> {
@@ -900,39 +904,6 @@ function getISOWeek(date: Date): string {
   return `${d.getUTCFullYear()}-W${String(Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)).padStart(2, '0')}`
 }
 
-export async function incrementStreakField(field: string, amount = 1): Promise<void> {
-  const streak = await fetchStreak()
-  const key = field as keyof UserStreak
-
-  if (field === 'loginDays') {
-    const today = new Date().toISOString().split('T')[0]
-    if (streak.lastLoginDate === today) return
-    streak.lastLoginDate = today
-  }
-
-  if (field === 'videosWatched') {
-    const today = new Date().toISOString().split('T')[0]
-    if (streak.videosWatchedDate !== today) {
-      streak.videosWatchedToday = 0
-      streak.videosWatchedDate = today
-    }
-    streak.videosWatchedToday += amount
-  }
-
-  if (field === 'simuladosCompleted') {
-    const week = getISOWeek(new Date())
-    if (streak.lastSimuladoWeek !== week) {
-      streak.simuladosThisWeek = 0
-      streak.lastSimuladoWeek = week
-    }
-    streak.simuladosThisWeek += amount
-  }
-
-  const current = (streak[key] as number) || 0
-  ;(streak as unknown as Record<string, unknown>)[key] = current + amount
-  await upsertStreak(streak)
-}
-
 export async function checkAndUnlockAchievements(): Promise<string[]> {
   const streak = await fetchStreak()
   const newlyUnlocked: string[] = []
@@ -990,7 +961,7 @@ export async function checkModeHardcore(challengeId: string, isWin: boolean, mod
   }
 }
 
-export async function checkMasoquista(challengeId: string, isWin: boolean): Promise<void> {
+export async function checkMasoquista(challengeId: string, isWin: boolean, currentAttemptId: string): Promise<void> {
   if (!isWin) return
   const userId = await getUserId()
   const { data: attempts } = await supabase
@@ -998,12 +969,12 @@ export async function checkMasoquista(challengeId: string, isWin: boolean): Prom
     .select('id, wrong_count')
     .eq('challenge_id', challengeId)
     .eq('user_id', userId)
+    .neq('id', currentAttemptId)
     .order('completed_at', { ascending: false })
     .limit(3)
 
   if (!attempts || attempts.length < 3) return
 
-  // The 3 most recent attempts BEFORE the current win must all be losses
   const allLosses = attempts.every(a => a.wrong_count > 0)
   if (allLosses) {
     await unlockAchievement('masoquista')

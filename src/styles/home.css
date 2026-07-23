@@ -367,6 +367,37 @@
   height: 260px;
 }
 
+.quote-nav {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.quote-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(200, 180, 140, 0.06);
+  color: #7a6a5a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin: 0 4px;
+}
+
+.quote-nav-btn:hover {
+  background: rgba(200, 180, 140, 0.15);
+  color: #d0c0a0;
+}
+
+.quote-nav-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
 .quote-image-wrap {
   width: 180px;
   flex-shrink: 0;
@@ -662,6 +693,48 @@
 .goals-add-btn svg {
   width: 20px;
   height: 20px;
+}
+
+.goals-color-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.goals-color-chip {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.goals-color-chip:hover {
+  transform: scale(1.1);
+}
+
+.goals-color-chip.selected {
+  transform: scale(1.15);
+}
+
+.goals-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.goal-color-bar {
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  flex-shrink: 0;
+  align-self: stretch;
 }
 
 .goals-list {

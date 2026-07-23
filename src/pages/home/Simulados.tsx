@@ -287,6 +287,31 @@ function formatTime(ms: number) {
 
 type View = 'gallery' | 'exam'
 
+interface SavedExam {
+  year: number
+  answers: Record<string, string>
+  savedAt: number
+  elapsedMs: number
+}
+
+function loadSavedExam(year: number): SavedExam | null {
+  try {
+    const raw = localStorage.getItem(`simulado_${year}`)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch { return null }
+}
+
+function saveExam(year: number, answers: Record<string, string>, elapsedMs: number) {
+  try {
+    localStorage.setItem(`simulado_${year}`, JSON.stringify({ year, answers, savedAt: Date.now(), elapsedMs }))
+  } catch { }
+}
+
+function clearSavedExam(year: number) {
+  try { localStorage.removeItem(`simulado_${year}`) } catch { }
+}
+
 export default function Simulados() {
   const [view, setView] = useState<View>('gallery')
   const [loading, setLoading] = useState(true)
@@ -300,9 +325,11 @@ export default function Simulados() {
   const startTimeRef = useRef<number>(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const questionRefs = useRef<Map<number, HTMLDivElement | null>>(new Map())
+  const autoSaveRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+    if (autoSaveRef.current) { clearInterval(autoSaveRef.current); autoSaveRef.current = null }
   }, [])
 
   useEffect(() => () => stopTimer(), [stopTimer])
@@ -320,7 +347,7 @@ export default function Simulados() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [lightboxImg])
 
-  const startExam = useCallback(async (year: number) => {
+  const startExam = useCallback(async (year: number, resume = false) => {
     setSelectedYear(year)
     setQuestions([])
     setAnswers({})
@@ -329,6 +356,7 @@ export default function Simulados() {
     setFetching(true)
 
     try {
+      const savedExam = resume ? loadSavedExam(year) : null
       let allQuestions: ChallengeQuestion[] = []
       let offset = 0
       const limit = 50
@@ -345,9 +373,25 @@ export default function Simulados() {
       setQuestions(allQuestions)
       setView('exam')
 
-      startTimeRef.current = Date.now()
-      setElapsed(0)
+      if (savedExam) {
+        setAnswers(savedExam.answers)
+        const restoredElapsed = savedExam.elapsedMs + (Date.now() - savedExam.savedAt)
+        startTimeRef.current = Date.now() - restoredElapsed
+        setElapsed(restoredElapsed)
+      } else {
+        startTimeRef.current = Date.now()
+        setElapsed(0)
+      }
       timerRef.current = setInterval(() => setElapsed(Date.now() - startTimeRef.current), 200)
+
+      if (autoSaveRef.current) clearInterval(autoSaveRef.current)
+      autoSaveRef.current = setInterval(() => {
+        setAnswers(prev => {
+          const currentElapsed = Date.now() - startTimeRef.current
+          saveExam(year, prev, currentElapsed)
+          return prev
+        })
+      }, 3000)
     } catch (err) {
       setFetchError(err instanceof Error ? err.message : 'Erro ao carregar questões')
     } finally {
@@ -363,9 +407,13 @@ export default function Simulados() {
       } else {
         next[questionId] = optionId
       }
+      if (selectedYear !== null) {
+        const currentElapsed = Date.now() - startTimeRef.current
+        saveExam(selectedYear, next, currentElapsed)
+      }
       return next
     })
-  }, [])
+  }, [selectedYear])
 
   const scrollToQuestion = useCallback((index: number) => {
     const el = questionRefs.current.get(index)
@@ -376,6 +424,7 @@ export default function Simulados() {
 
   const handleFinish = useCallback(() => {
     stopTimer()
+    if (selectedYear !== null) clearSavedExam(selectedYear)
     const correct = questions.filter(q => {
       const selected = answers[q.id]
       return selected && q.options.find(o => o.id === selected)?.correct
@@ -441,54 +490,78 @@ export default function Simulados() {
           </div>
         ) : (
           <div className="simulados-grid">
-            {ENEM_YEARS.map((year, idx) => (
-              <div
-                key={year}
-                className={`simulado-card ${idx >= 5 ? 'disabled' : ''}`}
-                onClick={() => idx < 5 && startExam(year)}
-              >
-                <div className="simulado-card-top">
-                  <span className="simulado-card-year">{year}</span>
-                  {idx < 5 ? (
-                    <span className="simulado-card-badge available">Disponível</span>
-                  ) : (
-                    <span className="simulado-card-badge coming">Em breve</span>
+            {ENEM_YEARS.map((year, idx) => {
+              const savedExam = idx < 5 ? loadSavedExam(year) : null
+              return (
+                <div
+                  key={year}
+                  className={`simulado-card ${idx >= 5 ? 'disabled' : ''}`}
+                  onClick={() => idx < 5 && startExam(year, !!savedExam)}
+                >
+                  <div className="simulado-card-top">
+                    <span className="simulado-card-year">{year}</span>
+                    {idx < 5 ? (
+                      <span className={`simulado-card-badge ${savedExam ? 'resumable' : 'available'}`}>{savedExam ? 'Em andamento' : 'Disponível'}</span>
+                    ) : (
+                      <span className="simulado-card-badge coming">Em breve</span>
+                    )}
+                  </div>
+                  <div className="simulado-card-body">
+                    <div className="simulado-card-info">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                      </svg>
+                      <span>Até 180 questões</span>
+                    </div>
+                    <div className="simulado-card-info">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                      <span>Sem tempo limite</span>
+                    </div>
+                    <div className="simulado-card-info">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                      <span>Múltipla escolha</span>
+                    </div>
+                    {savedExam && (
+                      <div className="simulado-card-info resumable-info">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="23 4 23 10 17 10" />
+                          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                        </svg>
+                        <span>{Object.keys(savedExam.answers).length} respondidas · {formatTime(savedExam.elapsedMs)}</span>
+                      </div>
+                    )}
+                  </div>
+                  {idx < 5 && (
+                    <button className={`simulado-card-btn ${savedExam ? 'resume' : ''}`} type="button">
+                      {savedExam ? (
+                        <>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="23 4 23 10 17 10" />
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                          </svg>
+                          Retomar
+                        </>
+                      ) : (
+                        <>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                          </svg>
+                          Iniciar
+                        </>
+                      )}
+                    </button>
                   )}
                 </div>
-                <div className="simulado-card-body">
-                  <div className="simulado-card-info">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                      <line x1="16" y1="13" x2="8" y2="13" />
-                      <line x1="16" y1="17" x2="8" y2="17" />
-                    </svg>
-                    <span>Até 180 questões</span>
-                  </div>
-                  <div className="simulado-card-info">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                    <span>Sem tempo limite</span>
-                  </div>
-                  <div className="simulado-card-info">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                    <span>Múltipla escolha</span>
-                  </div>
-                </div>
-                {idx < 5 && (
-                  <button className="simulado-card-btn" type="button">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                    Iniciar
-                  </button>
-                )}
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

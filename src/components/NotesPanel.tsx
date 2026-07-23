@@ -33,6 +33,21 @@ function exportNotesTxt(notes: VideoNote[], videoTitle: string) {
   URL.revokeObjectURL(url)
 }
 
+function copyNotesStructured(notes: VideoNote[], videoTitle: string): Promise<boolean> {
+  const sorted = [...notes].sort((a, b) => a.timestamp - b.timestamp)
+  const lines: string[] = [
+    `# ${videoTitle}`,
+    '',
+  ]
+  for (const n of sorted) {
+    lines.push(`[${formatTimestamp(n.timestamp)}] ${n.text}`)
+  }
+  lines.push('')
+  lines.push(`_${sorted.length} anotacoes — ${new Date().toLocaleDateString('pt-BR')}_`)
+
+  return navigator.clipboard.writeText(lines.join('\n')).then(() => true).catch(() => false)
+}
+
 function groupNotesByDate(notes: VideoNote[]) {
   const now = Date.now()
   const dayMs = 86400000
@@ -91,6 +106,7 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
   const [renameValue, setRenameValue] = useState('')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [selectMode, setSelectMode] = useState(false)
+  const [copiedNotes, setCopiedNotes] = useState(false)
   const groupInputRef = useRef<HTMLInputElement>(null)
   const renameInputRef = useRef<HTMLInputElement>(null)
 
@@ -408,18 +424,37 @@ export default function NotesPanel({ notes, currentTime, videoId, videoTitle, on
           </button>
         )}
         {localNotes.length > 0 && videoTitle && (
-          <button
-            className="notes-export-btn"
-            onClick={() => exportNotesTxt(localNotes, videoTitle)}
-            title="Exportar anotações"
-            type="button"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-          </button>
+          <>
+            <button
+              className="notes-export-btn"
+              onClick={() => copyNotesStructured(localNotes, videoTitle).then(ok => { if (ok) setCopiedNotes(true); setTimeout(() => setCopiedNotes(false), 2000) })}
+              title={copiedNotes ? 'Copiado!' : 'Copiar anotacoes'}
+              type="button"
+            >
+              {copiedNotes ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              )}
+            </button>
+            <button
+              className="notes-export-btn"
+              onClick={() => exportNotesTxt(localNotes, videoTitle)}
+              title="Exportar anotacoes"
+              type="button"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            </button>
+          </>
         )}
       </div>
 

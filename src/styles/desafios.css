@@ -1011,6 +1011,24 @@
   to { opacity: 1; }
 }
 
+/* ── Answered Progress Bar ────────────────────── */
+
+.quiz-answered-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(200, 180, 140, 0.06);
+  border-radius: 2px;
+  margin-bottom: 4px;
+  overflow: hidden;
+}
+
+.quiz-answered-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #508cc8, #6aa0d8);
+  border-radius: 2px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* ── Quiz View: Actions ───────────────────────── */
 
 .quiz-actions {

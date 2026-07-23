@@ -8,12 +8,13 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.vers
 interface PdfViewerProps {
   fileUrl: string
   fileName: string
+  docId?: string
   onClose: () => void
 }
 
 const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3]
 
-export default function PdfViewer({ fileUrl, fileName, onClose }: PdfViewerProps) {
+export default function PdfViewer({ fileUrl, fileName, docId, onClose }: PdfViewerProps) {
   const [numPages, setNumPages] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [scaleIndex, setScaleIndex] = useState(2)
@@ -81,10 +82,32 @@ export default function PdfViewer({ fileUrl, fileName, onClose }: PdfViewerProps
         if (el.getBoundingClientRect().top <= threshold) closest = pageNum
       }
       setCurrentPage(closest)
+      if (docId) {
+        try { localStorage.setItem(`pdf_scroll_${docId}`, String(container.scrollTop)) } catch { }
+      }
     }
     container.addEventListener('scroll', handleScroll, { passive: true })
+      if (docId) {
+      try {
+        const saved = localStorage.getItem(`pdf_scroll_${docId}`)
+        if (saved) {
+          const scrollY = Number(saved)
+          if (scrollY > 0) {
+            let retries = 0
+            const tryRestore = () => {
+              container.scrollTop = scrollY
+              if (container.scrollTop < scrollY && retries < 10) {
+                retries++
+                requestAnimationFrame(tryRestore)
+              }
+            }
+            requestAnimationFrame(tryRestore)
+          }
+        }
+      } catch { }
+    }
     return () => container.removeEventListener('scroll', handleScroll)
-  }, [numPages])
+  }, [numPages, docId])
 
   return (
     <div className={`pdf-viewer-overlay ${isFullscreen ? 'pdf-fullscreen' : ''}`} ref={overlayRef}>

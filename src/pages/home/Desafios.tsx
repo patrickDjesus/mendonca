@@ -147,6 +147,7 @@ export default function Desafios() {
 
   const startChallenge = useCallback((challenge: Challenge) => {
     setActiveChallenge(challenge); setCurrentQIndex(0); setAnswers([]); resetQuizState(); setLastResult(null); setView('quiz')
+    if (timerRef.current) clearInterval(timerRef.current)
     startTimeRef.current = Date.now(); setElapsed(0)
     timerRef.current = setInterval(() => setElapsed(Date.now() - startTimeRef.current), 200)
     if (challenge.modifiers?.includes('memoria_curta')) {
@@ -230,7 +231,7 @@ export default function Desafios() {
       logActivity('challenge_done', `${isWin ? 'Acertou' : 'Errou'} "${activeChallenge.title}" (${correctCount}/${activeChallenge.questionIds.length})`, 'challenge', isWin ? '#b450b4' : '#c86450').catch(() => {})
       recordAction('challenge', { challengeWin: isWin }).catch(() => {})
       checkModeHardcore(activeChallenge.id, correctCount > wrongCount, activeChallenge.modifiers?.length || 0).catch(() => {})
-      checkMasoquista(activeChallenge.id, isWin).catch(() => {})
+      checkMasoquista(activeChallenge.id, isWin, attempt.id).catch(() => {})
       setView('results')
       stopMemoryTimer()
     } else {
@@ -252,7 +253,7 @@ export default function Desafios() {
         }, 0)
       }
     }
-  }, [activeChallenge, currentQIndex, answers, stopTimer, resetQuizState, stopMemoryTimer, streak])
+  }, [activeChallenge, currentQIndex, answers, stopTimer, resetQuizState, stopMemoryTimer])
 
   const handleBackToList = useCallback(() => { setView('list'); setActiveChallenge(null); setLastResult(null); stopTimer(); stopMemoryTimer(); setQuestionHidden(false) }, [stopTimer, stopMemoryTimer])
 
@@ -308,10 +309,12 @@ export default function Desafios() {
   if (view === 'quiz' && activeChallenge) {
     const q = getCurrentQuestion()
     if (!q) return null
-    const progress = ((currentQIndex + 1) / activeChallenge.questionIds.length) * 100
-    const showMemory = activeChallenge.modifiers?.includes('memoria_curta') && !showFeedback
-    const hasCronometroEmChamas = activeChallenge.modifiers?.includes('cronometro_em_chamas')
     const totalQuestions = activeChallenge.questionIds.length
+    const progress = ((currentQIndex + 1) / totalQuestions) * 100
+    const showMemory = activeChallenge.modifiers?.includes('memoria_curta') && !showFeedback
+    const answeredCount = answers.length
+    const answeredPct = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0
+    const hasCronometroEmChamas = activeChallenge.modifiers?.includes('cronometro_em_chamas')
     const timeBudgetMs = totalQuestions * 30_000 * (hasCronometroEmChamas ? 0.5 : 1)
     const timerPct = Math.max(0, Math.min(100, ((timeBudgetMs - elapsed) / timeBudgetMs) * 100))
     const timerClass = timerPct > 50 ? 'safe' : timerPct > 20 ? 'warning' : 'danger'
@@ -344,6 +347,7 @@ export default function Desafios() {
           </div>
         </div>
         <div className="quiz-timer-bar"><div className={`quiz-timer-bar-fill ${timerClass}`} style={{ width: `${timerPct}%` }} /></div>
+        <div className="quiz-answered-bar"><div className="quiz-answered-bar-fill" style={{ width: `${answeredPct}%` }} /></div>
         <div className="quiz-progress"><div className="quiz-progress-fill" style={{ width: `${progress}%` }} /></div>
         {showMemory && !questionHidden && (
           <div className="quiz-memory-bar">

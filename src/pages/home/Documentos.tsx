@@ -71,8 +71,10 @@ export default function Documentos() {
     }
   }, [])
 
+  const myDocsRef = useRef(myDocs)
+  myDocsRef.current = myDocs
+
   const handleSave = useCallback(async (updated: DocMeta) => {
-    const previousDocs = myDocs
     setMyDocs(prev => prev.map(d => d.id === updated.id ? updated : d))
     setEditingDoc(null)
     try {
@@ -80,21 +82,20 @@ export default function Documentos() {
       if (updated.content) checkMaterialOuro(updated.content).catch(() => {})
     } catch (e) {
       console.error('Erro ao salvar documento:', e)
-      setMyDocs(previousDocs)
+      setMyDocs(myDocsRef.current)
     }
-  }, [myDocs])
+  }, [])
 
   const handleDelete = useCallback(async (id: string) => {
-    const previousDocs = myDocs
     setMyDocs(prev => prev.filter(d => d.id !== id))
     setDeleteTarget(null)
     try {
       await deleteDoc(id)
     } catch (e) {
       console.error('Erro ao deletar documento:', e)
-      setMyDocs(previousDocs)
+      setMyDocs(myDocsRef.current)
     }
-  }, [myDocs])
+  }, [])
 
   const handleCreateWithSubject = useCallback(async (subject: Subject) => {
     const form = pickerFormRef.current
@@ -436,6 +437,7 @@ export default function Documentos() {
             <PdfViewer
               fileUrl={viewingPdf.fileUrl}
               fileName={viewingPdf.fileName || viewingPdf.title}
+              docId={viewingPdf.id}
               onClose={() => setViewingPdf(null)}
             />
           </Suspense>
