@@ -42,6 +42,8 @@ export default function DocEditor({ doc, onSave, onCancel }: DocEditorProps) {
   const titleRef = useRef<HTMLInputElement>(null)
   const titleValue = useRef(doc.title)
   const [paperStyle, setPaperStyle] = useState<'default' | 'white'>(doc.paperStyle || 'default')
+  const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastSavedRef = useRef<string>(JSON.stringify(doc.content || []))
 
   useEffect(() => {
     setPaperStyle(doc.paperStyle || 'default')
@@ -52,6 +54,10 @@ export default function DocEditor({ doc, onSave, onCancel }: DocEditorProps) {
       titleRef.current.focus()
       titleRef.current.select()
     }
+  }, [])
+
+  useEffect(() => {
+    return () => { if (autoSaveRef.current) clearTimeout(autoSaveRef.current) }
   }, [])
 
   const handleSave = useCallback(() => {
@@ -80,12 +86,38 @@ export default function DocEditor({ doc, onSave, onCancel }: DocEditorProps) {
         handleSave()
       }
       if (e.key === 'Escape') {
+        if (autoSaveRef.current) clearTimeout(autoSaveRef.current)
         onCancel()
       }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
   }, [handleSave, onCancel])
+
+  const handleAutoSave = useCallback(() => {
+    if (autoSaveRef.current) clearTimeout(autoSaveRef.current)
+    autoSaveRef.current = setTimeout(() => {
+      const blocks = editor.document
+      const serialized = JSON.stringify(blocks)
+      if (serialized === lastSavedRef.current) return
+      lastSavedRef.current = serialized
+      const firstBlock = blocks[0]
+      let title = titleValue.current.trim()
+      if (!title && firstBlock) {
+        const text = firstBlock.content
+        if (Array.isArray(text)) {
+          title = text.map((b: { type: string; text?: string }) => ('text' in b && b.text ? b.text : '')).join('')
+        }
+      }
+      onSave({
+        ...doc,
+        title: title || doc.title,
+        content: blocks,
+        paperStyle,
+        updatedAt: Date.now(),
+      })
+    }, 3000)
+  }, [editor, doc, onSave, paperStyle])
 
   const fmt = {
     toggleBold: () => editor.toggleStyles({ bold: true }),
@@ -252,6 +284,7 @@ export default function DocEditor({ doc, onSave, onCancel }: DocEditorProps) {
             <BlockNoteView
               editor={editor}
               theme="dark"
+              onChange={handleAutoSave}
             />
           </div>
         </div>

@@ -2,19 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import philosophers from '../../data/philosophers.json'
 import { fetchMyCounts, fetchRecentActivities, type Activity, fetchGoals, createGoal, updateGoal, deleteGoal as deleteGoalDb, type Goal } from '../../lib/db'
-
-function timeAgo(ms: number): string {
-  const diff = Date.now() - ms
-  const min = Math.floor(diff / 60000)
-  if (min < 1) return 'agora'
-  if (min < 60) return `há ${min}min`
-  const h = Math.floor(min / 60)
-  if (h < 24) return `há ${h}h`
-  const d = Math.floor(h / 24)
-  if (d < 7) return `há ${d}d`
-  const w = Math.floor(d / 7)
-  return `há ${w}sem`
-}
+import { timeAgo } from '../../utils/format'
 
 const ENEM_DATE = new Date('2026-11-08T13:30:00-03:00')
 

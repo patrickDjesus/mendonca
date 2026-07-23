@@ -1,16 +1,29 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import { NotificationProvider } from './components/NotificationProvider'
+import ErrorBoundary from './components/ErrorBoundary'
 import AuthPage from './pages/AuthPage'
 import HomePage from './pages/home/HomePage'
-import VisaoGeral from './pages/home/VisaoGeral'
-import Documentos from './pages/home/Documentos'
-import Videos from './pages/home/Videos'
-import Desafios from './pages/home/Desafios'
-import Simulados from './pages/home/Simulados'
-import Perfil from './pages/home/Perfil'
-import Admin from './pages/home/Admin'
+
+const VisaoGeral = lazy(() => import('./pages/home/VisaoGeral'))
+const Documentos = lazy(() => import('./pages/home/Documentos'))
+const Videos = lazy(() => import('./pages/home/Videos'))
+const Desafios = lazy(() => import('./pages/home/Desafios'))
+const Simulados = lazy(() => import('./pages/home/Simulados'))
+const Perfil = lazy(() => import('./pages/home/Perfil'))
+const Admin = lazy(() => import('./pages/home/Admin'))
+
+function PageFallback() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 300 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 28, height: 28, border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#daa03c', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Carregando...</span>
+      </div>
+    </div>
+  )
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
@@ -41,21 +54,23 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <NotificationProvider>
-      <Routes>
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>}>
-          <Route index element={<VisaoGeral />} />
-          <Route path="documentos" element={<Documentos />} />
-          <Route path="videos" element={<Videos />} />
-          <Route path="desafios" element={<Desafios />} />
-          <Route path="simulados" element={<Simulados />} />
-          <Route path="perfil" element={<Perfil />} />
-          <Route path="admin" element={<Admin />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/auth" replace />} />
-      </Routes>
-    </NotificationProvider>
+    <ErrorBoundary>
+      <NotificationProvider>
+        <Routes>
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>}>
+            <Route index element={<Suspense fallback={<PageFallback />}><VisaoGeral /></Suspense>} />
+            <Route path="documentos" element={<Suspense fallback={<PageFallback />}><Documentos /></Suspense>} />
+            <Route path="videos" element={<Suspense fallback={<PageFallback />}><Videos /></Suspense>} />
+            <Route path="desafios" element={<Suspense fallback={<PageFallback />}><Desafios /></Suspense>} />
+            <Route path="simulados" element={<Suspense fallback={<PageFallback />}><Simulados /></Suspense>} />
+            <Route path="perfil" element={<Suspense fallback={<PageFallback />}><Perfil /></Suspense>} />
+            <Route path="admin" element={<Suspense fallback={<PageFallback />}><Admin /></Suspense>} />
+          </Route>
+          <Route path="*" element={<Navigate to="/auth" replace />} />
+        </Routes>
+      </NotificationProvider>
+    </ErrorBoundary>
   )
 }
 

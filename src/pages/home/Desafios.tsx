@@ -13,6 +13,36 @@ const EMPTY_STREAK: UserStreak = { currentStreak: 0, longestStreak: 0, lastChall
 const DIFFICULTY_LABELS: Record<ChallengeDifficulty, string> = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil' }
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F']
 
+const QUIZ_SAVE_KEY = 'mendonca_active_quiz'
+
+interface SavedQuiz {
+  challengeId: string
+  currentQIndex: number
+  answers: QuestionAnswer[]
+  startTimeMs: number
+  savedAt: number
+}
+
+function saveQuizState(challengeId: string, currentQIndex: number, answers: QuestionAnswer[], startTimeMs: number) {
+  try {
+    localStorage.setItem(QUIZ_SAVE_KEY, JSON.stringify({ challengeId, currentQIndex, answers, startTimeMs, savedAt: Date.now() }))
+  } catch { }
+}
+
+function loadSavedQuiz(): SavedQuiz | null {
+  try {
+    const raw = localStorage.getItem(QUIZ_SAVE_KEY)
+    if (!raw) return null
+    const data = JSON.parse(raw)
+    if (Date.now() - data.savedAt > 3600000) { localStorage.removeItem(QUIZ_SAVE_KEY); return null }
+    return data
+  } catch { return null }
+}
+
+function clearSavedQuiz() {
+  try { localStorage.removeItem(QUIZ_SAVE_KEY) } catch { }
+}
+
 function calculateScore(correct: number, _wrong: number, timeMs: number, total: number, diff: ChallengeDifficulty) {
   const base = diff === 'facil' ? 100 : diff === 'medio' ? 150 : 200
   const pts = correct * base
@@ -69,6 +99,8 @@ export default function Desafios() {
   const startTimeRef = useRef<number>(0)
   const [elapsed, setElapsed] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const answersRef = useRef<QuestionAnswer[]>([])
+  const currentQIndexRef = useRef(0)
 
   const [questionHidden, setQuestionHidden] = useState(false)
   const [memoryTimeLeft, setMemoryTimeLeft] = useState(15)
@@ -79,6 +111,7 @@ export default function Desafios() {
 
   const [tableFilter, setTableFilter] = useState('')
   const [tableSubjectFilter, setTableSubjectFilter] = useState<Subject | 'Todas'>('Todas')
+  const [savedQuiz, setSavedQuiz] = useState<SavedQuiz | null>(null)
 
   const dailyChallenge = useMemo(() => challenges.find(c => c.isDaily) || null, [challenges])
   const questionMap = useMemo(() => new Map(questions.map(q => [q.id, q])), [questions])
@@ -120,7 +153,7 @@ export default function Desafios() {
   }, [])
 
   const stopTimer = useCallback(() => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null } }, [])
-  useEffect(() => () => stopTimer(), [stopTimer])
+  useEffect(() => () => { stopTimer(); if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current) }, [stopTimer])
 
   const stopMemoryTimer = useCallback(() => {
     if (memoryTimerRef.current) { clearInterval(memoryTimerRef.current); memoryTimerRef.current = null }
@@ -135,6 +168,12 @@ export default function Desafios() {
         const [qs, chs, ats, st] = await Promise.all([fetchQuestions(), fetchChallenges(), fetchAttempts(), fetchStreak()])
         if (!mounted) return
         setQuestions(qs); setChallenges(chs); setAttempts(ats); setStreak(st)
+        const sq = loadSavedQuiz()
+        if (sq) {
+          const challenge = chs.find(c => c.id === sq.challengeId)
+          if (challenge) setSavedQuiz(sq)
+          else clearSavedQuiz()
+        }
       } catch { } finally { if (mounted) setLoading(false) }
     }
     load()
@@ -145,11 +184,20 @@ export default function Desafios() {
 
   const resetQuizState = useCallback(() => { setSelectedOptionIds([]); setTfAnswers({}); setShowFeedback(false); setDragOrder([]); setFillAnswers({}); setOpenText(''); setSelfEval(null) }, [])
 
+  useEffect(() => { answersRef.current = answers }, [answers])
+  useEffect(() => { currentQIndexRef.current = currentQIndex }, [currentQIndex])
+
+  const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   const startChallenge = useCallback((challenge: Challenge) => {
     setActiveChallenge(challenge); setCurrentQIndex(0); setAnswers([]); resetQuizState(); setLastResult(null); setView('quiz')
     if (timerRef.current) clearInterval(timerRef.current)
+    if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current)
     startTimeRef.current = Date.now(); setElapsed(0)
     timerRef.current = setInterval(() => setElapsed(Date.now() - startTimeRef.current), 200)
+    autoSaveTimerRef.current = setInterval(() => {
+      saveQuizState(challenge.id, currentQIndexRef.current, answersRef.current, startTimeRef.current)
+    }, 5000)
     if (challenge.modifiers?.includes('memoria_curta')) {
       setTimeout(() => {
         setQuestionHidden(false); setMemoryTimeLeft(15)
@@ -234,6 +282,8 @@ export default function Desafios() {
       checkMasoquista(activeChallenge.id, isWin, attempt.id).catch(() => {})
       setView('results')
       stopMemoryTimer()
+      clearSavedQuiz()
+      if (autoSaveTimerRef.current) { clearInterval(autoSaveTimerRef.current); autoSaveTimerRef.current = null }
     } else {
       setCurrentQIndex(i => i + 1); resetQuizState()
       if (activeChallenge.modifiers?.includes('memoria_curta')) {
@@ -255,7 +305,7 @@ export default function Desafios() {
     }
   }, [activeChallenge, currentQIndex, answers, stopTimer, resetQuizState, stopMemoryTimer])
 
-  const handleBackToList = useCallback(() => { setView('list'); setActiveChallenge(null); setLastResult(null); stopTimer(); stopMemoryTimer(); setQuestionHidden(false) }, [stopTimer, stopMemoryTimer])
+  const handleBackToList = useCallback(() => { setView('list'); setActiveChallenge(null); setLastResult(null); stopTimer(); stopMemoryTimer(); setQuestionHidden(false); clearSavedQuiz(); if (autoSaveTimerRef.current) { clearInterval(autoSaveTimerRef.current); autoSaveTimerRef.current = null } }, [stopTimer, stopMemoryTimer])
 
   const handleSelfEval = useCallback((choice: 'correct' | 'wrong') => {
     const q = getCurrentQuestion()
@@ -606,6 +656,32 @@ export default function Desafios() {
           <div className="desafio-stat-info"><span className="desafio-stat-value">{attempts.length}/{challenges.length}</span><span className="desafio-stat-label">Resolvidos</span></div>
         </div>
       </div>
+
+      {savedQuiz && (
+        <div className="desafio-resume-banner">
+          <div className="desafio-resume-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+            <span>Desafio em andamento — questão {savedQuiz.currentQIndex + 1}</span>
+          </div>
+          <div className="desafio-resume-btns">
+            <button className="desafio-resume-btn" onClick={() => {
+              const challenge = challenges.find(c => c.id === savedQuiz.challengeId)
+              if (!challenge) { clearSavedQuiz(); setSavedQuiz(null); return }
+              setActiveChallenge(challenge); setCurrentQIndex(savedQuiz.currentQIndex); setAnswers(savedQuiz.answers); setLastResult(null); setView('quiz')
+              if (timerRef.current) clearInterval(timerRef.current)
+              if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current)
+              const restored = savedQuiz.startTimeMs + (Date.now() - savedQuiz.savedAt)
+              startTimeRef.current = Date.now() - restored; setElapsed(restored)
+              timerRef.current = setInterval(() => setElapsed(Date.now() - startTimeRef.current), 200)
+              autoSaveTimerRef.current = setInterval(() => {
+                saveQuizState(challenge.id, savedQuiz.currentQIndex, answers, startTimeRef.current)
+              }, 5000)
+              setSavedQuiz(null)
+            }} type="button">Retomar</button>
+            <button className="desafio-resume-dismiss" onClick={() => { clearSavedQuiz(); setSavedQuiz(null) }} type="button">Descartar</button>
+          </div>
+        </div>
+      )}
 
       <div className="desafios-create-bar" ref={dropdownRef}>
         <div className="desafios-dropdown-wrap">

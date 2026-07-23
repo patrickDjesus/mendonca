@@ -672,6 +672,44 @@ export async function assignNotesToGroup(noteIds: string[], groupId: string | nu
 }
 
 /* ═══════════════════════════════════════════════════════════
+   VIDEO PROGRESS
+   ═══════════════════════════════════════════════════════════ */
+
+export async function fetchVideoProgress(videoId: string): Promise<number> {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('video_progress')
+    .select('seconds')
+    .eq('video_id', videoId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (error) throw error
+  return data?.seconds ?? 0
+}
+
+export async function fetchAllVideoProgress(): Promise<Map<string, number>> {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('video_progress')
+    .select('video_id, seconds')
+    .eq('user_id', userId)
+  if (error) throw error
+  const map = new Map<string, number>()
+  for (const row of data || []) {
+    map.set(row.video_id as string, row.seconds as number)
+  }
+  return map
+}
+
+export async function upsertVideoProgress(videoId: string, seconds: number): Promise<void> {
+  const userId = await getUserId()
+  const { error } = await supabase
+    .from('video_progress')
+    .upsert({ user_id: userId, video_id: videoId, seconds, updated_at: new Date().toISOString() }, { onConflict: 'user_id,video_id' })
+  if (error) throw error
+}
+
+/* ═══════════════════════════════════════════════════════════
    GOALS
    ═══════════════════════════════════════════════════════════ */
 

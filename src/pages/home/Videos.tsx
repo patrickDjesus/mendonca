@@ -5,7 +5,7 @@ import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import VideoPlayer, { type VideoPlayerHandle } from '../../components/VideoPlayer'
 import NotesPanel from '../../components/NotesPanel'
 import { extractYoutubeId } from '../../utils/youtube'
-import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, deleteAllVideoNotes, updateVideoDuration, logActivity, recordAction } from '../../lib/db'
+import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, deleteAllVideoNotes, updateVideoDuration, logActivity, recordAction, fetchAllVideoProgress, upsertVideoProgress } from '../../lib/db'
 import '../../styles/videos.css'
 
 import { formatTimestamp } from '../../utils/format'
@@ -56,14 +56,31 @@ export default function Videos() {
   const dragMoved = useRef(false)
   const dragRowCleanup = useRef<(() => void) | null>(null)
 
+  const [serverProgress, setServerProgress] = useState<Map<string, number>>(new Map())
+
+  useEffect(() => {
+    fetchAllVideoProgress().then(map => {
+      setServerProgress(map)
+      for (const [vid, sec] of map) {
+        const key = getProgressKey(vid)
+        const local = JSON.parse(localStorage.getItem(key) || '{}')
+        if (!local.time || sec > local.time) {
+          localStorage.setItem(key, JSON.stringify({ time: sec, updatedAt: Date.now() }))
+        }
+      }
+    }).catch(() => {})
+  }, [])
+
   const savedProgressMap = useMemo(() => {
     const map = new Map<string, number>()
     for (const v of videos) {
-      const t = getSavedProgress(v.id)
-      if (t > 0) map.set(v.id, t)
+      const serverTime = serverProgress.get(v.id) || 0
+      const localTime = getSavedProgress(v.id)
+      const best = Math.max(serverTime, localTime)
+      if (best > 0) map.set(v.id, best)
     }
     return map
-  }, [videos])
+  }, [videos, serverProgress])
 
   const initDrag = useCallback((row: HTMLDivElement, startX: number) => {
     dragRef.current = { active: true, el: row, startX, scrollLeft: row.scrollLeft }
@@ -234,6 +251,8 @@ export default function Videos() {
     }
   }, [watchingVideo, isPlaying])
 
+  const syncToServerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   useEffect(() => {
     if (!watchingVideo || currentTime < 3) return
     const key = getProgressKey(watchingVideo.id)
@@ -243,6 +262,10 @@ export default function Videos() {
       existing.updatedAt = Date.now()
       localStorage.setItem(key, JSON.stringify(existing))
     } catch { /* noop */ }
+    if (syncToServerRef.current) clearTimeout(syncToServerRef.current)
+    syncToServerRef.current = setTimeout(() => {
+      upsertVideoProgress(watchingVideo.id, Math.floor(currentTime)).catch(() => {})
+    }, 10000)
   }, [watchingVideo, currentTime])
 
   useEffect(() => {

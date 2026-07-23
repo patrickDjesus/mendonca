@@ -3,20 +3,8 @@ import { useOutletContext } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { fetchMyCounts, fetchRecentActivities, fetchUserAchievements, type Activity, getLevelProgress, getRank } from '../../lib/db'
 import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES, CATEGORY_ICONS } from '../../data/achievements'
+import { timeAgo } from '../../utils/format'
 import '../../styles/perfil.css'
-
-function timeAgo(ms: number): string {
-  const diff = Date.now() - ms
-  const min = Math.floor(diff / 60000)
-  if (min < 1) return 'agora'
-  if (min < 60) return `há ${min}min`
-  const h = Math.floor(min / 60)
-  if (h < 24) return `há ${h}h`
-  const d = Math.floor(h / 24)
-  if (d < 7) return `há ${d}d`
-  const w = Math.floor(d / 7)
-  return `há ${w}sem`
-}
 
 function getInitials(name: string): string {
   if (!name) return '?'
