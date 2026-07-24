@@ -648,7 +648,7 @@ export default function Desafios() {
           <div className="desafio-stat-info"><span className="desafio-stat-value">{streak.currentStreak}</span><span className="desafio-stat-label">Sequência</span></div>
         </div>
         <div className="desafio-stat-card">
-          <div className="desafio-stat-icon xp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg></div>
+          <div className="desafio-stat-icon xp"><img src="/XP.png" alt="XP" className="desafio-stat-xp-img" /></div>
           <div className="desafio-stat-info"><span className="desafio-stat-value">{streak.totalXp.toLocaleString()}</span><span className="desafio-stat-label">XP total</span></div>
         </div>
         <div className="desafio-stat-card">
@@ -757,7 +757,7 @@ export default function Desafios() {
                   <span className="desafio-badge questions-badge">{challenge.questionIds.length} questões</span>
                   {challenge.modifiers && challenge.modifiers.length > 0 && <span className="desafio-badge modifiers-badge">{challenge.modifiers.length} mod</span>}
                 </div>
-                {isAttempted && best ? <span className="desafio-card-score">★ {best.score} pts</span> : <span className="desafio-card-xp">+{challenge.xpBase} XP</span>}
+                {isAttempted && best ? <span className="desafio-card-score">★ {best.score} pts</span> : <span className="desafio-card-xp"><img src="/XP.png" alt="" className="desafio-xp-icon" /> +{challenge.xpBase} XP</span>}
               </div>
               <h4 className="desafio-card-title">{challenge.title}</h4>
               <p className="desafio-card-desc">{challenge.description}</p>

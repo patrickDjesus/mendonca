@@ -1037,12 +1037,21 @@ export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' 
   }
 
   const streak = await fetchStreak()
+  const today = new Date().toISOString().split('T')[0]
+
+  if (type === 'login' && streak.lastLoginDate === today) {
+    return
+  }
 
   const field = fieldMap[type]
   if (field) {
     const key = field as keyof UserStreak
     const current = (streak[key] as number) || 0
     ;(streak as unknown as Record<string, unknown>)[key] = current + 1
+  }
+
+  if (type === 'login') {
+    streak.lastLoginDate = today
   }
 
   if (type === 'video' && meta?.watchMinutes) {

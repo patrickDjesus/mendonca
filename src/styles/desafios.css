@@ -85,6 +85,12 @@
   color: #64b478;
 }
 
+.desafio-stat-xp-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
 .desafio-stat-icon.total {
   background: rgba(140, 120, 200, 0.12);
   color: #8c78c8;
@@ -332,6 +338,12 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.desafio-xp-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
 }
 
 .desafio-card-score {
