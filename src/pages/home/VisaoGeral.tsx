@@ -61,7 +61,6 @@ export default function VisaoGeral() {
   const { userName } = useOutletContext<{ userName: string }>()
   const [timeLeft, setTimeLeft] = useState(getTimeLeft)
   const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * philosophers.length))
-  const [quoteHovered, setQuoteHovered] = useState(false)
   const [goals, setGoals] = useState<Goal[]>([])
   const [goalInput, setGoalInput] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -81,12 +80,11 @@ export default function VisaoGeral() {
   }, [])
 
   useEffect(() => {
-    if (quoteHovered) return
     const quoteTimer = setInterval(() => {
       setQuoteIndex(prev => (prev + 1) % philosophers.length)
     }, 15000)
     return () => clearInterval(quoteTimer)
-  }, [quoteHovered])
+  }, [])
 
   const quote = philosophers[quoteIndex]
 
@@ -203,12 +201,7 @@ export default function VisaoGeral() {
           </div>
         </div>
 
-        <div className="card card-quote" onMouseEnter={() => setQuoteHovered(true)} onMouseLeave={() => setQuoteHovered(false)}>
-          <div className="quote-nav">
-            <button className="quote-nav-btn" onClick={() => setQuoteIndex(prev => (prev - 1 + philosophers.length) % philosophers.length)} type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-            </button>
-          </div>
+        <div className="card card-quote">
           <div className="quote-image-wrap">
             <img
               src={quote.url_foto}
@@ -220,11 +213,6 @@ export default function VisaoGeral() {
           <div className="quote-content">
             <p className="quote-text">"{quote.frase}"</p>
             <p className="quote-author">{quote.nome}</p>
-          </div>
-          <div className="quote-nav">
-            <button className="quote-nav-btn" onClick={() => setQuoteIndex(prev => (prev + 1) % philosophers.length)} type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-            </button>
           </div>
         </div>
       </div>
