@@ -2,10 +2,11 @@ import { createContext, useContext, useState, useCallback, useEffect, type React
 
 export interface Notification {
   id: string
-  type: 'level_up' | 'achievement' | 'info'
+  type: 'level_up' | 'achievement' | 'info' | 'xp_gain'
   title: string
   message: string
   icon?: string
+  xpAmount?: number
 }
 
 interface NotificationContextValue {
@@ -52,20 +53,25 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
 function NotificationToast({ notification, onDismiss }: { notification: Notification; onDismiss: () => void }) {
   useEffect(() => {
-    const timer = setTimeout(onDismiss, 5000)
+    const timer = setTimeout(onDismiss, 4000)
     return () => clearTimeout(timer)
   }, [onDismiss])
 
-  const borderColor = notification.type === 'level_up' ? '#daa03c' : notification.type === 'achievement' ? '#b450b4' : '#508cc8'
-  const bgIcon = notification.type === 'level_up' ? '#daa03c20' : notification.type === 'achievement' ? '#b450b420' : '#508cc820'
+  const borderColor = notification.type === 'xp_gain' ? '#daa03c' : notification.type === 'level_up' ? '#daa03c' : notification.type === 'achievement' ? '#b450b4' : '#508cc8'
 
   return (
     <div className="notif-toast" style={{ borderLeftColor: borderColor }}>
-      <div className="notif-icon" style={{ background: bgIcon, color: borderColor }}>
-        {notification.type === 'level_up' && '⬆'}
-        {notification.type === 'achievement' && (notification.icon || '🏆')}
-        {notification.type === 'info' && 'ℹ'}
-      </div>
+      {notification.type === 'xp_gain' ? (
+        <div className="notif-icon notif-icon-xp">
+          <img src="/XP.png" alt="XP" className="notif-xp-img" />
+        </div>
+      ) : (
+        <div className="notif-icon" style={{ background: `${borderColor}20`, color: borderColor }}>
+          {notification.type === 'level_up' && '⬆'}
+          {notification.type === 'achievement' && (notification.icon || '🏆')}
+          {notification.type === 'info' && 'ℹ'}
+        </div>
+      )}
       <div className="notif-body">
         <span className="notif-title">{notification.title}</span>
         <span className="notif-message">{notification.message}</span>

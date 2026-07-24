@@ -90,3 +90,13 @@
 .notif-close:hover {
   color: #c8b898;
 }
+
+.notif-icon-xp {
+  background: transparent;
+}
+
+.notif-xp-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}

@@ -500,7 +500,10 @@ export default function MasteryTest({ notes, videoTitle, videoDescription, onClo
                 <span className="mastery-breakdown-value">{writtenScore}</span>
               </div>
             </div>
-            <p className="mastery-final-xp">+50 XP ganhos!</p>
+            <div className="mastery-final-xp">
+              <img src="/XP.png" alt="XP" className="mastery-xp-img" />
+              <span>+50 XP</span>
+            </div>
             <div className="mastery-stage-actions">
               <button className="mastery-btn mastery-btn-primary" onClick={onClose} type="button">
                 Concluir

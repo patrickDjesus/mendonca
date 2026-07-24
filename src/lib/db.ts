@@ -879,11 +879,17 @@ export async function awardXp(amount: number): Promise<{ newXp: number; leveledU
   const newLevel = getLevel(newXp)
   streak.totalXp = newXp
   await upsertStreak(streak)
+  pushNotification({
+    type: 'xp_gain',
+    title: `+${amount} XP`,
+    message: 'XP ganho!',
+    xpAmount: amount,
+  })
   if (newLevel > oldLevel) {
     pushNotification({
       type: 'level_up',
       title: 'Subiu de nível!',
-      message: `Você agora é nível ${newLevel}! (+${amount} XP)`,
+      message: `Você agora é nível ${newLevel}!`,
     })
   }
   return { newXp, leveledUp: newLevel > oldLevel }

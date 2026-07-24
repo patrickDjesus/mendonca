@@ -2876,10 +2876,20 @@
 }
 
 .mastery-final-xp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   font-size: 14px;
   font-weight: 700;
   color: #daa03c;
   margin: 0 0 20px;
+}
+
+.mastery-xp-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
 }
 
 /* ── Mastery Responsive ────────────────────────────── */
