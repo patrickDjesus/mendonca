@@ -3,7 +3,7 @@ import { pushNotification } from '../components/NotificationProvider'
 import { ACHIEVEMENT_MAP } from '../data/achievements'
 import type { ChallengeQuestion, Challenge, ChallengeAttempt, UserStreak, ChallengeModifier } from '../types/challenge'
 import type { DocMeta, Subject } from '../types/doc'
-import type { VideoMeta, VideoNote } from '../types/video'
+import type { VideoMeta, VideoNote, MasteryStage } from '../types/video'
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -869,6 +869,7 @@ export const XP_REWARDS = {
   DAILY_LOGIN: 10,
   CREATE_NOTE: 5,
   COMPLETE_SIMULADO: 200,
+  MASTERY_TEST: 50,
 }
 
 export async function awardXp(amount: number): Promise<{ newXp: number; leveledUp: boolean }> {
@@ -1019,7 +1020,7 @@ export async function checkMasoquista(challengeId: string, isWin: boolean, curre
   }
 }
 
-export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' | 'simulado' | 'login', meta?: { watchMinutes?: number; subject?: string; simuladoYear?: number; simuladoScore?: number; docPages?: number; challengeWin?: boolean }): Promise<void> {
+export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' | 'simulado' | 'login' | 'mastery', meta?: { watchMinutes?: number; subject?: string; simuladoYear?: number; simuladoScore?: number; docPages?: number; challengeWin?: boolean }): Promise<void> {
   const fieldMap: Record<string, string> = {
     doc: 'docsCreated',
     video: 'videosWatched',
@@ -1247,4 +1248,23 @@ export async function adminResetUserStreak(userId: string): Promise<void> {
 export async function adminPurgeUserData(userId: string): Promise<void> {
   const { error } = await supabase.rpc('admin_purge_user_data', { target_user_id: userId })
   if (error) throw error
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MASTERY TEST (AI)
+   ═══════════════════════════════════════════════════════════ */
+
+export async function callMasteryTest(payload: {
+  notes: string[]
+  videoTitle: string
+  videoDescription: string
+  stage: MasteryStage
+  userAnswer?: string
+  questions?: Array<{ id: string; question: string; options?: string[]; correctIndex?: number }>
+}): Promise<Record<string, unknown>> {
+  const { data, error } = await supabase.functions.invoke('mastery-test', {
+    body: payload,
+  })
+  if (error) throw error
+  return data as Record<string, unknown>
 }

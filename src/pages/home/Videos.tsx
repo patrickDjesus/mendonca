@@ -4,6 +4,7 @@ import type { Subject } from '../../types/doc'
 import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import VideoPlayer, { type VideoPlayerHandle } from '../../components/VideoPlayer'
 import NotesPanel from '../../components/NotesPanel'
+import MasteryTest from '../../components/MasteryTest'
 import { extractYoutubeId } from '../../utils/youtube'
 import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, deleteAllVideoNotes, updateVideoDuration, logActivity, recordAction, fetchAllVideoProgress, upsertVideoProgress } from '../../lib/db'
 import '../../styles/videos.css'
@@ -48,6 +49,7 @@ export default function Videos() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [resumePrompt, setResumePrompt] = useState<{ video: VideoMeta; seconds: number } | null>(null)
+  const [showMasteryTest, setShowMasteryTest] = useState(false)
   const videoPlayerRef = useRef<VideoPlayerHandle>(null)
   const watchTimeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const scrollRefs = useRef<Map<string, HTMLDivElement>>(new Map())
@@ -597,6 +599,28 @@ export default function Videos() {
               {watchingVideo.description && (
                 <p className="video-watch-desc">{watchingVideo.description}</p>
               )}
+
+              {notes.length >= 3 ? (
+                <button
+                  className="mastery-test-btn"
+                  onClick={() => setShowMasteryTest(true)}
+                  type="button"
+                  title="A IA vai usar suas anotações como base para criar as questões. Mais anotações = teste mais preciso e personalizado."
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 15l-2 5l9-11h-7l2-5-9 11h7z" />
+                  </svg>
+                  Teste de Maestria
+                </button>
+              ) : notes.length > 0 ? (
+                <div className="mastery-test-btn mastery-test-btn-disabled" title="A IA usa suas anotações como base para criar e corrigir as questões. Quanto mais anotações, mais preciso e personalizado será o teste. Crie pelo menos 3 para desbloquear.">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  Teste de Maestria ({notes.length}/3 anotações)
+                </div>
+              ) : null}
             </div>
 
             <div className="video-watch-stats">
@@ -829,6 +853,14 @@ export default function Videos() {
             </div>
           </div>
         </div>
+      )}
+      {showMasteryTest && watchingVideo && (
+        <MasteryTest
+          notes={notes}
+          videoTitle={watchingVideo.title}
+          videoDescription={watchingVideo.description || ''}
+          onClose={() => setShowMasteryTest(false)}
+        />
       )}
     </div>
   )
