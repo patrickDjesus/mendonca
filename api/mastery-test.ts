@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || ''
 const GROQ_API_KEY = process.env.GROQ_API_KEY || ''
 
 interface RequestBody {
@@ -74,34 +73,12 @@ Responda APENAS com um JSON válido (sem markdown, sem \`\`\`), no formato:
   }
 }
 
-async function callOpenAI(system: string, user: string): Promise<string> {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-      temperature: 0.7,
-      max_tokens: 2000,
-    }),
-  })
-
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`OpenAI error: ${res.status} - ${err}`)
+async function callAI(system: string, user: string): Promise<string> {
+  if (!GROQ_API_KEY) {
+    throw new Error('GROQ_API_KEY não configurada')
   }
 
-  const data = await res.json()
-  return data.choices[0].message.content.trim()
-}
-
-async function callGroq(system: string, user: string): Promise<string> {
+  console.log('[mastery-test] Usando Groq (llama-3.3-70b-versatile)')
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -125,37 +102,8 @@ async function callGroq(system: string, user: string): Promise<string> {
   }
 
   const data = await res.json()
+  console.log('[mastery-test] ✓ Groq respondeu com sucesso')
   return data.choices[0].message.content.trim()
-}
-
-async function callAI(system: string, user: string): Promise<string> {
-  if (OPENAI_API_KEY) {
-    try {
-      console.log('[mastery-test] Tentando OpenAI (gpt-4o-mini)...')
-      const result = await callOpenAI(system, user)
-      console.log('[mastery-test] ✓ OpenAI respondeu com sucesso')
-      return result
-    } catch (e) {
-      console.warn('[mastery-test] ✗ OpenAI falhou:', e)
-    }
-  } else {
-    console.log('[mastery-test] OPENAI_API_KEY não configurada, pulando OpenAI')
-  }
-
-  if (GROQ_API_KEY) {
-    try {
-      console.log('[mastery-test] Tentando Groq (llama-3.3-70b-versatile)...')
-      const result = await callGroq(system, user)
-      console.log('[mastery-test] ✓ Groq respondeu com sucesso')
-      return result
-    } catch (e) {
-      console.warn('[mastery-test] ✗ Groq falhou:', e)
-    }
-  } else {
-    console.log('[mastery-test] GROQ_API_KEY não configurada, pulando Groq')
-  }
-
-  throw new Error('Nenhuma API de IA disponível')
 }
 
 function parseJsonResponse(raw: string): unknown {
@@ -194,7 +142,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(result)
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
-    console.error('mastery-test error:', message)
+    console.error('[mastery-test] ERRO FINAL:', message)
     return res.status(500).json({ error: message })
   }
 }
