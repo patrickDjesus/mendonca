@@ -1,5 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { createClient } from "npm:@supabase/supabase-js@2"
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || ""
 const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY") || ""
@@ -165,7 +164,7 @@ function parseJsonResponse(raw: string): unknown {
   return JSON.parse(cleaned)
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders })
   }
