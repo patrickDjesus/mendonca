@@ -39,6 +39,7 @@ export default function FloatingCalculator() {
   }, [])
 
   function handleButton(value: string) {
+    inputRef.current?.focus()
     if (value === 'C') {
       setDisplay('0')
       setExpression('')
