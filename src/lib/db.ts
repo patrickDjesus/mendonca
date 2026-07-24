@@ -1262,9 +1262,14 @@ export async function callMasteryTest(payload: {
   userAnswer?: string
   questions?: Array<{ id: string; question: string; options?: string[]; correctIndex?: number }>
 }): Promise<Record<string, unknown>> {
-  const { data, error } = await supabase.functions.invoke('mastery-test', {
-    body: payload,
+  const res = await fetch('/api/mastery-test', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
   })
-  if (error) throw error
-  return data as Record<string, unknown>
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Erro desconhecido' }))
+    throw new Error(err.error || `HTTP ${res.status}`)
+  }
+  return res.json()
 }
