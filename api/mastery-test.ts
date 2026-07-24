@@ -131,18 +131,28 @@ async function callGroq(system: string, user: string): Promise<string> {
 async function callAI(system: string, user: string): Promise<string> {
   if (OPENAI_API_KEY) {
     try {
-      return await callOpenAI(system, user)
+      console.log('[mastery-test] Tentando OpenAI (gpt-4o-mini)...')
+      const result = await callOpenAI(system, user)
+      console.log('[mastery-test] ✓ OpenAI respondeu com sucesso')
+      return result
     } catch (e) {
-      console.warn('OpenAI failed, trying Groq:', e)
+      console.warn('[mastery-test] ✗ OpenAI falhou:', e)
     }
+  } else {
+    console.log('[mastery-test] OPENAI_API_KEY não configurada, pulando OpenAI')
   }
 
   if (GROQ_API_KEY) {
     try {
-      return await callGroq(system, user)
+      console.log('[mastery-test] Tentando Groq (llama-3.3-70b-versatile)...')
+      const result = await callGroq(system, user)
+      console.log('[mastery-test] ✓ Groq respondeu com sucesso')
+      return result
     } catch (e) {
-      console.warn('Groq failed:', e)
+      console.warn('[mastery-test] ✗ Groq falhou:', e)
     }
+  } else {
+    console.log('[mastery-test] GROQ_API_KEY não configurada, pulando Groq')
   }
 
   throw new Error('Nenhuma API de IA disponível')
@@ -176,6 +186,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Parâmetros inválidos' })
     }
 
+    console.log(`[mastery-test] Stage: ${body.stage} | Video: "${body.videoTitle}"`)
     const { system, user: userPrompt } = buildPrompt(body)
     const raw = await callAI(system, userPrompt)
     const result = parseJsonResponse(raw)
