@@ -1091,6 +1091,7 @@ export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' 
     note: XP_REWARDS.CREATE_NOTE,
     simulado: XP_REWARDS.COMPLETE_SIMULADO,
     login: XP_REWARDS.DAILY_LOGIN,
+    mastery: XP_REWARDS.MASTERY_TEST,
   }
   const xp = xpMap[type]
   if (xp) await awardXp(xp)

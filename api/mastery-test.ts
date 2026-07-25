@@ -98,7 +98,8 @@ async function callAI(system: string, user: string): Promise<string> {
 
   if (!res.ok) {
     const err = await res.text()
-    throw new Error(`Groq error: ${res.status} - ${err}`)
+    console.error(`[mastery-test] Groq error ${res.status}:`, err)
+    throw new Error(`Erro ao comunicar com a IA (status ${res.status})`)
   }
 
   const data = await res.json()
@@ -111,7 +112,12 @@ function parseJsonResponse(raw: string): unknown {
   if (cleaned.startsWith('```')) {
     cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
   }
-  return JSON.parse(cleaned)
+  try {
+    return JSON.parse(cleaned)
+  } catch {
+    console.error('[mastery-test] Resposta da IA não é JSON válido:', cleaned.slice(0, 200))
+    throw new Error('Resposta da IA em formato inválido')
+  }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -143,6 +149,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     console.error('[mastery-test] ERRO FINAL:', message)
-    return res.status(500).json({ error: message })
+    const safeMessage = message.includes('Groq') || message.includes('status')
+      ? 'Erro ao comunicar com a IA. Tente novamente.'
+      : message
+    return res.status(500).json({ error: safeMessage })
   }
 }

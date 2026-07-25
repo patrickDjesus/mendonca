@@ -9,7 +9,7 @@ interface TooltipProps {
 
 export default function Tooltip({ children, content, position = 'top' }: TooltipProps) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
     if (!open) return
