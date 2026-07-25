@@ -1,74 +1,76 @@
 /* ================================
    Tooltip
    ================================ */
-.tooltip-wrap {
-  position: relative;
+
+/* ── Anchor (inline trigger wrapper) ── */
+.tooltip-anchor {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  vertical-align: middle;
+  position: relative;
 }
 
+/* ── Trigger "?" button ── */
 .tooltip-trigger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: rgba(180, 160, 130, 0.18);
-  color: #a09080;
-  font-size: 14px;
+  background: rgba(180, 160, 130, 0.15);
+  color: #9a8a78;
+  font-size: 11px;
   font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.15s ease;
+  transition: background 0.15s, color 0.15s;
   line-height: 1;
   user-select: none;
+  margin-left: 3px;
+  vertical-align: middle;
 }
 
-.tooltip-trigger:hover,
-.tooltip-trigger.active {
-  background: rgba(180, 160, 130, 0.3);
-  color: #c8b898;
+.tooltip-trigger:hover {
+  background: rgba(218, 160, 60, 0.25);
+  color: #c8a050;
 }
 
-/* ── Popup Box ── */
-.tooltip-box {
+/* ── Popup (portal, appended to body) ── */
+.tooltip-popup {
   position: absolute;
-  z-index: 9999;
+  z-index: 99999;
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: rgba(42, 34, 28, 0.94);
-  border: 1px solid rgba(200, 180, 140, 0.15);
-  border-radius: 10px;
-  padding: 14px 16px;
+  gap: 14px;
+  background: rgba(38, 30, 24, 0.96);
+  border: 1px solid rgba(200, 180, 140, 0.12);
+  border-radius: 12px;
+  padding: 14px 18px;
   width: max-content;
-  max-width: 380px;
+  max-width: 400px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(218, 160, 60, 0.06);
   pointer-events: none;
-  animation: tooltipFadeIn 0.15s ease;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  animation: tooltipPopIn 0.12s ease;
 }
 
-.tooltip-box::after {
+/* ── Arrow ── */
+.tooltip-popup::after {
   content: '';
   position: absolute;
   width: 8px;
   height: 8px;
-  background: rgba(42, 34, 28, 0.94);
-  border: 1px solid rgba(200, 180, 140, 0.15);
+  background: rgba(38, 30, 24, 0.96);
+  border: 1px solid rgba(200, 180, 140, 0.12);
   transform: rotate(45deg);
 }
 
-/* ── Arrow by position ── */
-.tooltip-top {
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
+/* ── Position: top ── */
+.tooltip-popup-top {
+  transform: translateX(-50%) translateY(calc(-100% - 10px));
 }
-
-.tooltip-top::after {
+.tooltip-popup-top::after {
   bottom: -5px;
   left: 50%;
   margin-left: -4px;
@@ -76,13 +78,11 @@
   border-left: none;
 }
 
-.tooltip-bottom {
-  top: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
+/* ── Position: bottom ── */
+.tooltip-popup-bottom {
+  transform: translateX(-50%) translateY(10px);
 }
-
-.tooltip-bottom::after {
+.tooltip-popup-bottom::after {
   top: -5px;
   left: 50%;
   margin-left: -4px;
@@ -90,104 +90,103 @@
   border-right: none;
 }
 
-.tooltip-left {
-  right: calc(100% + 10px);
-  top: 50%;
-  transform: translateY(-50%);
+/* ── Position: left ── */
+.tooltip-popup-left {
+  transform: translateY(-50%) translateX(calc(-100% - 10px));
 }
-
-.tooltip-left::after {
-  left: -5px;
+.tooltip-popup-left::after {
+  right: -5px;
   top: 50%;
   margin-top: -4px;
   border-bottom: none;
   border-left: none;
 }
 
-.tooltip-right {
-  left: calc(100% + 10px);
-  top: 50%;
-  transform: translateY(-50%);
+/* ── Position: right ── */
+.tooltip-popup-right {
+  transform: translateY(-50%) translateX(10px);
 }
-
-.tooltip-right::after {
-  right: -5px;
+.tooltip-popup-right::after {
+  left: -5px;
   top: 50%;
   margin-top: -4px;
   border-top: none;
   border-right: none;
 }
 
-/* ── Big "?" Icon (left side) ── */
-.tooltip-icon {
+/* ── Big "?" icon (left side of popup) ── */
+.tooltip-popup-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
   border-radius: 50%;
-  background: rgba(218, 160, 60, 0.18);
+  background: rgba(218, 160, 60, 0.15);
   color: #daa03c;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
+  font-family: 'DM Sans', sans-serif;
   line-height: 1;
-  flex-shrink: 0;
 }
 
-/* ── Text (right side) ── */
-.tooltip-text {
+/* ── Text (right side of popup) ── */
+.tooltip-popup-text {
   flex: 1;
   font-size: 13px;
-  line-height: 1.5;
-  color: #d0c8b8;
+  line-height: 1.55;
+  color: #ccc4b4;
   font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.01em;
 }
 
-/* ── Animations ── */
-@keyframes tooltipFadeIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* ── Animation ── */
+@keyframes tooltipPopIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(calc(-100% - 6px)) scale(0.97); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(calc(-100% - 10px)) scale(1); }
 }
 
-@keyframes tooltipFadeInBottom {
-  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+.tooltip-popup-bottom {
+  animation-name: tooltipPopInBottom;
+}
+@keyframes tooltipPopInBottom {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px) scale(0.97); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(10px) scale(1); }
 }
 
-@keyframes tooltipFadeInLeft {
-  from { opacity: 0; transform: translateY(-50%) translateX(4px); }
-  to { opacity: 1; transform: translateY(-50%) translateX(0); }
+.tooltip-popup-left {
+  animation-name: tooltipPopInLeft;
+}
+@keyframes tooltipPopInLeft {
+  from { opacity: 0; transform: translateY(-50%) translateX(calc(-100% - 6px)) scale(0.97); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(calc(-100% - 10px)) scale(1); }
 }
 
-@keyframes tooltipFadeInRight {
-  from { opacity: 0; transform: translateY(-50%) translateX(-4px); }
-  to { opacity: 1; transform: translateY(-50%) translateX(0); }
+.tooltip-popup-right {
+  animation-name: tooltipPopInRight;
 }
-
-.tooltip-left { animation-name: tooltipFadeInLeft; }
-.tooltip-right { animation-name: tooltipFadeInRight; }
-.tooltip-bottom { animation-name: tooltipFadeInBottom; }
+@keyframes tooltipPopInRight {
+  from { opacity: 0; transform: translateY(-50%) translateX(6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(10px) scale(1); }
+}
 
 /* ── Mobile ── */
 @media (max-width: 640px) {
-  .tooltip-box {
+  .tooltip-popup {
     max-width: 280px;
-    padding: 10px 12px;
+    padding: 12px 14px;
     gap: 10px;
   }
-  .tooltip-icon {
-    flex: 0 0 36px;
-    width: 36px;
-    height: 36px;
-    font-size: 18px;
+  .tooltip-popup-icon {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    font-size: 17px;
   }
-  .tooltip-text {
-    font-size: 12px;
-  }
-  .tooltip-trigger {
-    width: 24px;
-    height: 24px;
+  .tooltip-popup-text {
     font-size: 12px;
   }
 }
