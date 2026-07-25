@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import type { ChallengeQuestion, ChallengeOption } from '../../types/challenge'
 import type { Subject } from '../../types/doc'
 import { recordAction } from '../../lib/db'
+import Tooltip from '../../components/Tooltip'
 import '../../styles/simulados.css'
 
 const API_BASE = import.meta.env.DEV ? '/enem-api' : 'https://api.enem.dev/v1'
@@ -461,7 +462,7 @@ export default function Simulados() {
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
             </svg>
-            <h1 className="simulados-title">Simulados ENEM</h1>
+            <h1 className="simulados-title">Simulados ENEM <Tooltip content="Questões reais do ENEM organizadas por ano. Pratique no seu ritmo, sem limite de tempo." /></h1>
           </div>
           <span className="simulados-count">{ENEM_YEARS.length} provas disponíveis</span>
         </div>
@@ -501,7 +502,7 @@ export default function Simulados() {
                   <div className="simulado-card-top">
                     <span className="simulado-card-year">{year}</span>
                     {idx < 5 ? (
-                      <span className={`simulado-card-badge ${savedExam ? 'resumable' : 'available'}`}>{savedExam ? 'Em andamento' : 'Disponível'}</span>
+                      <span className={`simulado-card-badge ${savedExam ? 'resumable' : 'available'}`}>{savedExam ? 'Em andamento' : 'Disponível'} <Tooltip content={savedExam ? 'Você começou este simulado e pode continuar de onde parou.' : 'Clique para iniciar este simulado. Suas respostas são salvas automaticamente.'} /></span>
                     ) : (
                       <span className="simulado-card-badge coming">Em breve</span>
                     )}

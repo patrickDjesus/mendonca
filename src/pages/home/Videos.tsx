@@ -7,6 +7,7 @@ import NotesPanel from '../../components/NotesPanel'
 import MasteryTest from '../../components/MasteryTest'
 import { extractYoutubeId } from '../../utils/youtube'
 import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, deleteAllVideoNotes, updateVideoDuration, logActivity, recordAction, fetchAllVideoProgress, upsertVideoProgress } from '../../lib/db'
+import Tooltip from '../../components/Tooltip'
 import '../../styles/videos.css'
 
 import { formatTimestamp } from '../../utils/format'
@@ -605,20 +606,21 @@ export default function Videos() {
                   className="mastery-test-btn"
                   onClick={() => setShowMasteryTest(true)}
                   type="button"
-                  title="A IA vai usar suas anotações como base para criar as questões. Mais anotações = teste mais preciso e personalizado."
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 15l-2 5l9-11h-7l2-5-9 11h7z" />
                   </svg>
                   Teste de Maestria
+                  <Tooltip content="A IA usa suas anotações para gerar um teste personalizado de 3 etapas: resumo, múltipla escolha e questões abertas. Vale +50 XP!" />
                 </button>
               ) : notes.length > 0 ? (
-                <div className="mastery-test-btn mastery-test-btn-disabled" title="A IA usa suas anotações como base para criar e corrigir as questões. Quanto mais anotações, mais preciso e personalizado será o teste. Crie pelo menos 3 para desbloquear.">
+                <div className="mastery-test-btn mastery-test-btn-disabled">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
                   Teste de Maestria ({notes.length}/3 anotações)
+                  <Tooltip content="Crie pelo menos 3 anotações neste vídeo para desbloquear o Teste de Maestria. Quanto mais anotações, mais preciso o teste." />
                 </div>
               ) : null}
             </div>

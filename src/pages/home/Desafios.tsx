@@ -7,6 +7,7 @@ import QuestionBuilder from '../../components/QuestionBuilder'
 import ChallengeBuilder from '../../components/ChallengeBuilder'
 import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, deleteQuestion, createChallenge, updateChallenge, deleteChallenge, createAttempt, logActivity, recordAction, checkModeHardcore, checkMasoquista } from '../../lib/db'
 import { supabase } from '../../lib/supabase'
+import Tooltip from '../../components/Tooltip'
 import '../../styles/desafios.css'
 
 const EMPTY_STREAK: UserStreak = { currentStreak: 0, longestStreak: 0, lastChallengeDate: null, totalXp: 0, totalWatchSeconds: 0, videosWatched: 0, docsCreated: 0, challengesCompleted: 0, simuladosCompleted: 0, notesCreated: 0, loginDays: 0, lastLoginDate: null, videosWatchedToday: 0, videosWatchedDate: null, watchedSubjects: [], completedSimuladoYears: [], bestSimuladoScore: 0, simuladosThisWeek: 0, lastSimuladoWeek: null }
@@ -645,15 +646,15 @@ export default function Desafios() {
       <div className="desafios-stats">
         <div className="desafio-stat-card">
           <div className="desafio-stat-icon streak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg></div>
-          <div className="desafio-stat-info"><span className="desafio-stat-value">{streak.currentStreak}</span><span className="desafio-stat-label">Sequência</span></div>
+          <div className="desafio-stat-info"><span className="desafio-stat-value">{streak.currentStreak}</span><span className="desafio-stat-label">Sequência <Tooltip content="Dias consecutivos que você completou pelo menos um desafio. Mantenha a sequência para ganhar mais XP!" /></span></div>
         </div>
         <div className="desafio-stat-card">
           <div className="desafio-stat-icon xp"><img src="/XP.png" alt="XP" className="desafio-stat-xp-img" /></div>
-          <div className="desafio-stat-info"><span className="desafio-stat-value">{streak.totalXp.toLocaleString()}</span><span className="desafio-stat-label">XP total</span></div>
+          <div className="desafio-stat-info"><span className="desafio-stat-value">{streak.totalXp.toLocaleString()}</span><span className="desafio-stat-label">XP total <Tooltip content="Pontos de experiência ganhos ao estudar. Quanto mais XP, mais alto seu nível e rank." /></span></div>
         </div>
         <div className="desafio-stat-card">
           <div className="desafio-stat-icon total"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg></div>
-          <div className="desafio-stat-info"><span className="desafio-stat-value">{attempts.length}/{challenges.length}</span><span className="desafio-stat-label">Resolvidos</span></div>
+          <div className="desafio-stat-info"><span className="desafio-stat-value">{attempts.length}/{challenges.length}</span><span className="desafio-stat-label">Resolvidos <Tooltip content="Quantidade de desafios que você já completou pelo menos uma vez." /></span></div>
         </div>
       </div>
 
@@ -757,7 +758,7 @@ export default function Desafios() {
                   <span className="desafio-badge questions-badge">{challenge.questionIds.length} questões</span>
                   {challenge.modifiers && challenge.modifiers.length > 0 && <span className="desafio-badge modifiers-badge">{challenge.modifiers.length} mod</span>}
                 </div>
-                {isAttempted && best ? <span className="desafio-card-score">★ {best.score} pts</span> : <span className="desafio-card-xp"><img src="/XP.png" alt="" className="desafio-xp-icon" /> +{challenge.xpBase} XP</span>}
+                {isAttempted && best ? <span className="desafio-card-score">★ {best.score} pts</span> : <span className="desafio-card-xp"><img src="/XP.png" alt="" className="desafio-xp-icon" /> +{challenge.xpBase} XP <Tooltip content="XP que você ganha ao concluir este desafio. Quanto mais difícil, mais XP." /></span>}
               </div>
               <h4 className="desafio-card-title">{challenge.title}</h4>
               <p className="desafio-card-desc">{challenge.description}</p>

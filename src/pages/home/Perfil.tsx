@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { fetchMyCounts, fetchRecentActivities, fetchUserAchievements, type Activity, getLevelProgress, getRank } from '../../lib/db'
 import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES, CATEGORY_ICONS } from '../../data/achievements'
 import { timeAgo } from '../../utils/format'
+import Tooltip from '../../components/Tooltip'
 import '../../styles/perfil.css'
 
 function getInitials(name: string): string {
@@ -132,7 +133,7 @@ export default function Perfil() {
         {/* Rank + Level Bar */}
         <div className="perfil-rank-section">
           <div className="perfil-rank-label">
-            <span className="perfil-rank-title" style={{ color: rank.color }}>{rank.title}</span>
+            <span className="perfil-rank-title" style={{ color: rank.color }}>{rank.title} <Tooltip content="Seu rank é baseado no total de XP acumulado. Quanto mais estudar, mais alto o rank." /></span>
             <span className="perfil-rank-xp">{counts.xp.toLocaleString('pt-BR')} XP</span>
           </div>
           <div className="perfil-level-bar">
@@ -155,7 +156,7 @@ export default function Perfil() {
             </svg>
           </div>
           <div className="perfil-stat-value">{counts.streak}</div>
-          <div className="perfil-stat-label">Sequência</div>
+          <div className="perfil-stat-label">Sequência <Tooltip content="Dias consecutivos de estudo. Mantenha a sequência para ganhar mais XP!" /></div>
         </div>
 
         <div className="perfil-stat-card">
@@ -177,7 +178,7 @@ export default function Perfil() {
             </svg>
           </div>
           <div className="perfil-stat-value">{counts.videos}</div>
-          <div className="perfil-stat-label">Vídeos</div>
+          <div className="perfil-stat-label">Vídeos <Tooltip content="Total de vídeos assistidos na plataforma." /></div>
         </div>
 
         <div className="perfil-stat-card">
@@ -187,7 +188,7 @@ export default function Perfil() {
             </svg>
           </div>
           <div className="perfil-stat-value">{counts.challenges}</div>
-          <div className="perfil-stat-label">Desafios</div>
+          <div className="perfil-stat-label">Desafios <Tooltip content="Total de desafios completados com sucesso." /></div>
         </div>
       </div>
 
@@ -201,7 +202,7 @@ export default function Perfil() {
             </svg>
             Conquistas
           </h2>
-          <span className="perfil-achievement-bonus">+{totalBonusPct}% XP</span>
+            <span className="perfil-achievement-bonus">+{totalBonusPct}% XP <Tooltip content="Cada conquista desbloqueada concede +10% de bônus XP em todas as ações." /></span>
         </div>
 
         <div className="perfil-achievement-cats">

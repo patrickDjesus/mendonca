@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import philosophers from '../../data/philosophers.json'
 import { fetchMyCounts, fetchRecentActivities, type Activity, fetchGoals, createGoal, updateGoal, deleteGoal as deleteGoalDb, type Goal } from '../../lib/db'
 import { timeAgo } from '../../utils/format'
+import Tooltip from '../../components/Tooltip'
 
 const ENEM_DATE = new Date('2026-11-08T13:30:00-03:00')
 
@@ -220,7 +221,10 @@ export default function VisaoGeral() {
       {/* Row 2: Activities (tall) + Stats & Goals (stacked) */}
       <div className="dash-row-2">
         <div className="card card-activities">
-          <h3 className="card-title">Atividades Recentes</h3>
+            <h3 className="card-title">
+              Atividades Recentes
+              <Tooltip content="Suas últimas ações na plataforma, como estudos, desafios e documentos criados." />
+            </h3>
           <div className="act-list">
             {activities.length === 0 && (
               <p className="goals-empty">Nenhuma atividade ainda.</p>
@@ -237,7 +241,10 @@ export default function VisaoGeral() {
 
         <div className="dash-row-2-right">
           <div className="card card-stats">
-            <h3 className="card-title">Seu Progresso</h3>
+            <h3 className="card-title">
+              Seu Progresso
+              <Tooltip content="Resumo do total de atividades realizadas na plataforma." />
+            </h3>
             <div className="stats-grid">
               <div className="stat-box">
                 <div className="stat-icon-wrap" style={{ background: 'rgba(80,140,200,0.15)', color: '#508cc8' }}>
@@ -272,7 +279,10 @@ export default function VisaoGeral() {
           </div>
 
           <div className="card card-goals">
-            <h3 className="card-title">Objetivos</h3>
+            <h3 className="card-title">
+              Objetivos
+              <Tooltip content="Defina metas de estudo e acompanhe seu progresso. Marque como concluída ao atingir." />
+            </h3>
             <form className="goals-form" onSubmit={addGoal}>
               <input
                 type="text"
