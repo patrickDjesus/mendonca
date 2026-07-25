@@ -7,6 +7,7 @@ import type { DocMeta } from '../types/doc'
 interface DocEditorProps {
   doc: DocMeta
   onSave: (doc: DocMeta) => void
+  onAutoSave: (doc: DocMeta) => void
   onCancel: () => void
 }
 
@@ -32,7 +33,7 @@ function ToolbarSep() {
   return <div className="doc-toolbar-sep" />
 }
 
-export default function DocEditor({ doc, onSave, onCancel }: DocEditorProps) {
+export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEditorProps) {
   const editor = useCreateBlockNote({
     initialContent: doc.content && doc.content.length > 0
       ? doc.content
@@ -109,7 +110,7 @@ export default function DocEditor({ doc, onSave, onCancel }: DocEditorProps) {
           title = text.map((b: { type: string; text?: string }) => ('text' in b && b.text ? b.text : '')).join('')
         }
       }
-      onSave({
+      onAutoSave({
         ...doc,
         title: title || doc.title,
         content: blocks,
@@ -117,7 +118,7 @@ export default function DocEditor({ doc, onSave, onCancel }: DocEditorProps) {
         updatedAt: Date.now(),
       })
     }, 3000)
-  }, [editor, doc, onSave, paperStyle])
+  }, [editor, doc, onAutoSave, paperStyle])
 
   const fmt = {
     toggleBold: () => editor.toggleStyles({ bold: true }),

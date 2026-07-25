@@ -86,6 +86,17 @@ export default function Documentos() {
     }
   }, [])
 
+  const handleAutoSave = useCallback(async (updated: DocMeta) => {
+    setMyDocs(prev => prev.map(d => d.id === updated.id ? updated : d))
+    try {
+      await updateDoc(updated)
+      if (updated.content) checkMaterialOuro(updated.content).catch(() => {})
+    } catch (e) {
+      console.error('Erro ao auto-salvar documento:', e)
+      setMyDocs(myDocsRef.current)
+    }
+  }, [])
+
   const handleDelete = useCallback(async (id: string) => {
     setMyDocs(prev => prev.filter(d => d.id !== id))
     setDeleteTarget(null)
@@ -285,7 +296,7 @@ export default function Documentos() {
   if (editingDoc) {
     return (
       <Suspense fallback={<div className="doc-editor-overlay"><div className="doc-editor-loading">Carregando editor...</div></div>}>
-        <DocEditor doc={editingDoc} onSave={handleSave} onCancel={() => setEditingDoc(null)} />
+        <DocEditor doc={editingDoc} onSave={handleSave} onAutoSave={handleAutoSave} onCancel={() => setEditingDoc(null)} />
       </Suspense>
     )
   }
