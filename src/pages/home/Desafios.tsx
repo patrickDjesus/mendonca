@@ -197,9 +197,11 @@ export default function Desafios() {
   useEffect(() => { currentQIndexRef.current = currentQIndex }, [currentQIndex])
 
   const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const challengeEndedRef = useRef(false)
 
   const startChallenge = useCallback((challenge: Challenge) => {
     setActiveChallenge(challenge); setCurrentQIndex(0); setAnswers([]); resetQuizState(); setLastResult(null); setView('quiz')
+    challengeEndedRef.current = false
     if (timerRef.current) clearInterval(timerRef.current)
     if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current)
     startTimeRef.current = Date.now(); setElapsed(0)
@@ -366,6 +368,36 @@ export default function Desafios() {
 
   useEffect(() => { if (view === 'quiz') { const q = getCurrentQuestion(); if (q?.type === 'ordem' && dragOrder.length === 0) setDragOrder(shuffleArray(q.orderItems.map(i => i.id))) } }, [view, getCurrentQuestion, dragOrder.length])
 
+  useEffect(() => {
+    if (view !== 'quiz' || !activeChallenge) return
+    const hasCronometroEmChamas = activeChallenge.modifiers?.includes('cronometro_em_chamas')
+    const timeBudgetMs = activeChallenge.questionIds.length * 30_000 * (hasCronometroEmChamas ? 0.5 : 1)
+    if (elapsed < timeBudgetMs) return
+    if (challengeEndedRef.current) return
+    challengeEndedRef.current = true
+    stopTimer()
+    const totalTimeMs = timeBudgetMs
+    const curAnswers = answersRef.current
+    const correctCount = curAnswers.filter(a => a.correct).length
+    const wrongCount = curAnswers.length - correctCount
+    const { score, xpEarned } = calculateScore(correctCount, wrongCount, totalTimeMs, activeChallenge.questionIds.length, activeChallenge.difficulty)
+    const isReplay = attemptIds.has(activeChallenge.id)
+    const finalXp = isReplay ? Math.round(xpEarned * 0.2) : xpEarned
+    const attempt: ChallengeAttempt = { id: crypto.randomUUID(), challengeId: activeChallenge.id, answers: [...curAnswers], totalTimeMs, correctCount, wrongCount, score, xpEarned: finalXp, completedAt: Date.now() }
+    setAttempts(prev => [...prev, attempt]); setLastResult(attempt)
+    const isWin = correctCount > wrongCount
+    setStreak(prev => ({ ...prev, currentStreak: isWin ? prev.currentStreak + 1 : 0, longestStreak: isWin ? Math.max(prev.longestStreak, prev.currentStreak + 1) : prev.longestStreak, lastChallengeDate: new Date().toISOString().split('T')[0] }))
+    createAttempt(attempt).catch(() => {})
+    logActivity('challenge_done', `${isWin ? 'Acertou' : 'Errou'} "${activeChallenge.title}" (${correctCount}/${activeChallenge.questionIds.length}) - Tempo esgotado`, 'challenge', isWin ? '#b450b4' : '#c86450').catch(() => {})
+    recordAction('challenge', { challengeWin: isWin, challengeXp: finalXp }).catch(() => {})
+    checkModeHardcore(activeChallenge.id, correctCount > wrongCount, activeChallenge.modifiers?.length || 0).catch(() => {})
+    checkMasoquista(activeChallenge.id, isWin, attempt.id).catch(() => {})
+    setView('results')
+    stopMemoryTimer()
+    clearSavedQuiz()
+    if (autoSaveTimerRef.current) { clearInterval(autoSaveTimerRef.current); autoSaveTimerRef.current = null }
+  }, [elapsed, view, activeChallenge, stopTimer, stopMemoryTimer, attemptIds])
+
   /* ═══════════════════════════════════════════════
      QUIZ VIEW
      ═══════════════════════════════════════════════ */
@@ -386,9 +418,38 @@ export default function Desafios() {
     const renderQuizBody = () => {
       return (
         <>
-          {q.content && <p className="quiz-content-text">{q.content}</p>}
+          {q.content && q.type !== 'completar' && <p className="quiz-content-text">{q.content}</p>}
           {q.imageUrl && <img className="quiz-image" src={q.imageUrl} alt="" />}
         </>
+      )
+    }
+
+    const renderCompletarInline = () => {
+      const content = q.content || ''
+      const parts = content.split(/(_{2,})/)
+      const blankPattern = /^_+$/
+      let blankIdx = 0
+      return (
+        <div className="quiz-fill-text">
+          {parts.map((part, i) => {
+            if (blankPattern.test(part)) {
+              const blank = q.blanks[blankIdx]
+              blankIdx++
+              if (!blank) return <span key={i}>{part}</span>
+              const val = fillAnswers[blank.id] || ''
+              let cls = 'quiz-fill-input'
+              if (showFeedback) {
+                cls += val.trim().toLowerCase() === blank.answer.toLowerCase() ? ' correct' : ' wrong'
+              }
+              return (
+                <span key={blank.id} className="quiz-fill-blank">
+                  <input className={cls} value={val} onChange={e => setFillAnswers(prev => ({ ...prev, [blank.id]: e.target.value }))} placeholder="..." readOnly={showFeedback} />
+                </span>
+              )
+            }
+            return <span key={i}>{part}</span>
+          })}
+        </div>
       )
     }
 
@@ -399,7 +460,7 @@ export default function Desafios() {
         case 'verdadeiro_falso': return (<div className="quiz-tf-list">{q.statements.map(st => (<div key={st.id} className="quiz-tf-row"><p className="quiz-tf-text">{st.text}</p><div className="quiz-tf-btns"><button className={`quiz-tf-btn ${tfAnswers[st.id] === 'true' ? 'selected' : ''}`} onClick={() => setTfAnswers(prev => ({ ...prev, [st.id]: 'true' }))} type="button">V</button><button className={`quiz-tf-btn ${tfAnswers[st.id] === 'false' ? 'selected' : ''}`} onClick={() => setTfAnswers(prev => ({ ...prev, [st.id]: 'false' }))} type="button">F</button></div></div>))}</div>)
         case 'aberta': return (<div className="quiz-open"><textarea className="qb-textarea" value={openText} onChange={e => setOpenText(e.target.value)} placeholder="Digite sua resposta..." rows={4} readOnly={showFeedback} />{showFeedback && q.openExpectedText && <div className="quiz-open-expected"><strong>Resposta esperada:</strong> {q.openExpectedText}</div>}{showFeedback && !selfEval && (<div className="quiz-self-eval"><p className="quiz-self-eval-label">Você acertou?</p><div className="quiz-self-eval-btns"><button className="quiz-self-eval-btn correct" onClick={() => handleSelfEval('correct')} type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>Acertei</button><button className="quiz-self-eval-btn wrong" onClick={() => handleSelfEval('wrong')} type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>Errei</button></div></div>)}{showFeedback && selfEval && (<div className={`quiz-self-eval-result ${selfEval}`}><span className="quiz-self-eval-result-icon">{selfEval === 'correct' ? '✓' : '✗'}</span> {selfEval === 'correct' ? 'Marcado como certo' : 'Marcado como errado'}</div>)}</div>)
         case 'ordem': return (<div className="quiz-order-list">{dragOrder.map((id, idx) => { const item = q.orderItems.find(oi => oi.id === id); return item ? (<div key={id} className="quiz-order-item"><span className="quiz-order-num">{idx + 1}°</span><span>{item.text}</span></div>) : null })}</div>)
-        case 'completar': return (<div className="quiz-fill-list">{q.blanks.map((blank, idx) => (<div key={blank.id} className="quiz-fill-row"><span className="quiz-fill-label">Lacuna {idx + 1}:</span><input className="qb-input" value={fillAnswers[blank.id] || ''} onChange={e => setFillAnswers(prev => ({ ...prev, [blank.id]: e.target.value }))} placeholder="Sua resposta..." /></div>))}</div>)
+        case 'completar': return renderCompletarInline()
       }
     }
 
@@ -935,16 +996,23 @@ export default function Desafios() {
                           </div>
                         )}
 
-                        {q.type === 'completar' && q.blanks.length > 0 && (
-                          <div className="qv-options-preview">
-                            {q.blanks.map((blank, bi) => (
-                              <div key={blank.id} className="qv-option-row correct">
-                                <span className="qv-fill-label">Lacuna {bi + 1}</span>
-                                <span className="qv-option-text">→ {blank.answer}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        {q.type === 'completar' && q.blanks.length > 0 && q.content && (() => {
+                          const parts = q.content.split(/(_{2,})/)
+                          const blankPat = /^_+$/
+                          let bi = 0
+                          return (
+                            <div className="quiz-fill-text qv-fill-inline">
+                              {parts.map((part, pi) => {
+                                if (blankPat.test(part)) {
+                                  const blank = q.blanks[bi]
+                                  bi++
+                                  return blank ? <span key={blank.id} className="quiz-fill-blank"><span className="quiz-fill-input correct" style={{ cursor: 'default' }}>{blank.answer}</span></span> : <span key={pi}>{part}</span>
+                                }
+                                return <span key={pi}>{part}</span>
+                              })}
+                            </div>
+                          )
+                        })()}
 
                         {q.explanation && (
                           <div className="qv-explanation">

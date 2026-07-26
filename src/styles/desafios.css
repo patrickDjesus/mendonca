@@ -5,6 +5,8 @@
   padding: 32px;
   min-height: 100vh;
   width: 100%;
+  overflow: hidden;
+  min-width: 0;
 }
 
 /* ── Header ────────────────────────────────────────── */
@@ -1492,6 +1494,7 @@
   font-size: 32px;
   font-weight: 700;
   line-height: 1.1;
+  color: #ffffff;
 }
 
 .results-stat-value.correct {
@@ -1624,6 +1627,8 @@
 .qb-container,
 .cb-container {
   animation: builderIn 0.25s ease both;
+  overflow: hidden;
+  min-width: 0;
 }
 
 @keyframes builderIn {
@@ -2070,6 +2075,8 @@
   background: rgba(200, 180, 140, 0.03);
   cursor: pointer;
   transition: all 0.15s ease;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .cb-question-item:hover {
@@ -2592,42 +2599,58 @@
 /* ── Fill-in blanks in quiz ────────────────────────── */
 
 .quiz-fill-text {
-  font-size: 15px;
-  color: #b8a890;
-  line-height: 2;
+  font-size: 16px;
+  color: #c8b8a0;
+  line-height: 2.2;
+  padding: 8px 0;
 }
 
 .quiz-fill-blank {
   display: inline-flex;
   align-items: center;
-  margin: 0 4px;
+  margin: 0 2px;
+  vertical-align: baseline;
 }
 
 .quiz-fill-input {
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(200, 180, 140, 0.15);
-  background: rgba(200, 180, 140, 0.04);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1.5px dashed rgba(200, 180, 140, 0.25);
+  background: rgba(200, 180, 140, 0.06);
   color: #e8dcc8;
-  font-size: 14px;
+  font-size: 15px;
   font-family: inherit;
   outline: none;
-  min-width: 100px;
-  transition: border-color 0.15s ease;
+  min-width: 90px;
+  max-width: 220px;
+  width: auto;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  text-align: center;
+}
+
+.quiz-fill-input::placeholder {
+  color: rgba(200, 180, 140, 0.25);
 }
 
 .quiz-fill-input:focus {
-  border-color: rgba(100, 180, 120, 0.3);
+  border-color: rgba(100, 180, 120, 0.4);
+  border-style: solid;
+  background: rgba(100, 180, 120, 0.06);
 }
 
 .quiz-fill-input.correct {
-  border-color: rgba(100, 180, 120, 0.4);
-  background: rgba(100, 180, 120, 0.08);
+  border-color: rgba(100, 180, 120, 0.5);
+  border-style: solid;
+  background: rgba(100, 180, 120, 0.1);
+  color: #a0e0a0;
 }
 
 .quiz-fill-input.wrong {
-  border-color: rgba(200, 80, 80, 0.3);
-  background: rgba(200, 80, 80, 0.06);
+  border-color: rgba(200, 80, 80, 0.4);
+  border-style: solid;
+  background: rgba(200, 80, 80, 0.08);
+  color: #e09090;
+  text-decoration: line-through;
 }
 
 /* ── Crossword in quiz ─────────────────────────────── */
@@ -3859,6 +3882,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .cb-section-card {
@@ -3866,6 +3891,8 @@
   border-radius: 14px;
   background: rgba(200, 180, 140, 0.03);
   border: 1px solid rgba(200, 180, 140, 0.06);
+  overflow: hidden;
+  min-width: 0;
 }
 
 .cb-section-title {
@@ -3886,6 +3913,8 @@
   justify-content: space-between;
   align-items: center;
   padding-top: 8px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* ═══════════════════════════════════════════════
