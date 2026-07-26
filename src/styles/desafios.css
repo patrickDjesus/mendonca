@@ -318,7 +318,7 @@
 .stamp-text {
   color: rgba(100, 180, 120, 1);
   border-color: rgba(100, 180, 120, 0.6);
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.5);
   opacity: 1;
   transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), font-size 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -326,7 +326,7 @@
 .stamp-hover {
   color: rgba(100, 200, 130, 1);
   border-color: rgba(100, 200, 130, 0.9);
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(0, 0, 0, 0.55);
   opacity: 0;
   font-size: 22px;
   transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), font-size 0.5s cubic-bezier(0.4, 0, 0.2, 1);
