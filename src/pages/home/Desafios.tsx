@@ -4,6 +4,7 @@ import { QUESTION_TYPE_LABELS } from '../../types/challenge'
 import type { Subject } from '../../types/doc'
 import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import QuestionBuilder from '../../components/QuestionBuilder'
+import QuestionImporter from '../../components/QuestionImporter'
 import ChallengeBuilder from '../../components/ChallengeBuilder'
 import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, deleteQuestion, createChallenge, updateChallenge, deleteChallenge, createAttempt, logActivity, recordAction, checkModeHardcore, checkMasoquista } from '../../lib/db'
 import { supabase } from '../../lib/supabase'
@@ -66,7 +67,7 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a
 }
 
-type View = 'list' | 'quiz' | 'results' | 'create_question' | 'create_challenge' | 'edit_question' | 'edit_challenge' | 'list_questions' | 'list_challenges'
+type View = 'list' | 'quiz' | 'results' | 'create_question' | 'import_questions' | 'create_challenge' | 'edit_question' | 'edit_challenge' | 'list_questions' | 'list_challenges'
 
 export default function Desafios() {
   const [questions, setQuestions] = useState<ChallengeQuestion[]>([])
@@ -465,6 +466,14 @@ export default function Desafios() {
     )
   }
 
+  if (view === 'import_questions') {
+    return (
+      <div className="desafios-page">
+        <QuestionImporter onSave={handleSaveQuestion} onCancel={() => setView('list')} />
+      </div>
+    )
+  }
+
   if (view === 'create_challenge' || view === 'edit_challenge') {
     return (
       <div className="desafios-page">
@@ -700,6 +709,10 @@ export default function Desafios() {
               <button className="desafios-dropdown-item" onClick={() => { setOpenDropdown(null); setView('list_questions'); setTableFilter(''); setTableSubjectFilter('Todas') }} type="button">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg>
                 <div><span className="dd-item-title">Listar questões</span><span className="dd-item-desc">{questions.length} questões criadas</span></div>
+              </button>
+              <button className="desafios-dropdown-item" onClick={() => { setOpenDropdown(null); setView('import_questions') }} type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                <div><span className="dd-item-title">Importar JSON</span><span className="dd-item-desc">Importe questões de um arquivo .json</span></div>
               </button>
             </div>
           )}
