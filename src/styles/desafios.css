@@ -299,6 +299,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stamp-text,
@@ -312,19 +313,23 @@
   padding: 6px 18px;
   border: 3px solid;
   border-radius: 6px;
-  transition: opacity 0.2s ease, font-size 0.2s ease, transform 0.2s ease;
 }
 
 .stamp-text {
   color: rgba(100, 180, 120, 1);
   border-color: rgba(100, 180, 120, 0.6);
+  background: rgba(255, 255, 255, 0.85);
   opacity: 1;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), font-size 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stamp-hover {
   color: rgba(100, 200, 130, 1);
   border-color: rgba(100, 200, 130, 0.9);
+  background: rgba(255, 255, 255, 0.9);
   opacity: 0;
+  font-size: 28px;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), font-size 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .desafio-card.attempted:hover .desafio-stamp {
@@ -333,11 +338,11 @@
 
 .desafio-card.attempted:hover .stamp-text {
   opacity: 0;
+  font-size: 28px;
 }
 
 .desafio-card.attempted:hover .stamp-hover {
   opacity: 1;
-  font-size: 28px;
 }
 
 .desafio-card.attempted:hover {
