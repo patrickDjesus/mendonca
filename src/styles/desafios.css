@@ -278,15 +278,61 @@
   position: relative;
 }
 
-.desafio-card:hover:not(.attempted) {
+.desafio-card:hover {
   border-color: rgba(200, 180, 140, 0.18);
   background: rgba(200, 180, 140, 0.07);
   transform: translateY(-2px);
 }
 
 .desafio-card.attempted {
-  cursor: default;
-  opacity: 0.55;
+  position: relative;
+  overflow: hidden;
+}
+
+.desafio-stamp {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-22deg);
+  z-index: 5;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stamp-text,
+.stamp-hover {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  position: absolute;
+  padding: 6px 18px;
+  border: 3px solid;
+  border-radius: 6px;
+  transition: opacity 0.2s ease;
+}
+
+.stamp-text {
+  color: rgba(200, 180, 140, 0.35);
+  border-color: rgba(200, 180, 140, 0.35);
+  opacity: 1;
+}
+
+.stamp-hover {
+  color: rgba(212, 168, 67, 0.85);
+  border-color: rgba(212, 168, 67, 0.85);
+  opacity: 0;
+}
+
+.desafio-card.attempted:hover .stamp-text {
+  opacity: 0;
+}
+
+.desafio-card.attempted:hover .stamp-hover {
+  opacity: 1;
 }
 
 .desafio-card-top {
@@ -329,11 +375,6 @@
 .desafio-badge.questions-badge {
   background: rgba(140, 120, 200, 0.1);
   color: #8c78c8;
-}
-
-.desafio-badge.replay-badge {
-  background: rgba(212, 168, 67, 0.1);
-  color: #d4a843;
 }
 
 .desafio-card-xp {

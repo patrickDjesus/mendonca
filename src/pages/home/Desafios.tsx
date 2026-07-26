@@ -807,24 +807,16 @@ export default function Desafios() {
       <div className="desafios-grid">
         {filteredChallenges.map(challenge => {
           const isAttempted = attemptIds.has(challenge.id)
-          const best = attempts.filter(a => a.challengeId === challenge.id).sort((a, b) => b.score - a.score)[0]
           return (
             <div key={challenge.id} className={`desafio-card ${isAttempted ? 'attempted' : ''}`} onClick={() => startChallenge(challenge)}>
+              {isAttempted && <div className="desafio-stamp"><span className="stamp-text">COMPLETADO</span><span className="stamp-hover">REJOGAR</span></div>}
               <div className="desafio-card-top">
                 <div className="desafio-card-badges">
                   <span className={`desafio-badge difficulty-${challenge.difficulty}`}>{DIFFICULTY_LABELS[challenge.difficulty]}</span>
                   <span className="desafio-badge questions-badge">{challenge.questionIds.length} questões</span>
                   {challenge.modifiers && challenge.modifiers.length > 0 && <span className="desafio-badge modifiers-badge">{challenge.modifiers.length} mod</span>}
-                  {isAttempted && <span className="desafio-badge replay-badge">♻️ Rejogar</span>}
                 </div>
-                {isAttempted && best ? (
-                  <span className="desafio-card-score">
-                    ★ {best.score} pts
-                    <Tooltip content="Refazer este desafio rende 20% do XP original." />
-                  </span>
-                ) : (
-                  <span className="desafio-card-xp"><img src="/XP.png" alt="" className="desafio-xp-icon" /> +{challenge.xpBase} XP <Tooltip content="XP que você ganha ao concluir este desafio. Quanto mais difícil, mais XP." /></span>
-                )}
+                <span className="desafio-card-xp"><img src="/XP.png" alt="" className="desafio-xp-icon" /> +{challenge.xpBase} XP <Tooltip content={isAttempted ? "Refazer rende 20% do XP original." : "XP que você ganha ao concluir este desafio."} /></span>
               </div>
               <h4 className="desafio-card-title">{challenge.title}</h4>
               <p className="desafio-card-desc">{challenge.description}</p>
