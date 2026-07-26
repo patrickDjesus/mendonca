@@ -50,7 +50,11 @@ function calculateScore(correct: number, _wrong: number, timeMs: number, total: 
   const pts = correct * base
   const budget = total * 30_000
   const bonus = Math.round((1 - Math.min(1, timeMs / budget)) * 500)
-  return { score: pts + bonus, xpEarned: Math.round((pts + bonus) * 0.8) }
+  const score = pts + bonus
+  const accuracy = total > 0 ? correct / total : 0
+  const diffMultiplier = diff === 'facil' ? 1 : diff === 'medio' ? 1.5 : 2
+  const xpEarned = Math.round(score * accuracy * diffMultiplier * 0.5)
+  return { score, xpEarned }
 }
 
 function formatTime(ms: number) {
@@ -279,13 +283,15 @@ export default function Desafios() {
       const correctCount = answers.filter(a => a.correct).length
       const wrongCount = answers.length - correctCount
       const { score, xpEarned } = calculateScore(correctCount, wrongCount, totalTimeMs, activeChallenge.questionIds.length, activeChallenge.difficulty)
-      const attempt: ChallengeAttempt = { id: crypto.randomUUID(), challengeId: activeChallenge.id, answers: [...answers], totalTimeMs, correctCount, wrongCount, score, xpEarned, completedAt: Date.now() }
+      const isReplay = attemptIds.has(activeChallenge.id)
+      const finalXp = isReplay ? Math.round(xpEarned * 0.2) : xpEarned
+      const attempt: ChallengeAttempt = { id: crypto.randomUUID(), challengeId: activeChallenge.id, answers: [...answers], totalTimeMs, correctCount, wrongCount, score, xpEarned: finalXp, completedAt: Date.now() }
       setAttempts(prev => [...prev, attempt]); setLastResult(attempt)
       const isWin = correctCount > wrongCount
       setStreak(prev => ({ ...prev, currentStreak: isWin ? prev.currentStreak + 1 : 0, longestStreak: isWin ? Math.max(prev.longestStreak, prev.currentStreak + 1) : prev.longestStreak, lastChallengeDate: new Date().toISOString().split('T')[0] }))
       createAttempt(attempt).catch(() => {})
-      logActivity('challenge_done', `${isWin ? 'Acertou' : 'Errou'} "${activeChallenge.title}" (${correctCount}/${activeChallenge.questionIds.length})`, 'challenge', isWin ? '#b450b4' : '#c86450').catch(() => {})
-      recordAction('challenge', { challengeWin: isWin }).catch(() => {})
+      logActivity('challenge_done', `${isWin ? 'Acertou' : 'Errou'} "${activeChallenge.title}" (${correctCount}/${activeChallenge.questionIds.length})${isReplay ? ' (rejogou)' : ''}`, 'challenge', isWin ? '#b450b4' : '#c86450').catch(() => {})
+      recordAction('challenge', { challengeWin: isWin, challengeXp: finalXp }).catch(() => {})
       checkModeHardcore(activeChallenge.id, correctCount > wrongCount, activeChallenge.modifiers?.length || 0).catch(() => {})
       checkMasoquista(activeChallenge.id, isWin, attempt.id).catch(() => {})
       setView('results')
@@ -311,7 +317,7 @@ export default function Desafios() {
         }, 0)
       }
     }
-  }, [activeChallenge, currentQIndex, answers, stopTimer, resetQuizState, stopMemoryTimer])
+  }, [activeChallenge, currentQIndex, answers, stopTimer, resetQuizState, stopMemoryTimer, attemptIds])
 
   const handleBackToList = useCallback(() => { setView('list'); setActiveChallenge(null); setLastResult(null); stopTimer(); stopMemoryTimer(); setQuestionHidden(false); clearSavedQuiz(); if (autoSaveTimerRef.current) { clearInterval(autoSaveTimerRef.current); autoSaveTimerRef.current = null } }, [stopTimer, stopMemoryTimer])
 
@@ -477,8 +483,8 @@ export default function Desafios() {
             </div>
             <div className="results-stat">
               <span className="results-stat-emoji">⭐</span>
-              <span className="results-stat-value">{lastResult.score}</span>
-              <span className="results-stat-label">Pontos</span>
+              <span className="results-stat-value">+{lastResult.xpEarned}</span>
+              <span className="results-stat-label">XP Ganho</span>
             </div>
             <div className="results-stat">
               <span className="results-stat-emoji">⏱️</span>
@@ -777,9 +783,9 @@ export default function Desafios() {
         </div>
       </div>
 
-      {dailyChallenge && !attemptIds.has(dailyChallenge.id) && (
-        <div className="desafios-daily" onClick={() => startChallenge(dailyChallenge)}>
-          <div className="desafios-daily-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>Desafio do dia</div>
+      {dailyChallenge && (
+        <div className={`desafios-daily ${attemptIds.has(dailyChallenge.id) ? 'attempted' : ''}`} onClick={() => startChallenge(dailyChallenge)}>
+          <div className="desafios-daily-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>Desafio do dia {attemptIds.has(dailyChallenge.id) && '• Rejogar'}</div>
           <h2 className="desafios-daily-title">{dailyChallenge.title}</h2>
           <p className="desafios-daily-desc">{dailyChallenge.description}</p>
           <div className="desafios-daily-meta">
@@ -803,14 +809,22 @@ export default function Desafios() {
           const isAttempted = attemptIds.has(challenge.id)
           const best = attempts.filter(a => a.challengeId === challenge.id).sort((a, b) => b.score - a.score)[0]
           return (
-            <div key={challenge.id} className={`desafio-card ${isAttempted ? 'attempted' : ''}`} onClick={() => !isAttempted && startChallenge(challenge)}>
+            <div key={challenge.id} className={`desafio-card ${isAttempted ? 'attempted' : ''}`} onClick={() => startChallenge(challenge)}>
               <div className="desafio-card-top">
                 <div className="desafio-card-badges">
                   <span className={`desafio-badge difficulty-${challenge.difficulty}`}>{DIFFICULTY_LABELS[challenge.difficulty]}</span>
                   <span className="desafio-badge questions-badge">{challenge.questionIds.length} questões</span>
                   {challenge.modifiers && challenge.modifiers.length > 0 && <span className="desafio-badge modifiers-badge">{challenge.modifiers.length} mod</span>}
+                  {isAttempted && <span className="desafio-badge replay-badge">♻️ Rejogar</span>}
                 </div>
-                {isAttempted && best ? <span className="desafio-card-score">★ {best.score} pts</span> : <span className="desafio-card-xp"><img src="/XP.png" alt="" className="desafio-xp-icon" /> +{challenge.xpBase} XP <Tooltip content="XP que você ganha ao concluir este desafio. Quanto mais difícil, mais XP." /></span>}
+                {isAttempted && best ? (
+                  <span className="desafio-card-score">
+                    ★ {best.score} pts
+                    <Tooltip content="Refazer este desafio rende 20% do XP original." />
+                  </span>
+                ) : (
+                  <span className="desafio-card-xp"><img src="/XP.png" alt="" className="desafio-xp-icon" /> +{challenge.xpBase} XP <Tooltip content="XP que você ganha ao concluir este desafio. Quanto mais difícil, mais XP." /></span>
+                )}
               </div>
               <h4 className="desafio-card-title">{challenge.title}</h4>
               <p className="desafio-card-desc">{challenge.description}</p>

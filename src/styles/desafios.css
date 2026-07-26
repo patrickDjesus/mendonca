@@ -331,6 +331,11 @@
   color: #8c78c8;
 }
 
+.desafio-badge.replay-badge {
+  background: rgba(212, 168, 67, 0.1);
+  color: #d4a843;
+}
+
 .desafio-card-xp {
   font-size: 12px;
   font-weight: 700;

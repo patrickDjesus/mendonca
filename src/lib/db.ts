@@ -836,7 +836,24 @@ export async function fetchRecentActivities(limit = 8): Promise<Activity[]> {
    XP & LEVEL SYSTEM
    ═══════════════════════════════════════════════════════════ */
 
-const LEVEL_THRESHOLDS = [0, 100, 300, 600, 1000, 1600, 2400, 3500, 5000, 7000, 10000, 14000, 19000, 25000, 32000, 40000, 50000, 62000, 76000, 92000]
+const LEVEL_THRESHOLDS = [
+  0, 150, 400, 800, 1400, 2200, 3300, 4800, 6800, 9500,
+  13000, 17500, 23000, 30000, 39000, 50000, 64000, 82000, 105000, 135000,
+  175000, 225000, 290000, 375000, 485000, 625000, 805000, 1035000, 1330000, 1700000,
+]
+
+const RANK_TABLE: { title: string; tier: number; color: string }[] = [
+  { title: 'Iniciante',     tier: 1, color: '#6a5a4a' },
+  { title: 'Aprendiz',      tier: 2, color: '#50b478' },
+  { title: 'Estudioso',     tier: 3, color: '#508cc8' },
+  { title: 'Erudito',       tier: 4, color: '#b450b4' },
+  { title: 'Mestre',        tier: 5, color: '#daa03c' },
+  { title: 'Lenda',         tier: 6, color: '#ff6b6b' },
+  { title: 'Transcendido',  tier: 7, color: '#ff4444' },
+  { title: 'Imortal',       tier: 8, color: '#e0e0ff' },
+  { title: 'Absoluto',      tier: 9, color: '#ffd700' },
+  { title: 'Infinito',      tier: 10, color: '#ffffff' },
+]
 
 export function getLevel(xp: number): number {
   for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
@@ -848,18 +865,15 @@ export function getLevel(xp: number): number {
 export function getLevelProgress(xp: number): { level: number; current: number; needed: number; percent: number } {
   const level = getLevel(xp)
   const current = LEVEL_THRESHOLDS[level - 1] || 0
-  const needed = LEVEL_THRESHOLDS[level] || LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1] + 20000
+  const needed = LEVEL_THRESHOLDS[level] || LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1] + 500000
   const percent = Math.min(100, ((xp - current) / (needed - current)) * 100)
   return { level, current, needed, percent }
 }
 
 export function getRank(xp: number): { title: string; tier: number; color: string } {
-  if (xp >= 10000) return { title: 'Lenda', tier: 6, color: '#ff6b6b' }
-  if (xp >= 5000) return { title: 'Mestre', tier: 5, color: '#daa03c' }
-  if (xp >= 2000) return { title: 'Erudito', tier: 4, color: '#b450b4' }
-  if (xp >= 800) return { title: 'Estudioso', tier: 3, color: '#508cc8' }
-  if (xp >= 200) return { title: 'Aprendiz', tier: 2, color: '#50b478' }
-  return { title: 'Iniciante', tier: 1, color: '#6a5a4a' }
+  const level = getLevel(xp)
+  const rankIndex = Math.min(Math.floor((level - 1) / 2), RANK_TABLE.length - 1)
+  return RANK_TABLE[rankIndex]
 }
 
 export const XP_REWARDS = {
@@ -1026,7 +1040,7 @@ export async function checkMasoquista(challengeId: string, isWin: boolean, curre
   }
 }
 
-export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' | 'simulado' | 'login' | 'mastery', meta?: { watchMinutes?: number; subject?: string; simuladoYear?: number; simuladoScore?: number; docPages?: number; challengeWin?: boolean }): Promise<void> {
+export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' | 'simulado' | 'login' | 'mastery', meta?: { watchMinutes?: number; subject?: string; simuladoYear?: number; simuladoScore?: number; docPages?: number; challengeWin?: boolean; challengeXp?: number }): Promise<void> {
   const fieldMap: Record<string, string> = {
     doc: 'docsCreated',
     video: 'videosWatched',
@@ -1087,7 +1101,7 @@ export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' 
   const xpMap: Record<string, number> = {
     doc: XP_REWARDS.CREATE_DOC,
     video: XP_REWARDS.WATCH_VIDEO_PER_MIN * (meta?.watchMinutes || 1),
-    challenge: XP_REWARDS.COMPLETE_CHALLENGE,
+    challenge: meta?.challengeXp ?? XP_REWARDS.COMPLETE_CHALLENGE,
     note: XP_REWARDS.CREATE_NOTE,
     simulado: XP_REWARDS.COMPLETE_SIMULADO,
     login: XP_REWARDS.DAILY_LOGIN,
