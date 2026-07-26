@@ -108,6 +108,9 @@ export default function Desafios() {
   const [memoryTimeLeft, setMemoryTimeLeft] = useState(15)
   const memoryTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  const [feedbackOverlay, setFeedbackOverlay] = useState<'correct' | 'wrong' | null>(null)
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const [openDropdown, setOpenDropdown] = useState<'questions' | 'challenges' | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -155,7 +158,7 @@ export default function Desafios() {
   }, [])
 
   const stopTimer = useCallback(() => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null } }, [])
-  useEffect(() => () => { stopTimer(); if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current) }, [stopTimer])
+  useEffect(() => () => { stopTimer(); if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current); if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current) }, [stopTimer])
 
   const stopMemoryTimer = useCallback(() => {
     if (memoryTimerRef.current) { clearInterval(memoryTimerRef.current); memoryTimerRef.current = null }
@@ -263,6 +266,9 @@ export default function Desafios() {
     setShowFeedback(true)
     stopMemoryTimer()
     setQuestionHidden(false)
+    setFeedbackOverlay(correct ? 'correct' : 'wrong')
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current)
+    feedbackTimerRef.current = setTimeout(() => setFeedbackOverlay(null), 1200)
   }, [getCurrentQuestion, checkAnswer, selectedOptionIds, tfAnswers, openText, dragOrder, fillAnswers, stopMemoryTimer])
 
   const handleNext = useCallback(() => {
@@ -430,6 +436,19 @@ export default function Desafios() {
             {!showFeedback ? <button className="quiz-confirm-btn" onClick={handleConfirmAnswer} disabled={!isAnswerReady()} type="button">Confirmar</button> : <button className="quiz-next-btn" onClick={handleNext} disabled={q.type === 'aberta' && !selfEval} type="button">{currentQIndex >= activeChallenge.questionIds.length - 1 ? 'Ver resultado' : 'Próxima'}</button>}
           </div>
         </div>
+
+        {feedbackOverlay && (
+          <div className={`quiz-feedback-overlay ${feedbackOverlay}`}>
+            <div className="quiz-feedback-icon">
+              {feedbackOverlay === 'correct' ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              )}
+            </div>
+            <span className="quiz-feedback-text">{feedbackOverlay === 'correct' ? 'Correto!' : 'Errado!'}</span>
+          </div>
+        )}
       </div>
     )
   }
@@ -445,11 +464,27 @@ export default function Desafios() {
       <div className="desafios-page">
         <div className="results-container">
           <h2 className="results-title">{accuracy >= 70 ? 'Parabéns!' : 'Continue tentando!'}</h2>
-          <div className="results-stats">
-            <div className="results-stat"><span className="results-stat-value correct">{lastResult.correctCount}</span><span className="results-stat-label">Acertos</span></div>
-            <div className="results-stat"><span className="results-stat-value wrong">{lastResult.wrongCount}</span><span className="results-stat-label">Erros</span></div>
-            <div className="results-stat"><span className="results-stat-value">{lastResult.score}</span><span className="results-stat-label">Pontos</span></div>
-            <div className="results-stat"><span className="results-stat-value">{formatTime(lastResult.totalTimeMs)}</span><span className="results-stat-label">Tempo</span></div>
+          <div className="results-grid">
+            <div className="results-stat">
+              <span className="results-stat-emoji">✅</span>
+              <span className="results-stat-value correct">{lastResult.correctCount}</span>
+              <span className="results-stat-label">Acertos</span>
+            </div>
+            <div className="results-stat">
+              <span className="results-stat-emoji">❌</span>
+              <span className="results-stat-value wrong">{lastResult.wrongCount}</span>
+              <span className="results-stat-label">Erros</span>
+            </div>
+            <div className="results-stat">
+              <span className="results-stat-emoji">⭐</span>
+              <span className="results-stat-value">{lastResult.score}</span>
+              <span className="results-stat-label">Pontos</span>
+            </div>
+            <div className="results-stat">
+              <span className="results-stat-emoji">⏱️</span>
+              <span className="results-stat-value">{formatTime(lastResult.totalTimeMs)}</span>
+              <span className="results-stat-label">Tempo</span>
+            </div>
           </div>
           <div className="results-accuracy"><span className="results-accuracy-value">{accuracy}%</span></div>
           <button className="quiz-next-btn results-back-btn" onClick={handleBackToList} type="button">Voltar aos desafios</button>
