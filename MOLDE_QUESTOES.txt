@@ -1,0 +1,263 @@
+===============================================
+MOLDE PARA GERAÇÃO DE QUESTÕES — JSON
+===============================================
+
+O sistema aceita um ARRAY JSON contendo questões.
+Cada objeto dentro do array representa UMA questão.
+
+===============================================
+CAMPOS OBRIGATÓRIOS (em toda questão)
+===============================================
+
+1. "type" — Tipo da questão (string)
+   Valores aceitos:
+   - "multipla"            → Múltipla escolha (1 alternativa correta)
+   - "multipla_multipla"   → Múltipla escolha (VÁRIAS alternativas corretas)
+   - "verdadeiro_falso"    → Afirmações marcadas como V ou F
+   - "aberta"              → Resposta aberta (escrita pelo aluno)
+   - "ordem"               → Ordenar itens na ordem correta
+   - "completar"           → Preencher lacunas em uma frase
+
+2. "title" — Texto da pergunta (string, obrigatório, não vazio)
+
+3. "subject" — Matéria (string)
+   Valores aceitos (exatamente assim, com acento):
+   - "Física"
+   - "Química"
+   - "Biologia"
+   - "Matemática"
+   - "Linguagens"
+   - "Ciências Humanas"
+   - "Ciências da Natureza"
+   - "Geografia"
+   - "História"
+   - "Filosofia"
+
+4. "difficulty" — Dificuldade (string)
+   Valores aceitos:
+   - "facil"
+   - "medio"
+   - "dificil"
+
+===============================================
+CAMPOS OPCIONAIS (em toda questão)
+===============================================
+
+- "content"       → Texto de contexto/apoio (string)
+- "imageUrl"      → URL de uma imagem (string)
+- "explanation"   → Explicação exibida após o aluno responder (string)
+- "source"        → Origem da questão (string, ex: "enem")
+
+===============================================
+CAMPOS ESPECÍFICOS POR TIPO
+===============================================
+
+─────────────────────────────────────────────
+TIPO: "multipla" e "multipla_multipla"
+─────────────────────────────────────────────
+Campo obrigatório: "options" (array de objetos)
+
+Cada objeto em "options":
+  { "text": "texto da alternativa", "correct": true/false }
+
+- Mínimo 2 alternativas
+- Para "multipla": exatamente UMA com "correct": true
+- Para "multipla_multipla": UMA ou MAIS com "correct": true
+- Os campos "id" NÃO precisam ser informados — são gerados automaticamente
+
+Exemplo "multipla":
+"options": [
+  { "text": "Newton", "correct": true },
+  { "text": "Joule", "correct": false },
+  { "text": "Pascal", "correct": false },
+  { "text": "Watt", "correct": false }
+]
+
+Exemplo "multipla_multipla":
+"options": [
+  { "text": "Planetas rochosos", "correct": true },
+  { "text": "Planetas gasosos", "correct": true },
+  { "text": "Astroides", "correct": false },
+  { "text": "Cometas", "correct": false }
+]
+
+─────────────────────────────────────────────
+TIPO: "verdadeiro_falso"
+─────────────────────────────────────────────
+Campo obrigatório: "statements" (array de objetos)
+
+Cada objeto em "statements":
+  { "text": "texto da afirmação", "correct": true/false }
+
+- Mínimo 1 afirmação
+- "correct": true = a afirmação é VERDADEIRA
+- "correct": false = a afirmação é FALSA
+
+Exemplo:
+"statements": [
+  { "text": "A água ferve a 100°C ao nível do mar", "correct": true },
+  { "text": "O oxigênio é um gás nobre", "correct": false },
+  { "text": "A fotossíntese produz glicose", "correct": true }
+]
+
+─────────────────────────────────────────────
+TIPO: "aberta"
+─────────────────────────────────────────────
+Campo opcional: "openExpectedText" (string)
+
+É a resposta modelo. O aluno escreve a resposta e depois
+ele mesmo avalia se acertou ou errou.
+
+Exemplo:
+"openExpectedText": "A Primeira Lei de Newton diz que um corpo em repouso permanece em repouso, e um corpo em movimento retilíneo uniforme permanece em movimento, a menos que uma força externa atue sobre ele."
+
+─────────────────────────────────────────────
+TIPO: "ordem"
+─────────────────────────────────────────────
+Campo obrigatório: "orderItems" (array de objetos)
+
+Cada objeto em "orderItems":
+  { "text": "texto do item", "correctOrder": número_da_posição }
+
+- Mínimo 2 itens
+- "correctOrder" começa em 1
+- Cada item DEVE ter uma posição única
+
+Exemplo:
+"orderItems": [
+  { "text": "Mercúrio", "correctOrder": 1 },
+  { "text": "Vênus", "correctOrder": 2 },
+  { "text": "Terra", "correctOrder": 3 },
+  { "text": "Marte", "correctOrder": 4 }
+]
+
+─────────────────────────────────────────────
+TIPO: "completar"
+─────────────────────────────────────────────
+Campo obrigatório: "blanks" (array de objetos)
+Campo OBRIGATÓRIO associado: "content" (com underscores)
+
+Cada objeto em "blanks":
+  { "answer": "resposta correta da lacuna" }
+
+- Mínimo 1 lacuna
+- No campo "content", use "_" (underscore) para marcar cada lacuna
+- A QUANTIDADE de underscores no "content" deve ser igual à quantidade de "blanks"
+- As respostas em "blanks" correspondem às lacunas na ORDEM
+
+Exemplo:
+"content": "O Brasil é um país de clima __, com a maior parte do território na zona __.",
+"blanks": [
+  { "answer": "tropical" },
+  { "answer": "equatorial" }
+]
+
+===============================================
+EXEMPLO COMPLETO — TODOS OS TIPOS
+===============================================
+
+[
+  {
+    "type": "multipla",
+    "title": "Qual é a resultante de 3 + 5?",
+    "subject": "Matemática",
+    "difficulty": "facil",
+    "explanation": "3 + 5 = 8",
+    "options": [
+      { "text": "6", "correct": false },
+      { "text": "7", "correct": false },
+      { "text": "8", "correct": true },
+      { "text": "9", "correct": false }
+    ]
+  },
+  {
+    "type": "multipla_multipla",
+    "title": "Quais são planetas rochosos?",
+    "subject": "Geografia",
+    "difficulty": "medio",
+    "options": [
+      { "text": "Mercúrio", "correct": true },
+      { "text": "Vênus", "correct": true },
+      { "text": "Júpiter", "correct": false },
+      { "text": "Netuno", "correct": false }
+    ]
+  },
+  {
+    "type": "verdadeiro_falso",
+    "title": "Verdadeiro ou Falso sobre química",
+    "subject": "Química",
+    "difficulty": "medio",
+    "statements": [
+      { "text": "A água é composta por hidrogênio e oxigênio", "correct": true },
+      { "text": "O ouro é um metal de transição", "correct": true },
+      { "text": "O carbono é um gás nobre", "correct": false }
+    ]
+  },
+  {
+    "type": "aberta",
+    "title": "Explique o que é fotossíntese",
+    "subject": "Biologia",
+    "difficulty": "medio",
+    "explanation": "A fotossíntese é o processo pelo qual plantas convertem luz solar em energia química.",
+    "openExpectedText": "A fotossíntese é o processo pelo qual organismos fotossintéticos, como plantas, algas e algumas bactérias, convertem energia luminosa em energia química (glicose), utilizando dióxido de carbono e água, liberando oxigênio como subproduto."
+  },
+  {
+    "type": "ordem",
+    "title": "Ordene do menor para o maior: números primos",
+    "subject": "Matemática",
+    "difficulty": "facil",
+    "orderItems": [
+      { "text": "2", "correctOrder": 1 },
+      { "text": "3", "correctOrder": 2 },
+      { "text": "5", "correctOrder": 3 },
+      { "text": "7", "correctOrder": 4 }
+    ]
+  },
+  {
+    "type": "completar",
+    "title": "A água é formada por __ de hidrogênio e __ de oxigênio",
+    "subject": "Química",
+    "difficulty": "facil",
+    "content": "A água é formada por __ de hidrogênio e __ de oxigênio.",
+    "explanation": "A fórmula da água é H2O: dois átomos de hidrogênio para um de oxigênio.",
+    "blanks": [
+      { "answer": "2 átomos" },
+      { "answer": "1 átomo" }
+    ]
+  }
+]
+
+===============================================
+REGRAS IMPORTANTES
+===============================================
+
+1. O JSON deve ser um ARRAY (começa com [ e termina com ])
+2. Cada questão é um objeto { } dentro do array
+3. Os campos "id" NUNCA precisam ser informados — são gerados automaticamente
+4. Para "multipla": apenas UMA alternativa deve ter "correct": true
+5. Para "multipla_multipla": UMA ou MAIS alternativas com "correct": true
+6. Para "completar": a quantidade de "blanks" deve bater com os "_" no "content"
+7. Para "ordem": "correctOrder" começa em 1 e cada posição é única
+8. "subject" deve ter acento exato como listado acima
+9. "difficulty" NÃO tem acento: "facil", "medio", "dificil"
+10. Campos como "content", "imageUrl", "explanation" são OPCIONAIS
+11. Não inclua campos extras desconhecidos (serão ignorados, mas melhor evitar)
+
+===============================================
+VALIDAÇÃO AUTOMÁTICA
+===============================================
+
+O sistema valida cada questão automaticamente antes de importar.
+Se houver erro, será mostrado QUAL questão (nº do índice) e QUAL o problema.
+Exemplos de erros que o sistema detecta:
+- Título vazio ou ausente
+- Tipo inválido
+- Matéria inválida (ex: "física" sem acento)
+- Dificuldade inválida
+- Menos de 2 alternativas em múltipla escolha
+- Nenhuma alternativa marcada como correta
+- Menos de 1 afirmação em verdadeiro/falso
+- Menos de 2 itens em ordem
+- Menos de 1 lacuna em completar
+- JSON mal formado (sintaxe incorreta)
+- Array vazio
