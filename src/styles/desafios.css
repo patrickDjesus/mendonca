@@ -294,7 +294,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) rotate(-22deg);
-  z-index: 5;
+  z-index: 20;
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -316,14 +316,14 @@
 }
 
 .stamp-text {
-  color: rgba(200, 180, 140, 0.35);
-  border-color: rgba(200, 180, 140, 0.35);
+  color: rgba(100, 180, 120, 0.4);
+  border-color: rgba(100, 180, 120, 0.4);
   opacity: 1;
 }
 
 .stamp-hover {
-  color: rgba(212, 168, 67, 0.85);
-  border-color: rgba(212, 168, 67, 0.85);
+  color: rgba(100, 200, 130, 0.9);
+  border-color: rgba(100, 200, 130, 0.9);
   opacity: 0;
 }
 
