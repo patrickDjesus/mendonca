@@ -372,8 +372,12 @@ export default function Desafios() {
     const timerClass = timerPct > 50 ? 'safe' : timerPct > 20 ? 'warning' : 'danger'
 
     const renderQuizBody = () => {
-      if (q.content && q.type !== 'completar') return <p className="quiz-content-text">{q.content}</p>
-      return null
+      return (
+        <>
+          {q.content && <p className="quiz-content-text">{q.content}</p>}
+          {q.imageUrl && <img className="quiz-image" src={q.imageUrl} alt="" />}
+        </>
+      )
     }
 
     const renderTypeSpecific = () => {
