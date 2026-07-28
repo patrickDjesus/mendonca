@@ -318,7 +318,7 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
       {/* ── Step 2: Questions ─────────────────── */}
       {step === 'questions' && (
         <div className="cb-step-content">
-          <div className="cb-section-card">
+          <div className="cb-section-card cb-section-card-questions">
             <div className="cb-picker-header">
               <span className="cb-section-title">Questões ({selectedIds.length} selecionadas)</span>
               <div className="cb-picker-filters">
