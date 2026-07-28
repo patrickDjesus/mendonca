@@ -1685,6 +1685,14 @@
     min-height: 240px;
   }
 
+  .cb-section-card-questions .cb-question-list {
+    min-height: 140px;
+  }
+
+  .cb-search-input {
+    width: 160px;
+  }
+
   .quiz-header {
     flex-wrap: wrap;
     gap: 10px;
@@ -2280,8 +2288,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   padding-bottom: 10px;
   border-bottom: 1px solid rgba(200, 180, 140, 0.06);
+  flex-wrap: wrap;
 }
 
 .cb-picker-filter {
@@ -4148,7 +4158,12 @@
 
 .cb-section-card-questions {
   width: 100%;
-  min-height: 280px;
+  max-width: 100%;
+  min-height: 300px;
+}
+
+.cb-section-card-questions .cb-question-list {
+  min-height: 160px;
 }
 
 .cb-section-title {
