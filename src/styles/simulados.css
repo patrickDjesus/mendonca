@@ -643,6 +643,27 @@
 /* ================================
    Responsive
    ================================ */
+@media (max-width: 1200px) {
+  .simulados-page {
+    padding: 28px 24px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .simulados-page {
+    padding: 24px 20px;
+  }
+
+  .exam-question {
+    padding: 20px 22px;
+  }
+
+  .exam-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
 @media (max-width: 900px) {
   .exam-layout {
     flex-direction: column;
@@ -672,8 +693,20 @@
     font-size: 26px;
   }
 
+  .simulado-card {
+    padding: 20px;
+  }
+
   .navigator-grid {
     grid-template-columns: repeat(8, 1fr);
+  }
+
+  .exam-question {
+    padding: 18px 16px;
+  }
+
+  .exam-option {
+    padding: 12px 14px;
   }
 }
 
@@ -685,5 +718,18 @@
   .exam-header {
     flex-wrap: wrap;
     gap: 10px;
+  }
+
+  .exam-header-info {
+    flex-wrap: wrap;
+  }
+
+  .exam-year {
+    font-size: 16px;
+  }
+
+  .exam-timer {
+    font-size: 14px;
+    padding: 6px 12px;
   }
 }

@@ -916,6 +916,37 @@
   font-size: 14px;
   color: #d0c4b0;
   cursor: grab;
+  user-select: none;
+  transition: transform 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+}
+
+.quiz-order-item:active {
+  cursor: grabbing;
+}
+
+.quiz-order-item.dragging {
+  opacity: 0.4;
+  border-color: rgba(212, 168, 67, 0.4);
+  background: rgba(212, 168, 67, 0.08);
+}
+
+.quiz-order-item.drag-over {
+  border-color: rgba(212, 168, 67, 0.5);
+  transform: scale(1.02);
+}
+
+.quiz-order-grip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5a4a3a;
+  flex-shrink: 0;
+  cursor: grab;
+}
+
+.quiz-order-grip svg {
+  width: 18px;
+  height: 18px;
 }
 
 .quiz-order-num {
@@ -1602,6 +1633,64 @@
 
 /* ── Responsive ────────────────────────────────────── */
 
+@media (max-width: 1200px) {
+  .desafios-page {
+    padding: 28px 24px;
+  }
+
+  .desafios-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .desafios-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .quiz-card {
+    padding: 22px 24px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .desafios-page {
+    padding: 24px 20px;
+  }
+
+  .desafios-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .desafios-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+
+  .desafio-stat-card {
+    padding: 14px 16px;
+  }
+
+  .desafio-stat-value {
+    font-size: 18px;
+  }
+
+  .cb-difficulty-row-new {
+    flex-direction: column;
+  }
+
+  .cb-question-list {
+    max-height: 350px;
+  }
+
+  .quiz-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .quiz-info {
+    flex-wrap: wrap;
+  }
+}
+
 @media (max-width: 768px) {
   .desafios-page {
     padding: 20px 16px;
@@ -1617,6 +1706,157 @@
 
   .results-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quiz-card {
+    padding: 18px 16px;
+  }
+
+  .quiz-q-header {
+    flex-wrap: wrap;
+  }
+
+  .quiz-q-title {
+    font-size: 16px;
+  }
+
+  .quiz-option {
+    padding: 14px 16px;
+  }
+
+  .results-container {
+    padding: 40px 16px;
+  }
+
+  .results-title {
+    font-size: 22px;
+  }
+
+  .cb-section-card {
+    padding: 18px 16px;
+  }
+
+  .cb-question-list {
+    max-height: 300px;
+  }
+
+  .cb-step-btn .cb-step-label {
+    display: none;
+  }
+
+  .cb-step-line {
+    width: 20px;
+  }
+
+  .desafios-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .desafios-subjects {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .quiz-feedback-icon {
+    width: 72px;
+    height: 72px;
+  }
+
+  .quiz-feedback-icon svg {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .desafios-page {
+    padding: 16px 12px;
+  }
+
+  .desafios-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .desafios-header-left h1 {
+    font-size: 20px;
+  }
+
+  .desafios-daily {
+    padding: 20px;
+  }
+
+  .desafio-card {
+    padding: 18px 16px;
+  }
+
+  .desafio-card-title {
+    font-size: 14px;
+  }
+
+  .quiz-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .quiz-info {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .quiz-header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .quiz-q-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .quiz-option-letter {
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+  }
+
+  .quiz-option-text {
+    font-size: 13px;
+  }
+
+  .results-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .results-stat {
+    padding: 18px 12px;
+  }
+
+  .results-stat-value {
+    font-size: 24px;
+  }
+
+  .cb-container {
+    padding: 0;
+  }
+
+  .cb-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .cb-question-item {
+    padding: 10px 12px;
+  }
+
+  .cb-q-title {
+    font-size: 12px;
   }
 }
 
@@ -2060,7 +2300,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 400px;
+  max-height: min(500px, 55vh);
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -2077,6 +2317,7 @@
   transition: all 0.15s ease;
   min-width: 0;
   overflow: hidden;
+  max-width: 100%;
 }
 
 .cb-question-item:hover {
@@ -3884,6 +4125,7 @@
   gap: 20px;
   overflow: hidden;
   min-width: 0;
+  max-width: 100%;
 }
 
 .cb-section-card {
@@ -3893,6 +4135,7 @@
   border: 1px solid rgba(200, 180, 140, 0.06);
   overflow: hidden;
   min-width: 0;
+  max-width: 100%;
 }
 
 .cb-section-title {

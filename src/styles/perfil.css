@@ -571,6 +571,43 @@
 
 /* ── Responsive ────────────────────────────────────────── */
 
+@media (max-width: 1024px) {
+  .perfil-page {
+    padding: 22px 18px 40px;
+  }
+
+  .perfil-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .perfil-page {
+    padding: 20px 16px 36px;
+  }
+
+  .perfil-hero {
+    padding: 28px 22px 20px;
+  }
+
+  .perfil-section {
+    padding: 18px 18px;
+  }
+
+  .perfil-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .perfil-stat-card {
+    padding: 12px 10px;
+  }
+
+  .perfil-stat-value {
+    font-size: 18px;
+  }
+}
+
 @media (max-width: 600px) {
   .perfil-page {
     padding: 16px 12px 32px;

@@ -405,6 +405,98 @@
   padding: 80px 20px;
 }
 
+/* ── Responsive ────────────────────────────────── */
+@media (max-width: 1200px) {
+  .admin-page {
+    padding: 28px 24px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .admin-page {
+    padding: 24px 20px;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+
+  .admin-tools-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-modal {
+    min-width: 0;
+    width: calc(100vw - 40px);
+    max-width: 420px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-page {
+    padding: 20px 16px;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .admin-tabs {
+    overflow-x: auto;
+    gap: 0;
+  }
+
+  .admin-tab {
+    padding: 10px 14px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .admin-toolbar {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-section {
+    padding: 18px 16px;
+  }
+
+  .admin-settings-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-page {
+    padding: 16px 12px;
+  }
+
+  .admin-title {
+    font-size: 18px;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-stat-value {
+    font-size: 22px;
+  }
+
+  .admin-modal {
+    padding: 20px;
+  }
+}
+
 /* ================================
    Tools Tab
    ================================ */

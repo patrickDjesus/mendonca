@@ -1441,6 +1441,29 @@
 /* ================================
    Responsive
    ================================ */
+@media (max-width: 1024px) {
+  .docs-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 16px;
+  }
+
+  .doc-editor-body {
+    padding: 24px 16px 100px;
+  }
+
+  .doc-editor-paper {
+    padding: 0 20px 0 56px;
+  }
+
+  .doc-paper-margin {
+    left: 42px;
+  }
+
+  .doc-paper-holes {
+    left: 12px;
+  }
+}
+
 @media (max-width: 768px) {
   .docs-header {
     flex-direction: column;

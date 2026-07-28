@@ -108,7 +108,50 @@ export default function Desafios() {
   const answersRef = useRef<QuestionAnswer[]>([])
   const currentQIndexRef = useRef(0)
 
-  const [questionHidden, setQuestionHidden] = useState(false)
+  const dragIdxRef = useRef<number | null>(null)
+const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
+
+const handleDragStart = useCallback((idx: number) => (e: React.DragEvent) => {
+  dragIdxRef.current = idx
+  e.dataTransfer.effectAllowed = 'move'
+  const el = e.currentTarget as HTMLElement
+  el.classList.add('dragging')
+  e.dataTransfer.setData('text/plain', String(idx))
+}, [])
+
+const handleDragOver = useCallback((idx: number) => (e: React.DragEvent) => {
+  e.preventDefault()
+  e.dataTransfer.dropEffect = 'move'
+  setDragOverIdx(idx)
+  const fromIdx = dragIdxRef.current
+  if (fromIdx === null || fromIdx === idx) return
+  setDragOrder(prev => {
+    const next = [...prev]
+    const [moved] = next.splice(fromIdx, 1)
+    next.splice(idx, 0, moved)
+    return next
+  })
+  dragIdxRef.current = idx
+}, [])
+
+const handleDragLeave = useCallback(() => {
+  setDragOverIdx(null)
+}, [])
+
+const handleDrop = useCallback((e: React.DragEvent) => {
+  e.preventDefault()
+  dragIdxRef.current = null
+  setDragOverIdx(null)
+  document.querySelectorAll('.quiz-order-item.dragging').forEach(el => el.classList.remove('dragging'))
+}, [])
+
+const handleDragEnd = useCallback(() => {
+  dragIdxRef.current = null
+  setDragOverIdx(null)
+  document.querySelectorAll('.quiz-order-item.dragging').forEach(el => el.classList.remove('dragging'))
+}, [])
+
+const [questionHidden, setQuestionHidden] = useState(false)
   const [memoryTimeLeft, setMemoryTimeLeft] = useState(15)
   const memoryTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -459,7 +502,7 @@ export default function Desafios() {
         case 'multipla_multipla': return (<div className="quiz-options">{q.options.map((opt, i) => <button key={opt.id} className={`quiz-option ${selectedOptionIds.includes(opt.id) ? 'selected' : ''}`} onClick={() => setSelectedOptionIds(prev => prev.includes(opt.id) ? prev.filter(x => x !== opt.id) : [...prev, opt.id])} type="button"><span className="quiz-option-letter">{LETTERS[i]}</span><span className="quiz-option-text">{opt.text}</span></button>)}</div>)
         case 'verdadeiro_falso': return (<div className="quiz-tf-list">{q.statements.map(st => (<div key={st.id} className="quiz-tf-row"><p className="quiz-tf-text">{st.text}</p><div className="quiz-tf-btns"><button className={`quiz-tf-btn ${tfAnswers[st.id] === 'true' ? 'selected' : ''}`} onClick={() => setTfAnswers(prev => ({ ...prev, [st.id]: 'true' }))} type="button">V</button><button className={`quiz-tf-btn ${tfAnswers[st.id] === 'false' ? 'selected' : ''}`} onClick={() => setTfAnswers(prev => ({ ...prev, [st.id]: 'false' }))} type="button">F</button></div></div>))}</div>)
         case 'aberta': return (<div className="quiz-open"><textarea className="qb-textarea" value={openText} onChange={e => setOpenText(e.target.value)} placeholder="Digite sua resposta..." rows={4} readOnly={showFeedback} />{showFeedback && q.openExpectedText && <div className="quiz-open-expected"><strong>Resposta esperada:</strong> {q.openExpectedText}</div>}{showFeedback && !selfEval && (<div className="quiz-self-eval"><p className="quiz-self-eval-label">Você acertou?</p><div className="quiz-self-eval-btns"><button className="quiz-self-eval-btn correct" onClick={() => handleSelfEval('correct')} type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>Acertei</button><button className="quiz-self-eval-btn wrong" onClick={() => handleSelfEval('wrong')} type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>Errei</button></div></div>)}{showFeedback && selfEval && (<div className={`quiz-self-eval-result ${selfEval}`}><span className="quiz-self-eval-result-icon">{selfEval === 'correct' ? '✓' : '✗'}</span> {selfEval === 'correct' ? 'Marcado como certo' : 'Marcado como errado'}</div>)}</div>)
-        case 'ordem': return (<div className="quiz-order-list">{dragOrder.map((id, idx) => { const item = q.orderItems.find(oi => oi.id === id); return item ? (<div key={id} className="quiz-order-item"><span className="quiz-order-num">{idx + 1}°</span><span>{item.text}</span></div>) : null })}</div>)
+        case 'ordem': return (<div className="quiz-order-list">{dragOrder.map((id, idx) => { const item = q.orderItems.find(oi => oi.id === id); return item ? (<div key={id} className={`quiz-order-item ${dragIdxRef.current === idx ? 'dragging' : ''} ${dragOverIdx === idx && dragIdxRef.current !== null && dragIdxRef.current !== idx ? 'drag-over' : ''}`} draggable={!showFeedback} onDragStart={handleDragStart(idx)} onDragOver={handleDragOver(idx)} onDragLeave={handleDragLeave} onDrop={handleDrop} onDragEnd={handleDragEnd}><span className="quiz-order-grip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="16" y2="6" /><line x1="8" y1="12" x2="16" y2="12" /><line x1="8" y1="18" x2="16" y2="18" /></svg></span><span className="quiz-order-num">{idx + 1}°</span><span>{item.text}</span></div>) : null })}</div>)
         case 'completar': return renderCompletarInline()
       }
     }
