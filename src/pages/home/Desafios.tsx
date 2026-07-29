@@ -944,17 +944,6 @@ const [questionHidden, setQuestionHidden] = useState(false)
               <div className="desafio-card-footer">
                 <span className="desafio-card-subject" style={{ background: SUBJECT_COLORS[challenge.subject]?.bg, color: SUBJECT_COLORS[challenge.subject]?.text }}>{challenge.subject}</span>
                 {challenge.crossSubjects && challenge.crossSubjects.length > 0 && <span className="desafio-card-cross">+ {challenge.crossSubjects.join(', ')}</span>}
-                {challenge.modifiers && challenge.modifiers.length > 0 && (
-                  <div className="desafio-card-modifiers">
-                    {challenge.modifiers.map(m => (
-                      <Tooltip key={m} content={MODIFIER_LABELS[m]} position="top" hideIcon>
-                        <span className="desafio-modifier-icon" style={{ color: MODIFIER_COLORS[m] }}>
-                          {MODIFIER_ICONS[m]}
-                        </span>
-                      </Tooltip>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           )

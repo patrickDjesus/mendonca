@@ -56,8 +56,10 @@ interface Props {
 }
 
 export default function MathRenderer({ text, inline }: Props) {
+  console.log('[MathRenderer] rendering text:', JSON.stringify(text))
   const rendered = useMemo(() => {
     const blocks = splitBlocks(text)
+    console.log('[MathRenderer] blocks:', JSON.stringify(blocks))
     return blocks.map((block, i) => {
       if (block.type === 'text') {
         return <span key={i}>{block.content}</span>
