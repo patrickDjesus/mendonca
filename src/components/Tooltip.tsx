@@ -6,12 +6,13 @@ interface TooltipProps {
   children?: ReactNode
   content: string
   position?: 'top' | 'bottom' | 'left' | 'right'
+  hideIcon?: boolean
 }
 
 const OPPOSITE: Record<string, string> = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }
 const GAP = 10
 
-export default function Tooltip({ children, content, position: defaultPos = 'top' }: TooltipProps) {
+export default function Tooltip({ children, content, position: defaultPos = 'top', hideIcon = false }: TooltipProps) {
   const [open, setOpen] = useState(false)
   const [finalPos, setFinalPos] = useState<{ top: number; left: number; dir: string }>({ top: 0, left: 0, dir: defaultPos })
   const triggerRef = useRef<HTMLSpanElement>(null)
@@ -111,13 +112,21 @@ export default function Tooltip({ children, content, position: defaultPos = 'top
 
   return (
     <span
-      className="tooltip-anchor"
+      className={`tooltip-anchor${hideIcon ? ' icon-hidden' : ''}`}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
       onClick={() => setOpen(prev => !prev)}
     >
-      {children}
-      <span ref={triggerRef} className="tooltip-trigger" role="button" tabIndex={0}>?</span>
+      {hideIcon ? (
+        <span ref={triggerRef} style={{ display: 'inline-flex', alignItems: 'inherit', justifyContent: 'inherit' }}>
+          {children}
+        </span>
+      ) : (
+        <>
+          {children}
+          <span ref={triggerRef} className="tooltip-trigger" role="button" tabIndex={0}>?</span>
+        </>
+      )}
       {popup}
     </span>
   )

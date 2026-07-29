@@ -11,6 +11,10 @@
   gap: 0;
 }
 
+.tooltip-anchor.icon-hidden {
+  margin-left: 0;
+}
+
 /* ── Trigger "?" button ── */
 .tooltip-trigger {
   display: inline-flex;

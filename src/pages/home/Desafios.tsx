@@ -45,10 +45,10 @@ function clearSavedQuiz() {
   try { localStorage.removeItem(QUIZ_SAVE_KEY) } catch { }
 }
 
-function calculateScore(correct: number, _wrong: number, timeMs: number, total: number, diff: ChallengeDifficulty) {
+function calculateScore(correct: number, _wrong: number, timeMs: number, total: number, diff: ChallengeDifficulty, timeLimit = 300) {
   const base = diff === 'facil' ? 100 : diff === 'medio' ? 150 : 200
   const pts = correct * base
-  const budget = total * 30_000
+  const budget = timeLimit * 1000
   const bonus = Math.round((1 - Math.min(1, timeMs / budget)) * 500)
   const score = pts + bonus
   const accuracy = total > 0 ? correct / total : 0
@@ -327,7 +327,8 @@ const [questionHidden, setQuestionHidden] = useState(false)
       const totalTimeMs = Date.now() - startTimeRef.current
       const correctCount = answers.filter(a => a.correct).length
       const wrongCount = answers.length - correctCount
-      const { score, xpEarned } = calculateScore(correctCount, wrongCount, totalTimeMs, activeChallenge.questionIds.length, activeChallenge.difficulty)
+      const { score, xpEarned } = calculateScore(correctCount, wrongCount, totalTimeMs, activeChallenge.questionIds.length, activeChallenge.difficulty, activeChallenge.timeLimit)
+
       const isReplay = attemptIds.has(activeChallenge.id)
       const finalXp = isReplay ? Math.round(xpEarned * 0.2) : xpEarned
       const attempt: ChallengeAttempt = { id: crypto.randomUUID(), challengeId: activeChallenge.id, answers: [...answers], totalTimeMs, correctCount, wrongCount, score, xpEarned: finalXp, completedAt: Date.now() }
@@ -414,7 +415,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
   useEffect(() => {
     if (view !== 'quiz' || !activeChallenge) return
     const hasCronometroEmChamas = activeChallenge.modifiers?.includes('cronometro_em_chamas')
-    const timeBudgetMs = activeChallenge.questionIds.length * 30_000 * (hasCronometroEmChamas ? 0.5 : 1)
+    const timeBudgetMs = (activeChallenge.timeLimit || 300) * 1000 * (hasCronometroEmChamas ? 0.5 : 1)
     if (elapsed < timeBudgetMs) return
     if (challengeEndedRef.current) return
     challengeEndedRef.current = true
@@ -423,7 +424,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
     const curAnswers = answersRef.current
     const correctCount = curAnswers.filter(a => a.correct).length
     const wrongCount = curAnswers.length - correctCount
-    const { score, xpEarned } = calculateScore(correctCount, wrongCount, totalTimeMs, activeChallenge.questionIds.length, activeChallenge.difficulty)
+      const { score, xpEarned } = calculateScore(correctCount, wrongCount, totalTimeMs, activeChallenge.questionIds.length, activeChallenge.difficulty, activeChallenge.timeLimit)
     const isReplay = attemptIds.has(activeChallenge.id)
     const finalXp = isReplay ? Math.round(xpEarned * 0.2) : xpEarned
     const attempt: ChallengeAttempt = { id: crypto.randomUUID(), challengeId: activeChallenge.id, answers: [...curAnswers], totalTimeMs, correctCount, wrongCount, score, xpEarned: finalXp, completedAt: Date.now() }
@@ -451,10 +452,8 @@ const [questionHidden, setQuestionHidden] = useState(false)
     const totalQuestions = activeChallenge.questionIds.length
     const progress = ((currentQIndex + 1) / totalQuestions) * 100
     const showMemory = activeChallenge.modifiers?.includes('memoria_curta') && !showFeedback
-    const answeredCount = answers.length
-    const answeredPct = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0
     const hasCronometroEmChamas = activeChallenge.modifiers?.includes('cronometro_em_chamas')
-    const timeBudgetMs = totalQuestions * 30_000 * (hasCronometroEmChamas ? 0.5 : 1)
+    const timeBudgetMs = (activeChallenge.timeLimit || 300) * 1000 * (hasCronometroEmChamas ? 0.5 : 1)
     const timerPct = Math.max(0, Math.min(100, ((timeBudgetMs - elapsed) / timeBudgetMs) * 100))
     const timerClass = timerPct > 50 ? 'safe' : timerPct > 20 ? 'warning' : 'danger'
 
@@ -518,12 +517,18 @@ const [questionHidden, setQuestionHidden] = useState(false)
             <span className="quiz-timer">{formatTime(elapsed)}</span>
           </div>
         </div>
-        <div className="quiz-timer-bar"><div className={`quiz-timer-bar-fill ${timerClass}`} style={{ width: `${timerPct}%` }} /></div>
-        <div className="quiz-answered-bar"><div className="quiz-answered-bar-fill" style={{ width: `${answeredPct}%` }} /></div>
-        <div className="quiz-progress"><div className="quiz-progress-fill" style={{ width: `${progress}%` }} /></div>
+        <div className="quiz-bar-row">
+          <div className="quiz-timer-bar"><div className={`quiz-timer-bar-fill ${timerClass}`} style={{ width: `${timerPct}%` }} /><span className="quiz-bar-value">{formatTime(timeBudgetMs - elapsed)}</span></div>
+        </div>
+        <div className="quiz-bar-row">
+          <div className="quiz-progress"><div className="quiz-progress-fill" style={{ width: `${progress}%` }} /><span className="quiz-bar-value">{currentQIndex + 1}/{activeChallenge.questionIds.length}</span></div>
+        </div>
         {showMemory && !questionHidden && (
-          <div className="quiz-memory-bar">
-            <div className="quiz-memory-bar-fill" style={{ width: `${(memoryTimeLeft / 15) * 100}%` }} />
+          <div className="quiz-bar-row">
+            <span className="quiz-bar-label">Memória</span>
+            <div className="quiz-memory-bar">
+              <div className="quiz-memory-bar-fill" style={{ width: `${(memoryTimeLeft / 15) * 100}%` }} />
+            </div>
           </div>
         )}
         <div className="quiz-card">
@@ -570,33 +575,35 @@ const [questionHidden, setQuestionHidden] = useState(false)
   if (view === 'results' && lastResult) {
     const total = lastResult.correctCount + lastResult.wrongCount
     const accuracy = total > 0 ? Math.round((lastResult.correctCount / total) * 100) : 0
+    const isWin = accuracy === 100
     return (
       <div className="desafios-page">
         <div className="results-container">
-          <h2 className="results-title">{accuracy >= 70 ? 'Parabéns!' : 'Continue tentando!'}</h2>
-          <div className="results-grid">
-            <div className="results-stat">
-              <span className="results-stat-emoji">✅</span>
-              <span className="results-stat-value correct">{lastResult.correctCount}</span>
-              <span className="results-stat-label">Acertos</span>
+          <div className={`results-image-wrap ${isWin ? 'win' : 'lose'}`}>
+            <div className="results-blob" />
+            <div className="results-blob results-blob-2" />
+            <img src={isWin ? '/win.png' : '/lose.png'} alt={isWin ? 'Vitória' : 'Derrota'} className="results-image" />
+          </div>
+          <h2 className="results-title">{isWin ? 'Parabéns!' : 'Continue tentando!'}</h2>
+          <p className="results-challenge-name">{activeChallenge?.title} — {accuracy}%</p>
+          <div className="results-stats-row">
+            <div className="results-stat-mini">
+              <span className="results-stat-mini-value correct">{lastResult.correctCount}</span>
+              <span className="results-stat-mini-label">Acertos</span>
             </div>
-            <div className="results-stat">
-              <span className="results-stat-emoji">❌</span>
-              <span className="results-stat-value wrong">{lastResult.wrongCount}</span>
-              <span className="results-stat-label">Erros</span>
+            <div className="results-stat-mini">
+              <span className="results-stat-mini-value wrong">{lastResult.wrongCount}</span>
+              <span className="results-stat-mini-label">Erros</span>
             </div>
-            <div className="results-stat">
-              <span className="results-stat-emoji">⭐</span>
-              <span className="results-stat-value">+{lastResult.xpEarned}</span>
-              <span className="results-stat-label">XP Ganho</span>
+            <div className="results-stat-mini">
+              <span className="results-stat-mini-value xp">+{lastResult.xpEarned}</span>
+              <span className="results-stat-mini-label">XP</span>
             </div>
-            <div className="results-stat">
-              <span className="results-stat-emoji">⏱️</span>
-              <span className="results-stat-value">{formatTime(lastResult.totalTimeMs)}</span>
-              <span className="results-stat-label">Tempo</span>
+            <div className="results-stat-mini">
+              <span className="results-stat-mini-value time">{formatTime(lastResult.totalTimeMs)}</span>
+              <span className="results-stat-mini-label">Tempo</span>
             </div>
           </div>
-          <div className="results-accuracy"><span className="results-accuracy-value">{accuracy}%</span></div>
           <button className="quiz-next-btn results-back-btn" onClick={handleBackToList} type="button">Voltar aos desafios</button>
         </div>
       </div>
@@ -911,9 +918,9 @@ const [questionHidden, setQuestionHidden] = useState(false)
       <div className="desafios-grid">
         {filteredChallenges.map(challenge => {
           const isAttempted = attemptIds.has(challenge.id)
+          const attemptCount = attempts.filter(a => a.challengeId === challenge.id).length
           return (
             <div key={challenge.id} className={`desafio-card ${isAttempted ? 'attempted' : ''}`} onClick={() => startChallenge(challenge)}>
-              {isAttempted && <div className="desafio-stamp"><span className="stamp-text">COMPLETADO</span><span className="stamp-hover">REJOGAR</span></div>}
               <div className="desafio-card-top">
                 <div className="desafio-card-badges">
                   <span className={`desafio-badge difficulty-${challenge.difficulty}`}>{DIFFICULTY_LABELS[challenge.difficulty]}</span>
@@ -922,17 +929,20 @@ const [questionHidden, setQuestionHidden] = useState(false)
                 </div>
                 <span className="desafio-card-xp"><img src="/XP.png" alt="" className="desafio-xp-icon" /> +{challenge.xpBase} XP <Tooltip content={isAttempted ? "Refazer rende 20% do XP original." : "XP que você ganha ao concluir este desafio."} /></span>
               </div>
+              {isAttempted && (
+                <div className="desafio-card-medal">
+                  <Tooltip content="Quantas vezes você venceu este desafio" hideIcon>
+                    <img src="/trophy.png" alt="" className="desafio-card-trophy" />
+                  </Tooltip>
+                  <span className="desafio-card-medal-count">{attemptCount}</span>
+                </div>
+              )}
               <h4 className="desafio-card-title">{challenge.title}</h4>
               <p className="desafio-card-desc">{challenge.description}</p>
               <div className="desafio-card-footer">
                 <span className="desafio-card-subject" style={{ background: SUBJECT_COLORS[challenge.subject]?.bg, color: SUBJECT_COLORS[challenge.subject]?.text }}>{challenge.subject}</span>
                 {challenge.crossSubjects && challenge.crossSubjects.length > 0 && <span className="desafio-card-cross">+ {challenge.crossSubjects.join(', ')}</span>}
-                <div className="desafio-card-actions" onClick={e => e.stopPropagation()}>
-                  <button className="desafio-card-action-btn view-questions" onClick={() => setViewingQuestionsChallenge(challenge)} type="button">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
-                    <span>Ver questões</span>
-                  </button>
-                </div>
+
               </div>
             </div>
           )

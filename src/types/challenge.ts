@@ -103,6 +103,7 @@ export interface Challenge {
   createdAt: number
   modifiers: ChallengeModifier[]
   apostaCegaMin?: number
+  timeLimit?: number
 }
 
 export interface QuestionAnswer {

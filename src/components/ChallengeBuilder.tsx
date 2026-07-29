@@ -128,6 +128,7 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
   const [apostaCegaMin, setApostaCegaMin] = useState(initial?.apostaCegaMin || Math.max(1, Math.ceil((initial?.questionIds.length || 0) * 0.2)))
   const [filterSubject, setFilterSubject] = useState<Subject | 'Todas'>('Todas')
   const [searchQuery, setSearchQuery] = useState('')
+  const [timeLimit, setTimeLimit] = useState(initial?.timeLimit || 300)
   const [error, setError] = useState('')
 
   const primarySubject = subjects[0] || 'Matemática'
@@ -149,6 +150,19 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
 
   const toggleQuestion = useCallback((id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }, [])
+
+  const moveQuestion = useCallback((id: string, dir: -1 | 1) => {
+    setSelectedIds(prev => {
+      const idx = prev.indexOf(id)
+      if (idx === -1) return prev
+      const to = idx + dir
+      if (to < 0 || to >= prev.length) return prev
+      const next = [...prev]
+      next[idx] = prev[to]
+      next[to] = prev[idx]
+      return next
+    })
   }, [])
 
   const filtered = useMemo(() => {
@@ -206,9 +220,10 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
       createdAt: initial?.createdAt || Date.now(),
       modifiers,
       apostaCegaMin: modifiers.includes('aposta_cega') ? apostaCegaMin : undefined,
+      timeLimit,
     }
     onSave(challenge, [])
-  }, [title, description, primarySubject, crossSubjects, difficulty, selectedIds, initial, onSave, modifiers, apostaCegaMin])
+  }, [title, description, primarySubject, crossSubjects, difficulty, selectedIds, initial, onSave, modifiers, apostaCegaMin, timeLimit])
 
   const xpPreview = useMemo(() => {
     const baseXp = difficulty === 'facil' ? 100 : difficulty === 'medio' ? 150 : 200
@@ -217,10 +232,10 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
     return { base: baseXp, questions: questionBonus, modifiers: modifierBonus, total: baseXp + questionBonus + modifierBonus }
   }, [difficulty, selectedIds, modifiers])
 
-  const steps: { key: BuilderStep; label: string; icon: React.ReactNode }[] = [
-    { key: 'info', label: 'Informações', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg> },
-    { key: 'questions', label: 'Questões', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg> },
-    { key: 'modifiers', label: 'Modificadores', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg> },
+  const steps: { key: BuilderStep; label: string; desc: string }[] = [
+    { key: 'info', label: 'Informações', desc: 'Título, matérias e dificuldade' },
+    { key: 'questions', label: 'Questões', desc: 'Selecionar e ordenar' },
+    { key: 'modifiers', label: 'Modificadores', desc: 'Regras extras opcionais' },
   ]
 
   return (
@@ -234,13 +249,28 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
       </div>
 
       <div className="cb-step-nav">
-        {steps.map((s, i) => (
-          <button key={s.key} className={`cb-step-btn ${step === s.key ? 'active' : ''} ${steps.findIndex(x => x.key === step) > i ? 'completed' : ''}`} onClick={() => { if (i < steps.findIndex(x => x.key === step)) setStep(s.key) }} type="button" disabled={steps.findIndex(x => x.key === step) < i}>
-            <span className="cb-step-icon">{s.icon}</span>
-            <span className="cb-step-label">{s.label}</span>
-            {i < steps.length - 1 && <span className="cb-step-line" />}
-          </button>
-        ))}
+        {steps.map((s, i) => {
+          const currentIdx = steps.findIndex(x => x.key === step)
+          const isActive = step === s.key
+          const isCompleted = currentIdx > i
+          const isFuture = currentIdx < i
+          return (
+            <button key={s.key} className={`cb-step-btn ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${isFuture ? 'future' : ''}`} onClick={() => { if (isCompleted) setStep(s.key) }} type="button" disabled={isFuture}>
+              <span className="cb-step-indicator">
+                {isCompleted ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                ) : (
+                  <span className="cb-step-number">{i + 1}</span>
+                )}
+              </span>
+              <div className="cb-step-text">
+                <span className="cb-step-label">{s.label}</span>
+                <span className="cb-step-desc">{s.desc}</span>
+              </div>
+              {i < steps.length - 1 && <span className={`cb-step-line ${isCompleted ? 'filled' : ''}`} />}
+            </button>
+          )
+        })}
       </div>
 
       {error && <div className="qb-error">{error}</div>}
@@ -305,6 +335,18 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
             </div>
           </div>
 
+          <div className="cb-section-card">
+            <h4 className="cb-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+              Limite de tempo
+            </h4>
+            <p className="cb-section-desc">Tempo total para concluir o desafio inteiro.</p>
+            <div className="cb-time-input-row">
+              <input className="qb-input" type="number" min={30} max={3600} value={timeLimit} onChange={e => setTimeLimit(Math.max(30, Math.min(3600, Number(e.target.value) || 300)))} style={{ width: 80 }} />
+              <span className="cb-time-input-label">segundos ({(timeLimit / 60).toFixed(0)} min)</span>
+            </div>
+          </div>
+
           <div className="cb-nav-footer">
             <button className="cb-cancel-btn" onClick={onCancel} type="button">Cancelar</button>
             <button className="cb-save-btn" onClick={handleNextFromInfo} type="button">
@@ -322,11 +364,11 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
             <div className="cb-picker-header">
               <span className="cb-section-title">Questões ({selectedIds.length} selecionadas)</span>
               <div className="cb-picker-filters">
-                <div className="cb-search-wrap">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="cb-search-icon"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-                  <input className="cb-search-input" type="text" placeholder="Buscar por nome, matéria, tipo..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-                  {searchQuery && <button className="cb-search-clear" onClick={() => setSearchQuery('')} type="button">×</button>}
-                </div>
+                  <div className="cb-search-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="cb-search-icon"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+                    <input className="cb-search-input" type="text" placeholder="Buscar por nome, matéria, tipo..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                    <button className={`cb-search-clear ${searchQuery ? '' : 'hidden'}`} onClick={() => setSearchQuery('')} type="button">×</button>
+                  </div>
                 <select className="qb-select qb-select-sm" value={filterSubject} onChange={e => { setFilterSubject(e.target.value as Subject | 'Todas'); setSearchQuery('') }}>
                   <option value="Todas">Todas as matérias</option>
                   {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -348,6 +390,16 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
                       <span className="cb-q-title">{q.title}</span>
                       <span className="cb-q-meta">{q.subject} · {QUESTION_TYPE_LABELS[q.type]} · <span className={`cb-q-diff cb-q-diff-${q.difficulty}`}>{q.difficulty === 'facil' ? 'Fácil' : q.difficulty === 'medio' ? 'Médio' : 'Difícil'}</span></span>
                     </div>
+                    {isSelected && (
+                      <div className="cb-q-order" onClick={e => e.stopPropagation()}>
+                        <button className="cb-q-order-btn" onClick={() => moveQuestion(q.id, -1)} disabled={selectedIds.indexOf(q.id) === 0} type="button" title="Subir">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+                        </button>
+                        <button className="cb-q-order-btn" onClick={() => moveQuestion(q.id, 1)} disabled={selectedIds.indexOf(q.id) === selectedIds.length - 1} type="button" title="Descer">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )
               })}
