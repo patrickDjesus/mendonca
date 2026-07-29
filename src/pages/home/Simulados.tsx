@@ -3,6 +3,9 @@ import type { ChallengeQuestion, ChallengeOption } from '../../types/challenge'
 import type { Subject } from '../../types/doc'
 import { recordAction } from '../../lib/db'
 import Tooltip from '../../components/Tooltip'
+import MathRenderer from '../../components/MathRenderer'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
 import '../../styles/simulados.css'
 
 const API_BASE = import.meta.env.DEV ? '/enem-api' : 'https://api.enem.dev/v1'
@@ -202,45 +205,87 @@ function classifySubject(discipline: string | null, context: string | null, altT
 }
 
 function renderEnemMarkdown(text: string): string {
-  let html = text
+  const katexBlocks: string[] = []
+  let idx = 0
+  let processed = text
+
+  const placeholderPatterns = [
+    { open: '$$', close: '$$' },
+    { open: '\\(', close: '\\)' },
+    { open: '\\[', close: '\\]' },
+    { open: '$', close: '$' },
+  ]
+
+  for (const { open, close } of placeholderPatterns) {
+    const parts: string[] = []
+    let remaining = processed
+    while (remaining.length > 0) {
+      const oi = remaining.indexOf(open)
+      if (oi === -1) { parts.push(remaining); break }
+      const ci = remaining.indexOf(close, oi + open.length)
+      if (ci === -1) { parts.push(remaining); break }
+      const before = remaining.slice(0, oi)
+      const math = remaining.slice(oi + open.length, ci)
+      parts.push(before)
+      try {
+        const html = katex.renderToString(math, { displayMode: open === '$$' || open === '\\[', throwOnError: false })
+        const placeholder = `§§KATEX${idx}§§`
+        katexBlocks.push(html)
+        parts.push(placeholder)
+        idx++
+      } catch {
+        parts.push(math)
+      }
+      remaining = remaining.slice(ci + close.length)
+    }
+    processed = parts.join('')
+  }
+
+  let html = processed
   html = html.replace(/&/g, '&amp;')
   html = html.replace(/</g, '&lt;')
   html = html.replace(/>/g, '&gt;')
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img class="enem-inline-img" src="$2" alt="$1" />')
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
   const lines = html.split('\n')
-  const processed: string[] = []
+  const processedLines: string[] = []
   let inBlock = false
   for (const line of lines) {
     const trimmed = line.trim()
     if (trimmed === '') {
       if (inBlock) {
-        processed.push('</div>')
+        processedLines.push('</div>')
         inBlock = false
       }
-      processed.push('')
+      processedLines.push('')
     } else if (trimmed.startsWith('&gt;') || trimmed.startsWith('[')) {
       if (!inBlock) {
-        processed.push('<div class="enem-citation">')
+        processedLines.push('<div class="enem-citation">')
         inBlock = true
       }
-      processed.push(trimmed)
+      processedLines.push(trimmed)
     } else {
       if (inBlock) {
-        processed.push('</div>')
+        processedLines.push('</div>')
         inBlock = false
       }
-      processed.push(trimmed)
+      processedLines.push(trimmed)
     }
   }
-  if (inBlock) processed.push('</div>')
-  return processed
+  if (inBlock) processedLines.push('</div>')
+  let result = processedLines
     .map(line => {
       if (line === '') return '<br/>'
       if (line.startsWith('<div') || line.startsWith('</div>')) return line
       return `<p>${line}</p>`
     })
     .join('')
+
+  for (let i = 0; i < katexBlocks.length; i++) {
+    result = result.replace(`§§KATEX${i}§§`, katexBlocks[i])
+  }
+
+  return result
 }
 
 function extractImageUrls(text: string): Set<string> {
@@ -626,7 +671,7 @@ export default function Simulados() {
                   />
                 )}
                 {q.explanation && (
-                  <p className="exam-q-question">{q.explanation}</p>
+                  <p className="exam-q-question"><MathRenderer text={q.explanation} /></p>
                 )}
                 <div className="exam-q-options">
                   {q.options.map((opt, oi) => (
@@ -637,7 +682,7 @@ export default function Simulados() {
                       type="button"
                     >
                       <span className="exam-option-letter">{LETTERS[oi]}</span>
-                      <span className="exam-option-text">{opt.text}</span>
+                      <span className="exam-option-text"><MathRenderer text={opt.text} inline /></span>
                     </button>
                   ))}
                 </div>

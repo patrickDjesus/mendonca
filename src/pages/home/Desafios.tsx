@@ -9,6 +9,7 @@ import ChallengeBuilder from '../../components/ChallengeBuilder'
 import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, deleteQuestion, createChallenge, updateChallenge, deleteChallenge, createAttempt, logActivity, recordAction, checkModeHardcore, checkMasoquista } from '../../lib/db'
 import { supabase } from '../../lib/supabase'
 import Tooltip from '../../components/Tooltip'
+import MathRenderer from '../../components/MathRenderer'
 import '../../styles/desafios.css'
 
 const EMPTY_STREAK: UserStreak = { currentStreak: 0, longestStreak: 0, lastChallengeDate: null, totalXp: 0, totalWatchSeconds: 0, videosWatched: 0, docsCreated: 0, challengesCompleted: 0, simuladosCompleted: 0, notesCreated: 0, loginDays: 0, lastLoginDate: null, videosWatchedToday: 0, videosWatchedDate: null, watchedSubjects: [], completedSimuladoYears: [], bestSimuladoScore: 0, simuladosThisWeek: 0, lastSimuladoWeek: null }
@@ -461,7 +462,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
     const renderQuizBody = () => {
       return (
         <>
-          {q.content && q.type !== 'completar' && <p className="quiz-content-text">{q.content}</p>}
+          {q.content && q.type !== 'completar' && <p className="quiz-content-text"><MathRenderer text={q.content} /></p>}
           {q.imageUrl && <img className="quiz-image" src={q.imageUrl} alt="" />}
         </>
       )
@@ -490,7 +491,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
                 </span>
               )
             }
-            return <span key={i}>{part}</span>
+            return <span key={i}><MathRenderer text={part} inline /></span>
           })}
         </div>
       )
@@ -498,11 +499,11 @@ const [questionHidden, setQuestionHidden] = useState(false)
 
     const renderTypeSpecific = () => {
       switch (q.type) {
-        case 'multipla': return (<div className="quiz-options">{q.options.map((opt, i) => <button key={opt.id} className={`quiz-option ${selectedOptionIds.includes(opt.id) ? 'selected' : ''}`} onClick={() => setSelectedOptionIds([opt.id])} type="button"><span className="quiz-option-letter">{LETTERS[i]}</span><span className="quiz-option-text">{opt.text}</span></button>)}</div>)
-        case 'multipla_multipla': return (<div className="quiz-options">{q.options.map((opt, i) => <button key={opt.id} className={`quiz-option ${selectedOptionIds.includes(opt.id) ? 'selected' : ''}`} onClick={() => setSelectedOptionIds(prev => prev.includes(opt.id) ? prev.filter(x => x !== opt.id) : [...prev, opt.id])} type="button"><span className="quiz-option-letter">{LETTERS[i]}</span><span className="quiz-option-text">{opt.text}</span></button>)}</div>)
-        case 'verdadeiro_falso': return (<div className="quiz-tf-list">{q.statements.map(st => (<div key={st.id} className="quiz-tf-row"><p className="quiz-tf-text">{st.text}</p><div className="quiz-tf-btns"><button className={`quiz-tf-btn ${tfAnswers[st.id] === 'true' ? 'selected' : ''}`} onClick={() => setTfAnswers(prev => ({ ...prev, [st.id]: 'true' }))} type="button">V</button><button className={`quiz-tf-btn ${tfAnswers[st.id] === 'false' ? 'selected' : ''}`} onClick={() => setTfAnswers(prev => ({ ...prev, [st.id]: 'false' }))} type="button">F</button></div></div>))}</div>)
-        case 'aberta': return (<div className="quiz-open"><textarea className="qb-textarea" value={openText} onChange={e => setOpenText(e.target.value)} placeholder="Digite sua resposta..." rows={4} readOnly={showFeedback} />{showFeedback && q.openExpectedText && <div className="quiz-open-expected"><strong>Resposta esperada:</strong> {q.openExpectedText}</div>}{showFeedback && !selfEval && (<div className="quiz-self-eval"><p className="quiz-self-eval-label">Você acertou?</p><div className="quiz-self-eval-btns"><button className="quiz-self-eval-btn correct" onClick={() => handleSelfEval('correct')} type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>Acertei</button><button className="quiz-self-eval-btn wrong" onClick={() => handleSelfEval('wrong')} type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>Errei</button></div></div>)}{showFeedback && selfEval && (<div className={`quiz-self-eval-result ${selfEval}`}><span className="quiz-self-eval-result-icon">{selfEval === 'correct' ? '✓' : '✗'}</span> {selfEval === 'correct' ? 'Marcado como certo' : 'Marcado como errado'}</div>)}</div>)
-        case 'ordem': return (<div className="quiz-order-list">{dragOrder.map((id, idx) => { const item = q.orderItems.find(oi => oi.id === id); return item ? (<div key={id} className={`quiz-order-item ${dragIdxRef.current === idx ? 'dragging' : ''} ${dragOverIdx === idx && dragIdxRef.current !== null && dragIdxRef.current !== idx ? 'drag-over' : ''}`} draggable={!showFeedback} onDragStart={handleDragStart(idx)} onDragOver={handleDragOver(idx)} onDragLeave={handleDragLeave} onDrop={handleDrop} onDragEnd={handleDragEnd}><span className="quiz-order-grip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="16" y2="6" /><line x1="8" y1="12" x2="16" y2="12" /><line x1="8" y1="18" x2="16" y2="18" /></svg></span><span className="quiz-order-num">{idx + 1}°</span><span>{item.text}</span></div>) : null })}</div>)
+        case 'multipla': return (<div className="quiz-options">{q.options.map((opt, i) => <button key={opt.id} className={`quiz-option ${selectedOptionIds.includes(opt.id) ? 'selected' : ''}`} onClick={() => setSelectedOptionIds([opt.id])} type="button"><span className="quiz-option-letter">{LETTERS[i]}</span><span className="quiz-option-text"><MathRenderer text={opt.text} inline /></span></button>)}</div>)
+        case 'multipla_multipla': return (<div className="quiz-options">{q.options.map((opt, i) => <button key={opt.id} className={`quiz-option ${selectedOptionIds.includes(opt.id) ? 'selected' : ''}`} onClick={() => setSelectedOptionIds(prev => prev.includes(opt.id) ? prev.filter(x => x !== opt.id) : [...prev, opt.id])} type="button"><span className="quiz-option-letter">{LETTERS[i]}</span><span className="quiz-option-text"><MathRenderer text={opt.text} inline /></span></button>)}</div>)
+        case 'verdadeiro_falso': return (<div className="quiz-tf-list">{q.statements.map(st => (<div key={st.id} className="quiz-tf-row"><p className="quiz-tf-text"><MathRenderer text={st.text} inline /></p><div className="quiz-tf-btns"><button className={`quiz-tf-btn ${tfAnswers[st.id] === 'true' ? 'selected' : ''}`} onClick={() => setTfAnswers(prev => ({ ...prev, [st.id]: 'true' }))} type="button">V</button><button className={`quiz-tf-btn ${tfAnswers[st.id] === 'false' ? 'selected' : ''}`} onClick={() => setTfAnswers(prev => ({ ...prev, [st.id]: 'false' }))} type="button">F</button></div></div>))}</div>)
+        case 'aberta': return (<div className="quiz-open"><textarea className="qb-textarea" value={openText} onChange={e => setOpenText(e.target.value)} placeholder="Digite sua resposta..." rows={4} readOnly={showFeedback} />{showFeedback && q.openExpectedText && <div className="quiz-open-expected"><strong>Resposta esperada:</strong> <MathRenderer text={q.openExpectedText} /></div>}{showFeedback && !selfEval && (<div className="quiz-self-eval"><p className="quiz-self-eval-label">Você acertou?</p><div className="quiz-self-eval-btns"><button className="quiz-self-eval-btn correct" onClick={() => handleSelfEval('correct')} type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>Acertei</button><button className="quiz-self-eval-btn wrong" onClick={() => handleSelfEval('wrong')} type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>Errei</button></div></div>)}{showFeedback && selfEval && (<div className={`quiz-self-eval-result ${selfEval}`}><span className="quiz-self-eval-result-icon">{selfEval === 'correct' ? '✓' : '✗'}</span> {selfEval === 'correct' ? 'Marcado como certo' : 'Marcado como errado'}</div>)}</div>)
+        case 'ordem': return (<div className="quiz-order-list">{dragOrder.map((id, idx) => { const item = q.orderItems.find(oi => oi.id === id); return item ? (<div key={id} className={`quiz-order-item ${dragIdxRef.current === idx ? 'dragging' : ''} ${dragOverIdx === idx && dragIdxRef.current !== null && dragIdxRef.current !== idx ? 'drag-over' : ''}`} draggable={!showFeedback} onDragStart={handleDragStart(idx)} onDragOver={handleDragOver(idx)} onDragLeave={handleDragLeave} onDrop={handleDrop} onDragEnd={handleDragEnd}><span className="quiz-order-grip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="16" y2="6" /><line x1="8" y1="12" x2="16" y2="12" /><line x1="8" y1="18" x2="16" y2="18" /></svg></span><span className="quiz-order-num">{idx + 1}°</span><span><MathRenderer text={item.text} inline /></span></div>) : null })}</div>)
         case 'completar': return renderCompletarInline()
       }
     }
@@ -543,11 +544,11 @@ const [questionHidden, setQuestionHidden] = useState(false)
               </span>
             )}
           </div>
-          {!questionHidden && <h3 className="quiz-q-title">{q.title}</h3>}
+          {!questionHidden && <h3 className="quiz-q-title"><MathRenderer text={q.title} /></h3>}
           {!questionHidden && renderQuizBody()}
           {questionHidden && <div className="quiz-question-hidden-msg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg><span>Memória Curta: a pergunta desapareceu!</span></div>}
           {renderTypeSpecific()}
-          {showFeedback && q.explanation && <div className="quiz-explanation"><strong>Explicação:</strong> {q.explanation}</div>}
+          {showFeedback && q.explanation && <div className="quiz-explanation"><strong>Explicação:</strong> <MathRenderer text={q.explanation} /></div>}
           <div className="quiz-actions">
             {!showFeedback ? <button className="quiz-confirm-btn" onClick={handleConfirmAnswer} disabled={!isAnswerReady()} type="button">Confirmar</button> : <button className="quiz-next-btn" onClick={handleNext} disabled={q.type === 'aberta' && !selfEval} type="button">{currentQIndex >= activeChallenge.questionIds.length - 1 ? 'Ver resultado' : 'Próxima'}</button>}
           </div>
@@ -946,9 +947,11 @@ const [questionHidden, setQuestionHidden] = useState(false)
                 {challenge.modifiers && challenge.modifiers.length > 0 && (
                   <div className="desafio-card-modifiers">
                     {challenge.modifiers.map(m => (
-                      <span key={m} className="desafio-modifier-icon" style={{ color: MODIFIER_COLORS[m] }} title={MODIFIER_LABELS[m]}>
-                        {MODIFIER_ICONS[m]}
-                      </span>
+                      <Tooltip key={m} content={MODIFIER_LABELS[m]} position="top" hideIcon>
+                        <span className="desafio-modifier-icon" style={{ color: MODIFIER_COLORS[m] }}>
+                          {MODIFIER_ICONS[m]}
+                        </span>
+                      </Tooltip>
                     ))}
                   </div>
                 )}
@@ -1034,7 +1037,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
                 </div>
                 <div>
-                  <h3 className="qv-title">{viewingQuestionsChallenge.title}</h3>
+                  <h3 className="qv-title"><MathRenderer text={viewingQuestionsChallenge.title} /></h3>
                   <span className="qv-subtitle">{viewingQuestionsChallenge.questionIds.length} {viewingQuestionsChallenge.questionIds.length === 1 ? 'questão' : 'questões'}</span>
                 </div>
               </div>
@@ -1067,7 +1070,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
                       <div className="qv-card-left">
                         <span className="qv-card-num">{String(idx + 1).padStart(2, '0')}</span>
                         <div className="qv-card-info">
-                          <span className="qv-card-title">{q.title}</span>
+                          <span className="qv-card-title"><MathRenderer text={q.title} /></span>
                           <div className="qv-card-badges">
                             <span className="qv-badge subject" style={{ background: SUBJECT_COLORS[q.subject]?.bg, color: SUBJECT_COLORS[q.subject]?.text }}>{q.subject}</span>
                             <span className="qv-badge type">{QUESTION_TYPE_LABELS[q.type]}</span>
@@ -1081,7 +1084,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
 
                     {isExpanded && (
                       <div className="qv-card-detail">
-                        {q.content && <p className="qv-card-content">{q.content}</p>}
+                        {q.content && <p className="qv-card-content"><MathRenderer text={q.content} /></p>}
                         {q.imageUrl && <img className="qv-card-img" src={q.imageUrl} alt="" />}
 
                         {(q.type === 'multipla' || q.type === 'multipla_multipla') && q.options.length > 0 && (
@@ -1089,7 +1092,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
                             {q.options.map((opt, oi) => (
                               <div key={opt.id} className={`qv-option-row ${opt.correct ? 'correct' : ''}`}>
                                 <span className="qv-option-letter">{LETTERS[oi]}</span>
-                                <span className="qv-option-text">{opt.text}</span>
+                                <span className="qv-option-text"><MathRenderer text={opt.text} inline /></span>
                                 {opt.correct && <svg className="qv-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
                               </div>
                             ))}
@@ -1101,7 +1104,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
                             {q.statements.map(st => (
                               <div key={st.id} className={`qv-option-row ${st.correct ? 'correct' : ''}`}>
                                 <span className={`qv-tf-badge ${st.correct ? 'true' : 'false'}`}>{st.correct ? 'V' : 'F'}</span>
-                                <span className="qv-option-text">{st.text}</span>
+                                <span className="qv-option-text"><MathRenderer text={st.text} inline /></span>
                               </div>
                             ))}
                           </div>
@@ -1112,7 +1115,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
                             {[...q.orderItems].sort((a, b) => a.correctOrder - b.correctOrder).map((item, oi) => (
                               <div key={item.id} className="qv-option-row">
                                 <span className="qv-order-num">{oi + 1}°</span>
-                                <span className="qv-option-text">{item.text}</span>
+                                <span className="qv-option-text"><MathRenderer text={item.text} inline /></span>
                               </div>
                             ))}
                           </div>
@@ -1128,9 +1131,9 @@ const [questionHidden, setQuestionHidden] = useState(false)
                                 if (blankPat.test(part)) {
                                   const blank = q.blanks[bi]
                                   bi++
-                                  return blank ? <span key={blank.id} className="quiz-fill-blank"><span className="quiz-fill-input correct" style={{ cursor: 'default' }}>{blank.answer}</span></span> : <span key={pi}>{part}</span>
+                                  return blank ? <span key={blank.id} className="quiz-fill-blank"><span className="quiz-fill-input correct" style={{ cursor: 'default' }}><MathRenderer text={blank.answer} inline /></span></span> : <span key={pi}>{part}</span>
                                 }
-                                return <span key={pi}>{part}</span>
+                                return <span key={pi}><MathRenderer text={part} inline /></span>
                               })}
                             </div>
                           )
@@ -1138,7 +1141,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
 
                         {q.explanation && (
                           <div className="qv-explanation">
-                            <strong>Explicação:</strong> {q.explanation}
+                            <strong>Explicação:</strong> <MathRenderer text={q.explanation} />
                           </div>
                         )}
                       </div>
