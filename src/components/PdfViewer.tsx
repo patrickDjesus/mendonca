@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
+import { supabase } from '../lib/supabase'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
@@ -24,8 +25,61 @@ export default function PdfViewer({ fileUrl, fileName, docId, onClose }: PdfView
   const overlayRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const pageWrappers = useRef<Map<number, HTMLDivElement>>(new Map())
+  const [pdfBlob, setPdfBlob] = useState<string | null>(null)
+  const blobUrlRef = useRef<string | null>(null)
 
   const scale = ZOOM_STEPS[scaleIndex]
+
+  useEffect(() => {
+    if (!fileUrl) { setLoading(false); setError('URL do PDF não fornecida'); return }
+
+    let cancelled = false
+
+    const loadPdf = async () => {
+      try {
+        let blob: Blob
+
+        if (fileUrl.includes('/storage/v1/object/')) {
+          const urlObj = new URL(fileUrl)
+          const pathParts = urlObj.pathname.split('/')
+          const bucketIdx = pathParts.indexOf('object') + 2
+          if (bucketIdx > 1 && bucketIdx < pathParts.length) {
+            const filePath = pathParts.slice(bucketIdx).join('/')
+            const { data, error: downloadError } = await supabase.storage.from('documents').download(filePath)
+            if (downloadError) throw new Error(downloadError.message)
+            if (!data) throw new Error('Arquivo vazio')
+            blob = data
+          } else {
+            throw new Error('URL inválida')
+          }
+        } else {
+          const res = await fetch(fileUrl, { credentials: 'omit' })
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+          blob = await res.blob()
+        }
+
+        if (cancelled) return
+        const url = URL.createObjectURL(blob)
+        blobUrlRef.current = url
+        setPdfBlob(url)
+      } catch (err) {
+        if (!cancelled) {
+          setError((err as Error).message)
+          setLoading(false)
+        }
+      }
+    }
+
+    loadPdf()
+
+    return () => {
+      cancelled = true
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current)
+        blobUrlRef.current = null
+      }
+    }
+  }, [fileUrl])
 
   useEffect(() => {
     const el = overlayRef.current
@@ -196,7 +250,7 @@ export default function PdfViewer({ fileUrl, fileName, docId, onClose }: PdfView
               </div>
             )}
             <Document
-              file={fileUrl}
+              file={pdfBlob || fileUrl}
               onLoadSuccess={onDocumentLoad}
               onLoadError={onDocumentLoadError}
               loading=""
