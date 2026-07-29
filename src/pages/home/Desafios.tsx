@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import type { Challenge, ChallengeQuestion, QuestionAnswer, ChallengeAttempt, UserStreak, ChallengeDifficulty } from '../../types/challenge'
-import { QUESTION_TYPE_LABELS, MODIFIER_LABELS, MODIFIER_ICONS, MODIFIER_COLORS } from '../../types/challenge'
+import { QUESTION_TYPE_LABELS, MODIFIER_LABELS, MODIFIER_ICONS, MODIFIER_COLORS, MODIFIER_DESCRIPTIONS } from '../../types/challenge'
 import type { Subject } from '../../types/doc'
 import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import QuestionBuilder from '../../components/QuestionBuilder'
@@ -581,10 +581,10 @@ const [questionHidden, setQuestionHidden] = useState(false)
       <div className="desafios-page">
         <div className="results-container">
           <div className={`results-image-wrap ${isWin ? 'win' : 'lose'}`}>
-            <div className="results-blob" />
-            <div className="results-blob results-blob-2" />
+            <div className="results-deformed-circle" />
             <img src={isWin ? '/win.png' : '/lose.png'} alt={isWin ? 'Vitória' : 'Derrota'} className="results-image" />
           </div>
+          <div className="results-content">
           <h2 className="results-title">{isWin ? 'Parabéns!' : 'Continue tentando!'}</h2>
           <p className="results-challenge-name">{activeChallenge?.title} — {accuracy}%</p>
           <div className="results-stats-row">
@@ -606,6 +606,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
             </div>
           </div>
           <button className="quiz-next-btn results-back-btn" onClick={handleBackToList} type="button">Voltar aos desafios</button>
+          </div>
         </div>
       </div>
     )
