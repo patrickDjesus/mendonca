@@ -6,6 +6,7 @@ import AddDocCard from '../../components/AddDocCard'
 import '../../styles/documentos.css'
 import { generatePdfThumbnail } from '../../utils/pdfThumbnails'
 import { fetchMyDocs, fetchPublicDocs, createDoc, updateDoc, deleteDoc, logActivity, recordAction, checkMaterialOuro } from '../../lib/db'
+import { supabase } from '../../lib/supabase'
 
 const DocEditor = lazy(() => import('../../components/DocEditor'))
 const PdfViewer = lazy(() => import('../../components/PdfViewer'))
@@ -141,12 +142,16 @@ export default function Documentos() {
       const input = fileInputRef.current
       if (!input) return
       const originalOnchange = input.onchange
-      input.onchange = (e) => {
+      input.onchange = async (e) => {
         const target = e.target as HTMLInputElement
         const file = target.files?.[0]
         if (!file) { input.onchange = originalOnchange; return }
-        const fileUrl = URL.createObjectURL(file)
         const newDocId = crypto.randomUUID()
+        const fileExt = file.name.split('.').pop()
+        const filePath = `${newDocId}.${fileExt}`
+        const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file)
+        if (uploadError) { console.error('Erro ao fazer upload do PDF:', uploadError); return }
+        const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(filePath)
         const newDoc: DocMeta = {
           id: newDocId,
           title: form.title || file.name.replace(/\.pdf$/i, ''),
@@ -154,7 +159,7 @@ export default function Documentos() {
           type: 'pdf',
           subject,
           fileName: file.name,
-          fileUrl,
+          fileUrl: publicUrl,
           fileSize: file.size,
           createdAt: Date.now(),
           updatedAt: Date.now(),

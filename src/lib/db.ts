@@ -415,6 +415,20 @@ export async function updateDoc(d: DocMeta): Promise<DocMeta> {
 }
 
 export async function deleteDoc(id: string): Promise<void> {
+  const { data: doc, error: fetchError } = await supabase
+    .from('documents')
+    .select('file_name, file_url')
+    .eq('id', id)
+    .maybeSingle()
+  if (fetchError) throw fetchError
+
+  if (doc?.file_url) {
+    const fileExt = doc.file_name?.split('.').pop() || 'pdf'
+    const filePath = `${id}.${fileExt}`
+    const { error: storageError } = await supabase.storage.from('documents').remove([filePath])
+    if (storageError) console.error('Erro ao deletar arquivo do storage:', storageError)
+  }
+
   const { error } = await supabase.from('documents').delete().eq('id', id)
   if (error) throw error
 }
