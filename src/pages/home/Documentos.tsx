@@ -52,8 +52,8 @@ export default function Documentos() {
   const allDocs = useMemo(() => [...myDocs, ...publicDocs], [myDocs, publicDocs])
   const docs = useMemo(() => {
     if (activeTab === 'mine') return myDocs
-    return allDocs.filter(d => d.isPublic)
-  }, [activeTab, myDocs, allDocs])
+    return publicDocs
+  }, [activeTab, myDocs, publicDocs])
   const filtered = useMemo(() => docs.filter(d => {
     const q = searchQuery.toLowerCase()
     const matchSearch = !q || d.title.toLowerCase().includes(q) || (d.description && d.description.toLowerCase().includes(q))
