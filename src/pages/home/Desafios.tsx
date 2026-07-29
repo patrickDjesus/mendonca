@@ -921,7 +921,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
       <div className="desafios-grid">
         {filteredChallenges.map(challenge => {
           const isAttempted = attemptIds.has(challenge.id)
-          const attemptCount = attempts.filter(a => a.challengeId === challenge.id).length
+          const attemptCount = attempts.filter(a => a.challengeId === challenge.id && a.correctCount > a.wrongCount).length
           return (
             <div key={challenge.id} className={`desafio-card ${isAttempted ? 'attempted' : ''}`} onClick={() => setViewingChallengeDetails(challenge)}>
               <div className="desafio-card-top">
