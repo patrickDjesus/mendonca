@@ -10,9 +10,7 @@ const VisaoGeral = lazy(() => import('./pages/home/VisaoGeral'))
 const Documentos = lazy(() => import('./pages/home/Documentos'))
 const Videos = lazy(() => import('./pages/home/Videos'))
 const Desafios = lazy(() => import('./pages/home/Desafios'))
-const Simulados = lazy(() => import('./pages/home/Simulados'))
 const Perfil = lazy(() => import('./pages/home/Perfil'))
-const Admin = lazy(() => import('./pages/home/Admin'))
 
 function PageFallback() {
   return (
@@ -63,9 +61,7 @@ function App() {
             <Route path="documentos" element={<Suspense fallback={<PageFallback />}><Documentos /></Suspense>} />
             <Route path="videos" element={<Suspense fallback={<PageFallback />}><Videos /></Suspense>} />
             <Route path="desafios" element={<Suspense fallback={<PageFallback />}><Desafios /></Suspense>} />
-            <Route path="simulados" element={<Suspense fallback={<PageFallback />}><Simulados /></Suspense>} />
             <Route path="perfil" element={<Suspense fallback={<PageFallback />}><Perfil /></Suspense>} />
-            <Route path="admin" element={<Suspense fallback={<PageFallback />}><Admin /></Suspense>} />
           </Route>
           <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>

@@ -283,17 +283,12 @@ export async function fetchStreak(): Promise<UserStreak> {
       videosWatched: 0,
       docsCreated: 0,
       challengesCompleted: 0,
-      simuladosCompleted: 0,
       notesCreated: 0,
       loginDays: 0,
       lastLoginDate: null,
       videosWatchedToday: 0,
       videosWatchedDate: null,
       watchedSubjects: [],
-      completedSimuladoYears: [],
-      bestSimuladoScore: 0,
-      simuladosThisWeek: 0,
-      lastSimuladoWeek: null,
     }
   }
 
@@ -306,17 +301,12 @@ export async function fetchStreak(): Promise<UserStreak> {
     videosWatched: data.videos_watched || 0,
     docsCreated: data.docs_created || 0,
     challengesCompleted: data.challenges_completed || 0,
-    simuladosCompleted: data.simulados_completed || 0,
     notesCreated: data.notes_created || 0,
     loginDays: data.login_days || 0,
     lastLoginDate: data.last_login_date || null,
     videosWatchedToday: data.videos_watched_today || 0,
     videosWatchedDate: data.videos_watched_date || null,
     watchedSubjects: data.watched_subjects || [],
-    completedSimuladoYears: data.completed_simulado_years || [],
-    bestSimuladoScore: data.best_simulado_score || 0,
-    simuladosThisWeek: data.simulados_this_week || 0,
-    lastSimuladoWeek: data.last_simulado_week || null,
   }
 }
 
@@ -334,17 +324,12 @@ export async function upsertStreak(s: UserStreak): Promise<void> {
       videos_watched: s.videosWatched,
       docs_created: s.docsCreated,
       challenges_completed: s.challengesCompleted,
-      simulados_completed: s.simuladosCompleted,
       notes_created: s.notesCreated,
       login_days: s.loginDays,
       last_login_date: s.lastLoginDate,
       videos_watched_today: s.videosWatchedToday,
       videos_watched_date: s.videosWatchedDate,
       watched_subjects: s.watchedSubjects,
-      completed_simulado_years: s.completedSimuladoYears,
-      best_simulado_score: s.bestSimuladoScore,
-      simulados_this_week: s.simuladosThisWeek,
-      last_simulado_week: s.lastSimuladoWeek,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' })
 
@@ -896,7 +881,6 @@ export const XP_REWARDS = {
   COMPLETE_CHALLENGE: 100,
   DAILY_LOGIN: 10,
   CREATE_NOTE: 5,
-  COMPLETE_SIMULADO: 200,
   MASTERY_TEST: 50,
 }
 
@@ -980,8 +964,7 @@ export async function unlockAchievement(achievementId: string): Promise<boolean>
 export async function checkAndUnlockAchievements(): Promise<string[]> {
   const streak = await fetchStreak()
   const newlyUnlocked: string[] = []
-  const ALL_SUBJECTS = ['Física', 'Química', 'Biologia', 'Matemática', 'Linguagens', 'Ciências Humanas', 'Ciências da Natureza', 'Geografia', 'História', 'Filosofia']
-  const ALL_ENEM_YEARS = [2019, 2020, 2021, 2022, 2023]
+  const ALL_SUBJECTS = ['Física', 'Química', 'Biologia', 'Matemática', 'Linguagens', 'Geografia', 'História', 'Filosofia']
 
   const checks: Array<{ id: string; condition: boolean }> = [
     { id: 'primeiro_passo', condition: streak.loginDays >= 1 },
@@ -992,10 +975,6 @@ export async function checkAndUnlockAchievements(): Promise<string[]> {
     { id: 'sessao_pipoca', condition: streak.videosWatchedToday >= 5 },
     { id: 'arquivista', condition: streak.docsCreated >= 1 },
     { id: 'biblioteca_alexandria', condition: streak.docsCreated >= 20 },
-    { id: 'maratonista_enem', condition: streak.simuladosCompleted >= 1 },
-    { id: 'viajante_tempo', condition: ALL_ENEM_YEARS.every(y => streak.completedSimuladoYears.includes(y)) },
-    { id: 'precisao_cirurgica', condition: streak.bestSimuladoScore >= 80 },
-    { id: 'resistencia_ferro', condition: streak.simuladosThisWeek >= 2 },
     { id: 'aceitando_desafio', condition: streak.challengesCompleted >= 1 },
   ]
 
@@ -1054,13 +1033,12 @@ export async function checkMasoquista(challengeId: string, isWin: boolean, curre
   }
 }
 
-export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' | 'simulado' | 'login' | 'mastery', meta?: { watchMinutes?: number; subject?: string; simuladoYear?: number; simuladoScore?: number; docPages?: number; challengeWin?: boolean; challengeXp?: number }): Promise<void> {
+export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' | 'login' | 'mastery', meta?: { watchMinutes?: number; subject?: string; docPages?: number; challengeWin?: boolean; challengeXp?: number }): Promise<void> {
   const fieldMap: Record<string, string> = {
     doc: 'docsCreated',
     video: 'videosWatched',
     challenge: 'challengesCompleted',
     note: 'notesCreated',
-    simulado: 'simuladosCompleted',
     login: 'loginDays',
   }
 
@@ -1101,15 +1079,6 @@ export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' 
     streak.lastChallengeDate = new Date().toISOString().split('T')[0]
   }
 
-  if (type === 'simulado' && meta?.simuladoYear) {
-    if (!streak.completedSimuladoYears.includes(meta.simuladoYear)) {
-      streak.completedSimuladoYears = [...streak.completedSimuladoYears, meta.simuladoYear]
-    }
-    if (meta.simuladoScore && meta.simuladoScore > streak.bestSimuladoScore) {
-      streak.bestSimuladoScore = meta.simuladoScore
-    }
-  }
-
   await upsertStreak(streak)
 
   const xpMap: Record<string, number> = {
@@ -1117,7 +1086,6 @@ export async function recordAction(type: 'doc' | 'video' | 'challenge' | 'note' 
     video: XP_REWARDS.WATCH_VIDEO_PER_MIN * (meta?.watchMinutes || 1),
     challenge: meta?.challengeXp ?? XP_REWARDS.COMPLETE_CHALLENGE,
     note: XP_REWARDS.CREATE_NOTE,
-    simulado: XP_REWARDS.COMPLETE_SIMULADO,
     login: XP_REWARDS.DAILY_LOGIN,
     mastery: XP_REWARDS.MASTERY_TEST,
   }
@@ -1142,156 +1110,6 @@ export async function checkMaterialOuro(docContent: unknown[]): Promise<void> {
   if (totalChars >= 30000) {
     await unlockAchievement('material_ouro')
   }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   ADMIN FUNCTIONS
-   ═══════════════════════════════════════════════════════════ */
-
-export interface AdminUserProfile {
-  userId: string
-  name: string
-  email: string
-  isAdmin: boolean
-  createdAt: string
-}
-
-export async function checkIsAdmin(): Promise<boolean> {
-  const userId = await getUserId()
-  const { data } = await supabase.from('profiles').select('is_admin').eq('id', userId).maybeSingle()
-  return data?.is_admin === true
-}
-
-export async function adminListUsers(): Promise<AdminUserProfile[]> {
-  const { data, error } = await supabase.rpc('admin_list_users')
-  if (error) throw error
-  return (data || []).map((row: Record<string, unknown>) => ({
-    userId: row.user_id as string,
-    name: row.user_name as string || '',
-    email: row.user_email as string || '',
-    isAdmin: row.is_admin as boolean,
-    createdAt: row.created_at as string,
-  }))
-}
-
-export async function adminSetUserRole(userId: string, role: 'admin' | 'user'): Promise<void> {
-  const { error } = await supabase.rpc('admin_set_user_role', { target_user_id: userId, new_role: role })
-  if (error) throw error
-}
-
-export async function adminDeleteUser(userId: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_delete_user', { target_user_id: userId })
-  if (error) throw error
-}
-
-export async function adminGetStats(): Promise<{ totalUsers: number; totalDocs: number; totalChallenges: number; totalVideos: number }> {
-  const { data, error } = await supabase.rpc('admin_stats')
-  if (error) throw error
-  const row = data?.[0] as Record<string, unknown> | undefined
-  return {
-    totalUsers: Number(row?.total_users || 0),
-    totalDocs: Number(row?.total_docs || 0),
-    totalChallenges: Number(row?.total_challenges || 0),
-    totalVideos: Number(row?.total_videos || 0),
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   ADMIN TOOLS
-   ═══════════════════════════════════════════════════════════ */
-
-export interface AdminFullUser {
-  userId: string
-  name: string
-  email: string
-  isAdmin: boolean
-  createdAt: string
-  totalXp: number
-  currentStreak: number
-  docsCreated: number
-  videosWatched: number
-  challengesCompleted: number
-  simuladosCompleted: number
-  notesCreated: number
-  loginDays: number
-}
-
-export async function adminListUsersFull(): Promise<AdminFullUser[]> {
-  const { data, error } = await supabase.rpc('admin_list_users_full')
-  if (error) throw error
-  return (data || []).map((row: Record<string, unknown>) => ({
-    userId: row.user_id as string,
-    name: row.user_name as string || '',
-    email: row.user_email as string || '',
-    isAdmin: row.is_admin as boolean,
-    createdAt: row.created_at as string,
-    totalXp: Number(row.total_xp || 0),
-    currentStreak: Number(row.current_streak || 0),
-    docsCreated: Number(row.docs_created || 0),
-    videosWatched: Number(row.videos_watched || 0),
-    challengesCompleted: Number(row.challenges_completed || 0),
-    simuladosCompleted: Number(row.simulados_completed || 0),
-    notesCreated: Number(row.notes_created || 0),
-    loginDays: Number(row.login_days || 0),
-  }))
-}
-
-export async function adminSetUserXP(userId: string, xp: number): Promise<void> {
-  const { error } = await supabase.rpc('admin_set_user_xp', { target_user_id: userId, new_xp: xp })
-  if (error) throw error
-}
-
-export async function adminUnlockAchievementForUser(userId: string, achievementId: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_unlock_achievement', { target_user_id: userId, achievement: achievementId })
-  if (error) throw error
-}
-
-export async function adminRemoveAchievementForUser(userId: string, achievementId: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_remove_achievement', { target_user_id: userId, achievement: achievementId })
-  if (error) throw error
-}
-
-export async function adminGetUserAchievements(userId: string): Promise<{ achievementId: string; unlockedAt: number }[]> {
-  const { data, error } = await supabase.rpc('admin_get_user_achievements', { target_user_id: userId })
-  if (error) throw error
-  return (data || []).map((row: Record<string, unknown>) => ({
-    achievementId: row.achievement_id as string,
-    unlockedAt: new Date(row.unlocked_at as string).getTime(),
-  }))
-}
-
-export async function adminDeleteUserDocuments(userId: string): Promise<number> {
-  const { data, error } = await supabase.rpc('admin_delete_user_documents', { target_user_id: userId })
-  if (error) throw error
-  return Number(data || 0)
-}
-
-export async function adminDeleteUserVideos(userId: string): Promise<number> {
-  const { data, error } = await supabase.rpc('admin_delete_user_videos', { target_user_id: userId })
-  if (error) throw error
-  return Number(data || 0)
-}
-
-export async function adminDeleteUserNotes(userId: string): Promise<number> {
-  const { data, error } = await supabase.rpc('admin_delete_user_notes', { target_user_id: userId })
-  if (error) throw error
-  return Number(data || 0)
-}
-
-export async function adminDeleteUserChallenges(userId: string): Promise<number> {
-  const { data, error } = await supabase.rpc('admin_delete_user_challenges', { target_user_id: userId })
-  if (error) throw error
-  return Number(data || 0)
-}
-
-export async function adminResetUserStreak(userId: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_reset_user_streak', { target_user_id: userId })
-  if (error) throw error
-}
-
-export async function adminPurgeUserData(userId: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_purge_user_data', { target_user_id: userId })
-  if (error) throw error
 }
 
 /* ═══════════════════════════════════════════════════════════

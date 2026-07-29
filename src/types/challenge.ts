@@ -157,15 +157,10 @@ export interface UserStreak {
   videosWatched: number
   docsCreated: number
   challengesCompleted: number
-  simuladosCompleted: number
   notesCreated: number
   loginDays: number
   lastLoginDate: string | null
   videosWatchedToday: number
   videosWatchedDate: string | null
   watchedSubjects: string[]
-  completedSimuladoYears: number[]
-  bestSimuladoScore: number
-  simuladosThisWeek: number
-  lastSimuladoWeek: string | null
 }

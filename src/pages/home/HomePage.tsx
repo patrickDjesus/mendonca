@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { recordAction, checkIsAdmin } from '../../lib/db'
+import { recordAction } from '../../lib/db'
 import FloatingCalculator from '../../components/FloatingCalculator'
 import '../../styles/home.css'
 
 export default function HomePage() {
   const navigate = useNavigate()
   const [userName, setUserName] = useState('')
-  const [isAdmin, setIsAdmin] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
@@ -22,7 +21,6 @@ export default function HomePage() {
       }
       setUserName(user.user_metadata?.name || user.email || '')
       recordAction('login').catch(() => {})
-      checkIsAdmin().then(admin => { if (mounted) setIsAdmin(admin) }).catch(e => { console.error('Erro ao verificar admin:', e) })
     }
     getUser()
     return () => { mounted = false }
@@ -92,16 +90,6 @@ export default function HomePage() {
             <span>Desafios</span>
           </NavLink>
 
-          <NavLink to="/home/simulados" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-              <line x1="8" y1="7" x2="16" y2="7" />
-              <line x1="8" y1="11" x2="14" y2="11" />
-            </svg>
-            <span>Simulados</span>
-          </NavLink>
-
           <NavLink to="/home/perfil" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -110,14 +98,6 @@ export default function HomePage() {
             <span>Perfil</span>
           </NavLink>
 
-          {isAdmin && (
-            <NavLink to="/home/admin" className={({ isActive }) => `sidebar-item sidebar-item-admin ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-              <span>Admin</span>
-            </NavLink>
-          )}
         </nav>
 
         <div className="sidebar-divider" />

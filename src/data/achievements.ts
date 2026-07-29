@@ -1,6 +1,6 @@
 export interface Achievement {
   id: string
-  category: 'Geral' | 'Vídeos' | 'Simulados' | 'Desafios' | 'Documentos'
+  category: 'Geral' | 'Vídeos' | 'Desafios' | 'Documentos'
   name: string
   description: string
   icon: string
@@ -54,38 +54,6 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Sessão Pipoca',
     description: 'Assistir a 5 videoaulas em um único dia.',
     icon: '🍿',
-    xpBonus: 10,
-  },
-  {
-    id: 'maratonista_enem',
-    category: 'Simulados',
-    name: 'Maratonista do ENEM',
-    description: 'Concluir um simulado completo do ENEM (aprox. 180 questões).',
-    icon: '🏃',
-    xpBonus: 10,
-  },
-  {
-    id: 'viajante_tempo',
-    category: 'Simulados',
-    name: 'Viajante do Tempo',
-    description: 'Completar todos os simulados oficiais de 2019 a 2023.',
-    icon: '⏳',
-    xpBonus: 10,
-  },
-  {
-    id: 'precisao_cirurgica',
-    category: 'Simulados',
-    name: 'Precisão Cirúrgica',
-    description: 'Alcançar 80% ou mais de acertos em um simulado completo.',
-    icon: '🎯',
-    xpBonus: 10,
-  },
-  {
-    id: 'resistencia_ferro',
-    category: 'Simulados',
-    name: 'Resistência de Ferro',
-    description: 'Finalizar dois simulados completos em uma única semana.',
-    icon: '💪',
     xpBonus: 10,
   },
   {
@@ -148,12 +116,11 @@ export const ACHIEVEMENTS: Achievement[] = [
 
 export const ACHIEVEMENT_MAP = new Map(ACHIEVEMENTS.map(a => [a.id, a]))
 
-export const ACHIEVEMENT_CATEGORIES = ['Geral', 'Vídeos', 'Simulados', 'Desafios', 'Documentos'] as const
+export const ACHIEVEMENT_CATEGORIES = ['Geral', 'Vídeos', 'Desafios', 'Documentos'] as const
 
 export const CATEGORY_ICONS: Record<string, string> = {
   Geral: '⭐',
   'Vídeos': '🎬',
-  Simulados: '📝',
   Desafios: '⚔️',
   Documentos: '📄',
 }

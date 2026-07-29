@@ -8,7 +8,7 @@
 DO $$ BEGIN
   CREATE TYPE subject_type AS ENUM (
     'Física', 'Química', 'Biologia', 'Matemática',
-    'Linguagens', 'Ciências Humanas', 'Ciências da Natureza',
+    'Linguagens',
     'Geografia', 'História', 'Filosofia'
   );
 EXCEPTION WHEN duplicate_object THEN NULL;
@@ -210,10 +210,6 @@ ALTER TABLE challenges ADD COLUMN IF NOT EXISTS aposta_cega_min INTEGER;
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS paper_style JSONB;
 
 ALTER TABLE questions ADD COLUMN IF NOT EXISTS source TEXT;
-
--- Adicionar novos valores ao enum subject_type
-ALTER TYPE subject_type ADD VALUE IF NOT EXISTS 'Ciências Humanas';
-ALTER TYPE subject_type ADD VALUE IF NOT EXISTS 'Ciências da Natureza';
 
 -- ── RLS (Row Level Security) ────────────────────────────────
 

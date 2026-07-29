@@ -62,7 +62,7 @@ export default function Perfil() {
       setActivities(acts)
       const subMap: Record<string, number> = {}
       for (const a of acts) {
-        const subjects = ['Física', 'Química', 'Biologia', 'Matemática', 'Linguagens', 'Ciências Humanas', 'Ciências da Natureza', 'Geografia', 'História', 'Filosofia']
+        const subjects = ['Física', 'Química', 'Biologia', 'Matemática', 'Linguagens', 'Geografia', 'História', 'Filosofia']
         for (const s of subjects) {
           if (a.title.includes(s)) subMap[s] = (subMap[s] || 0) + 1
         }
@@ -268,8 +268,7 @@ export default function Perfil() {
             {Object.keys(subjectCounts).sort((a, b) => (subjectCounts[b] || 0) - (subjectCounts[a] || 0)).map(subject => {
               const colors: Record<string, { text: string }> = {
                 'Física': { text: '#508cc8' }, 'Química': { text: '#50b478' }, 'Biologia': { text: '#50b450' },
-                'Matemática': { text: '#c88c3c' }, 'Linguagens': { text: '#b450b4' }, 'Ciências Humanas': { text: '#c86450' },
-                'Ciências da Natureza': { text: '#50b890' }, 'Geografia': { text: '#3ca064' }, 'História': { text: '#c86450' },
+                'Matemática': { text: '#c88c3c' }, 'Linguagens': { text: '#b450b4' }, 'Geografia': { text: '#3ca064' }, 'História': { text: '#c86450' },
                 'Filosofia': { text: '#8c78c8' },
               }
               const c = colors[subject] || { text: '#6a5a4a' }
