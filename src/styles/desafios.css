@@ -5925,3 +5925,204 @@
   background: rgba(100, 180, 120, 0.4);
   transition: width 0.2s ease;
 }
+
+/* ── Challenge Card Modifier Icons ─────────────── */
+
+.desafio-card-modifiers {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.desafio-modifier-icon {
+  font-size: 14px;
+  line-height: 1;
+  cursor: help;
+  transition: transform 0.15s ease;
+}
+
+.desafio-modifier-icon:hover {
+  transform: scale(1.3);
+}
+
+/* ── Challenge Detail Modal ────────────────────── */
+
+.desafio-detail-modal {
+  width: 480px;
+  max-width: 92vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 28px 32px;
+}
+
+.desafio-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+
+.desafio-detail-header .desafio-modal-title {
+  margin-bottom: 0;
+  flex: 1;
+}
+
+.desafio-detail-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(200, 180, 140, 0.1);
+  background: transparent;
+  color: #7a6a5a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.desafio-detail-close:hover {
+  background: rgba(200, 80, 80, 0.1);
+  color: #c85050;
+  border-color: rgba(200, 80, 80, 0.2);
+}
+
+.desafio-detail-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.desafio-detail-desc {
+  font-size: 14px;
+  color: #8a7a6a;
+  line-height: 1.6;
+  margin: 12px 0 20px;
+}
+
+.desafio-detail-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.desafio-detail-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(200, 180, 140, 0.03);
+  border: 1px solid rgba(200, 180, 140, 0.06);
+}
+
+.desafio-detail-info-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #6a5a4a;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.desafio-detail-info-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #e0d4c0;
+}
+
+.desafio-detail-info-value.subject {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  align-self: flex-start;
+}
+
+.desafio-detail-info-value.xp {
+  color: #64b478;
+}
+
+.desafio-detail-info-value.diff-facil {
+  color: #64b478;
+}
+
+.desafio-detail-info-value.diff-medio {
+  color: #d4a843;
+}
+
+.desafio-detail-info-value.diff-dificil {
+  color: #c85050;
+}
+
+.desafio-detail-modifiers {
+  margin-bottom: 24px;
+}
+
+.desafio-detail-modifiers-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6a5a4a;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 10px;
+}
+
+.desafio-detail-modifiers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.desafio-detail-modifier-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid;
+  background: rgba(200, 180, 140, 0.02);
+}
+
+.desafio-detail-modifier-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.desafio-detail-modifier-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.desafio-detail-modifier-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.desafio-detail-modifier-desc {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.desafio-detail-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid rgba(200, 180, 140, 0.06);
+}
+
+.desafio-detail-actions .desafio-form-cancel {
+  padding: 10px 22px;
+}
+
+.desafio-detail-actions .desafio-form-confirm {
+  padding: 10px 24px;
+  font-size: 14px;
+}

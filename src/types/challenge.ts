@@ -78,6 +78,26 @@ export const MODIFIER_LABELS: Record<ChallengeModifier, string> = {
   aposta_cega: 'Aposta Cega',
 }
 
+export const MODIFIER_ICONS: Record<ChallengeModifier, string> = {
+  cronometro_em_chamas: '🔥',
+  contagem_regressiva_cegante: '🙈',
+  morte_subita: '💀',
+  memoria_curta: '🧠',
+  fio_da_navalha: '⚔️',
+  ponte_de_vidro: '💔',
+  aposta_cega: '🎰',
+}
+
+export const MODIFIER_COLORS: Record<ChallengeModifier, string> = {
+  cronometro_em_chamas: '#e05030',
+  contagem_regressiva_cegante: '#8080c0',
+  morte_subita: '#c83030',
+  memoria_curta: '#9070d0',
+  fio_da_navalha: '#d0a030',
+  ponte_de_vidro: '#50a0d0',
+  aposta_cega: '#d070b0',
+}
+
 export const MODIFIER_DESCRIPTIONS: Record<ChallengeModifier, string> = {
   cronometro_em_chamas: 'Tempo reduzido pela metade',
   contagem_regressiva_cegante: 'O aluno não sabe quanto tempo falta',

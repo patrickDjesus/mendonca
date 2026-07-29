@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import type { Challenge, ChallengeQuestion, QuestionAnswer, ChallengeAttempt, UserStreak, ChallengeDifficulty } from '../../types/challenge'
-import { QUESTION_TYPE_LABELS } from '../../types/challenge'
+import { QUESTION_TYPE_LABELS, MODIFIER_LABELS, MODIFIER_ICONS, MODIFIER_COLORS } from '../../types/challenge'
 import type { Subject } from '../../types/doc'
 import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import QuestionBuilder from '../../components/QuestionBuilder'
@@ -99,6 +99,7 @@ export default function Desafios() {
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null)
   const [deleteChallengeTarget, setDeleteChallengeTarget] = useState<Challenge | null>(null)
   const [viewingQuestionsChallenge, setViewingQuestionsChallenge] = useState<Challenge | null>(null)
+  const [viewingChallengeDetails, setViewingChallengeDetails] = useState<Challenge | null>(null)
   const [expandedQVQuestion, setExpandedQVQuestion] = useState<string | null>(null)
   const [deleteQuestionTarget, setDeleteQuestionTarget] = useState<ChallengeQuestion | null>(null)
 
@@ -895,7 +896,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
       </div>
 
       {dailyChallenge && (
-        <div className={`desafios-daily ${attemptIds.has(dailyChallenge.id) ? 'attempted' : ''}`} onClick={() => startChallenge(dailyChallenge)}>
+        <div className={`desafios-daily ${attemptIds.has(dailyChallenge.id) ? 'attempted' : ''}`} onClick={() => setViewingChallengeDetails(dailyChallenge)}>
           <div className="desafios-daily-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>Desafio do dia {attemptIds.has(dailyChallenge.id) && '• Rejogar'}</div>
           <h2 className="desafios-daily-title">{dailyChallenge.title}</h2>
           <p className="desafios-daily-desc">{dailyChallenge.description}</p>
@@ -920,12 +921,11 @@ const [questionHidden, setQuestionHidden] = useState(false)
           const isAttempted = attemptIds.has(challenge.id)
           const attemptCount = attempts.filter(a => a.challengeId === challenge.id).length
           return (
-            <div key={challenge.id} className={`desafio-card ${isAttempted ? 'attempted' : ''}`} onClick={() => startChallenge(challenge)}>
+            <div key={challenge.id} className={`desafio-card ${isAttempted ? 'attempted' : ''}`} onClick={() => setViewingChallengeDetails(challenge)}>
               <div className="desafio-card-top">
                 <div className="desafio-card-badges">
                   <span className={`desafio-badge difficulty-${challenge.difficulty}`}>{DIFFICULTY_LABELS[challenge.difficulty]}</span>
                   <span className="desafio-badge questions-badge">{challenge.questionIds.length} questões</span>
-                  {challenge.modifiers && challenge.modifiers.length > 0 && <span className="desafio-badge modifiers-badge">{challenge.modifiers.length} mod</span>}
                 </div>
                 <span className="desafio-card-xp"><img src="/XP.png" alt="" className="desafio-xp-icon" /> +{challenge.xpBase} XP <Tooltip content={isAttempted ? "Refazer rende 20% do XP original." : "XP que você ganha ao concluir este desafio."} /></span>
               </div>
@@ -942,7 +942,15 @@ const [questionHidden, setQuestionHidden] = useState(false)
               <div className="desafio-card-footer">
                 <span className="desafio-card-subject" style={{ background: SUBJECT_COLORS[challenge.subject]?.bg, color: SUBJECT_COLORS[challenge.subject]?.text }}>{challenge.subject}</span>
                 {challenge.crossSubjects && challenge.crossSubjects.length > 0 && <span className="desafio-card-cross">+ {challenge.crossSubjects.join(', ')}</span>}
-
+                {challenge.modifiers && challenge.modifiers.length > 0 && (
+                  <div className="desafio-card-modifiers">
+                    {challenge.modifiers.map(m => (
+                      <span key={m} className="desafio-modifier-icon" style={{ color: MODIFIER_COLORS[m] }} title={MODIFIER_LABELS[m]}>
+                        {MODIFIER_ICONS[m]}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )
@@ -955,6 +963,66 @@ const [questionHidden, setQuestionHidden] = useState(false)
           </div>
         )}
       </div>
+
+      {viewingChallengeDetails && (
+        <div className="desafio-modal-overlay" onClick={() => setViewingChallengeDetails(null)}>
+          <div className="desafio-modal desafio-detail-modal" onClick={e => e.stopPropagation()}>
+            <div className="desafio-detail-header">
+              <h3 className="desafio-modal-title">{viewingChallengeDetails.title}</h3>
+              <button className="desafio-detail-close" onClick={() => setViewingChallengeDetails(null)} type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            </div>
+            {viewingChallengeDetails.description && (
+              <p className="desafio-detail-desc">{viewingChallengeDetails.description}</p>
+            )}
+            <div className="desafio-detail-info">
+              <div className="desafio-detail-info-item">
+                <span className="desafio-detail-info-label">Matéria</span>
+                <span className="desafio-detail-info-value subject" style={{ background: SUBJECT_COLORS[viewingChallengeDetails.subject]?.bg, color: SUBJECT_COLORS[viewingChallengeDetails.subject]?.text }}>{viewingChallengeDetails.subject}</span>
+              </div>
+              <div className="desafio-detail-info-item">
+                <span className="desafio-detail-info-label">Dificuldade</span>
+                <span className={`desafio-detail-info-value diff-${viewingChallengeDetails.difficulty}`}>{DIFFICULTY_LABELS[viewingChallengeDetails.difficulty]}</span>
+              </div>
+              <div className="desafio-detail-info-item">
+                <span className="desafio-detail-info-label">Questões</span>
+                <span className="desafio-detail-info-value">{viewingChallengeDetails.questionIds.length} questões</span>
+              </div>
+              <div className="desafio-detail-info-item">
+                <span className="desafio-detail-info-label">Tempo</span>
+                <span className="desafio-detail-info-value">{viewingChallengeDetails.timeLimit || 300}s</span>
+              </div>
+              <div className="desafio-detail-info-item">
+                <span className="desafio-detail-info-label">XP Base</span>
+                <span className="desafio-detail-info-value xp">+{viewingChallengeDetails.xpBase} XP</span>
+              </div>
+            </div>
+            {viewingChallengeDetails.modifiers && viewingChallengeDetails.modifiers.length > 0 && (
+              <div className="desafio-detail-modifiers">
+                <span className="desafio-detail-modifiers-label">Modificadores</span>
+                <div className="desafio-detail-modifiers-list">
+                  {viewingChallengeDetails.modifiers.map(m => (
+                    <div key={m} className="desafio-detail-modifier-item" style={{ borderColor: MODIFIER_COLORS[m], color: MODIFIER_COLORS[m] }}>
+                      <span className="desafio-detail-modifier-icon">{MODIFIER_ICONS[m]}</span>
+                      <div className="desafio-detail-modifier-info">
+                        <span className="desafio-detail-modifier-name">{MODIFIER_LABELS[m]}</span>
+                        <span className="desafio-detail-modifier-desc" style={{ color: MODIFIER_COLORS[m], opacity: 0.7 }}>{MODIFIER_DESCRIPTIONS[m]}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="desafio-detail-actions">
+              <button className="desafio-form-cancel" onClick={() => setViewingChallengeDetails(null)} type="button">Voltar</button>
+              <button className="desafio-form-confirm" onClick={() => { setViewingChallengeDetails(null); startChallenge(viewingChallengeDetails) }} type="button">
+                {attemptIds.has(viewingChallengeDetails.id) ? 'Rejogar' : 'Iniciar desafio'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {viewingQuestionsChallenge && (
         <div className="qv-overlay" onClick={() => { setViewingQuestionsChallenge(null); setExpandedQVQuestion(null) }}>
