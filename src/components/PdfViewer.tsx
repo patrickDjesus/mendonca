@@ -42,7 +42,7 @@ export default function PdfViewer({ fileUrl, fileName, docId, onClose }: PdfView
         if (fileUrl.includes('/storage/v1/object/')) {
           const urlObj = new URL(fileUrl)
           const pathParts = urlObj.pathname.split('/')
-          const bucketIdx = pathParts.indexOf('object') + 2
+          const bucketIdx = pathParts.indexOf('object') + 3
           if (bucketIdx > 1 && bucketIdx < pathParts.length) {
             const filePath = pathParts.slice(bucketIdx).join('/')
             const { data, error: downloadError } = await supabase.storage.from('documents').download(filePath)
