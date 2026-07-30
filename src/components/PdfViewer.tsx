@@ -241,16 +241,15 @@ export default function PdfViewer({ fileUrl, fileName, docId, onClose }: PdfView
             <p className="pdf-placeholder-title">Erro ao carregar PDF</p>
             <p className="pdf-placeholder-hint">{error}</p>
           </div>
+        ) : !pdfBlob ? (
+          <div className="pdf-loading-spinner">
+            <div className="pdf-spinner" />
+            <span>Carregando PDF...</span>
+          </div>
         ) : (
           <div className="pdf-react-viewer">
-            {loading && (
-              <div className="pdf-loading-spinner">
-                <div className="pdf-spinner" />
-                <span>Carregando PDF...</span>
-              </div>
-            )}
             <Document
-              file={pdfBlob || fileUrl}
+              file={pdfBlob}
               onLoadSuccess={onDocumentLoad}
               onLoadError={onDocumentLoadError}
               loading=""
