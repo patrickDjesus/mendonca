@@ -19,7 +19,6 @@ export default function PdfViewer({ fileUrl, fileName, docId, onClose }: PdfView
   const [numPages, setNumPages] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [scaleIndex, setScaleIndex] = useState(2)
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -31,7 +30,7 @@ export default function PdfViewer({ fileUrl, fileName, docId, onClose }: PdfView
   const scale = ZOOM_STEPS[scaleIndex]
 
   useEffect(() => {
-    if (!fileUrl) { setLoading(false); setError('URL do PDF não fornecida'); return }
+    if (!fileUrl) { setError('URL do PDF não fornecida'); return }
 
     let cancelled = false
 
@@ -65,7 +64,6 @@ export default function PdfViewer({ fileUrl, fileName, docId, onClose }: PdfView
       } catch (err) {
         if (!cancelled) {
           setError((err as Error).message)
-          setLoading(false)
         }
       }
     }
@@ -110,12 +108,10 @@ export default function PdfViewer({ fileUrl, fileName, docId, onClose }: PdfView
 
   const onDocumentLoad = useCallback(({ numPages: n }: { numPages: number }) => {
     setNumPages(n)
-    setLoading(false)
   }, [])
 
   const onDocumentLoadError = useCallback((err: Error) => {
     setError(err.message)
-    setLoading(false)
   }, [])
 
   const zoomIn = useCallback(() => {
