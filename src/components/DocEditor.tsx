@@ -3,6 +3,24 @@ import { useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import '@blocknote/mantine/style.css'
 import type { DocMeta } from '../types/doc'
+import SpellContextMenu from './SpellContextMenu'
+import type { SpellPopupState } from './SpellContextMenu'
+import { TextSelection } from 'prosemirror-state'
+import {
+  createSpellPlugin,
+  getSpellMatches,
+  clearSpellMatches,
+  spellKey,
+} from '../lib/spellcheckPlugin'
+import type { MappedMatch } from '../lib/spellcheckPlugin'
+import {
+  createSpellCheckStore,
+  loadIgnoredWords,
+  saveIgnoredWords,
+  runSpellCheck,
+  suggestForWord,
+} from '../lib/spellcheck'
+import type { SpellCheckStatus } from '../lib/spellcheck'
 
 interface DocEditorProps {
   doc: DocMeta
@@ -45,6 +63,20 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
   const [paperStyle, setPaperStyle] = useState<'default' | 'white'>(doc.paperStyle || 'default')
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSavedRef = useRef<string>(JSON.stringify(doc.content || []))
+  const flushSaveRef = useRef<() => void>(() => {})
+
+  const [spellEnabled, setSpellEnabled] = useState(true)
+  const [spellPopup, setSpellPopup] = useState<SpellPopupState | null>(null)
+  const [spellSuggestions, setSpellSuggestions] = useState<string[]>([])
+  const [spellMessage, setSpellMessage] = useState('')
+  const [spellLoading, setSpellLoading] = useState(false)
+  const spellStoreRef = useRef(createSpellCheckStore())
+  const spellCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [spellDebug, setSpellDebug] = useState('')
+
+  useEffect(() => {
+    spellStoreRef.current.ignored = loadIgnoredWords(doc.id)
+  }, [doc.id])
 
   useEffect(() => {
     setPaperStyle(doc.paperStyle || 'default')
@@ -58,11 +90,20 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
   }, [])
 
   useEffect(() => {
-    return () => { if (autoSaveRef.current) clearTimeout(autoSaveRef.current) }
+    return () => {
+      if (autoSaveRef.current) clearTimeout(autoSaveRef.current)
+      if (spellCheckTimerRef.current) clearTimeout(spellCheckTimerRef.current)
+      try {
+        flushSaveRef.current()
+      } catch {
+        // editor já destruído — nada a salvar
+      }
+    }
   }, [])
 
   const handleSave = useCallback(() => {
     const blocks = editor.document
+    lastSavedRef.current = JSON.stringify(blocks)
     const firstBlock = blocks[0]
     let title = titleValue.current.trim()
     if (!title && firstBlock) {
@@ -80,6 +121,35 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
     })
   }, [editor, doc, onSave, paperStyle])
 
+  const flushSave = useCallback(() => {
+    const blocks = editor.document
+    const serialized = JSON.stringify(blocks)
+    if (serialized === lastSavedRef.current) return
+    lastSavedRef.current = serialized
+    const firstBlock = blocks[0]
+    let title = titleValue.current.trim()
+    if (!title && firstBlock) {
+      const text = firstBlock.content
+      if (Array.isArray(text)) {
+        title = text.map((b: { type: string; text?: string }) => ('text' in b && b.text ? b.text : '')).join('')
+      }
+    }
+    onAutoSave({
+      ...doc,
+      title: title || doc.title,
+      content: blocks,
+      paperStyle,
+      updatedAt: Date.now(),
+    })
+  }, [editor, doc, onAutoSave, paperStyle])
+
+  flushSaveRef.current = flushSave
+
+  const handleAutoSave = useCallback(() => {
+    if (autoSaveRef.current) clearTimeout(autoSaveRef.current)
+    autoSaveRef.current = setTimeout(flushSave, 3000)
+  }, [flushSave])
+
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
@@ -94,37 +164,206 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
           return
         }
         if (autoSaveRef.current) clearTimeout(autoSaveRef.current)
+        flushSave()
         onCancel()
       }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
-  }, [handleSave, onCancel])
+  }, [handleSave, flushSave, onCancel])
 
-  const handleAutoSave = useCallback(() => {
-    if (autoSaveRef.current) clearTimeout(autoSaveRef.current)
-    autoSaveRef.current = setTimeout(() => {
-      const blocks = editor.document
-      const serialized = JSON.stringify(blocks)
-      if (serialized === lastSavedRef.current) return
-      lastSavedRef.current = serialized
-      const firstBlock = blocks[0]
-      let title = titleValue.current.trim()
-      if (!title && firstBlock) {
-        const text = firstBlock.content
-        if (Array.isArray(text)) {
-          title = text.map((b: { type: string; text?: string }) => ('text' in b && b.text ? b.text : '')).join('')
-        }
+  const reportSpellStatus = useCallback((s: SpellCheckStatus) => {
+    if (s.error) setSpellDebug(`erro: ${s.error}`)
+    else setSpellDebug(`${s.matches} ocorrência(s) — texto: ${JSON.stringify(s.text).slice(0, 50)}`)
+  }, [])
+
+  const scheduleSpellCheck = useCallback(() => {
+    if (spellCheckTimerRef.current) clearTimeout(spellCheckTimerRef.current)
+    spellCheckTimerRef.current = setTimeout(() => {
+      const view = editor.prosemirrorView
+      if (view) {
+        setSpellDebug('verificando…')
+        runSpellCheck(view, spellStoreRef.current, reportSpellStatus)
       }
-      onAutoSave({
-        ...doc,
-        title: title || doc.title,
-        content: blocks,
-        paperStyle,
-        updatedAt: Date.now(),
+    }, 500)
+  }, [editor, reportSpellStatus])
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    const view = editor.prosemirrorView
+    if (!view) return
+
+    const el = (e.target as HTMLElement).closest?.('.bn-spell-error, .bn-spell-grammar') as HTMLElement | null
+    let match: MappedMatch | undefined
+    if (el) {
+      const from = Number(el.dataset.from ?? NaN)
+      const to = Number(el.dataset.to ?? NaN)
+      if (Number.isFinite(from) && Number.isFinite(to)) {
+        match = getSpellMatches(view.state).find((m) => m.from === from && m.to === to)
+      }
+    }
+    if (!match) {
+      const pos = view.posAtCoords({ left: e.clientX, top: e.clientY })
+      if (pos) {
+        const matches = getSpellMatches(view.state)
+        match = matches.find((m) => pos.pos >= m.from && pos.pos < m.to)
+      }
+    }
+
+    if (match) {
+      view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, match.from, match.to)))
+    }
+
+    setSpellPopup({
+      x: e.clientX,
+      y: e.clientY,
+      from: match ? match.from : -1,
+      to: match ? match.to : -1,
+      word: match ? match.word : '',
+    })
+    setSpellMessage(match ? match.message : '')
+
+    if (match && match.replacements.length > 0) {
+      setSpellLoading(false)
+      setSpellSuggestions(match.replacements)
+    } else if (match) {
+      setSpellLoading(true)
+      setSpellSuggestions([])
+      suggestForWord(match.word).then((sugs) => {
+        setSpellLoading(false)
+        setSpellSuggestions(sugs)
       })
-    }, 3000)
-  }, [editor, doc, onAutoSave, paperStyle])
+    } else {
+      setSpellLoading(false)
+      setSpellSuggestions([])
+    }
+  }, [editor])
+
+  const copyAtPos = useCallback(async () => {
+    const view = editor.prosemirrorView
+    if (!view) return
+    let text = ''
+    const sel = view.state.selection
+    if (!sel.empty) {
+      text = view.state.doc.textBetween(sel.from, sel.to, '\n')
+    } else if (spellPopup && spellPopup.from >= 0) {
+      text = spellPopup.word
+    }
+    setSpellPopup(null)
+    if (text) {
+      try {
+        await navigator.clipboard.writeText(text)
+      } catch {
+        // sem permissão de clipboard — ignora
+      }
+    }
+  }, [editor, spellPopup])
+
+  const pasteAtPos = useCallback(() => {
+    const view = editor.prosemirrorView
+    if (!view) return
+    view.focus()
+    if (spellPopup && spellPopup.from >= 0) {
+      view.dispatch(
+        view.state.tr.setSelection(TextSelection.create(view.state.doc, spellPopup.from, spellPopup.to)),
+      )
+    }
+    setSpellPopup(null)
+    let ok = false
+    try {
+      ok = document.execCommand('paste')
+    } catch {
+      ok = false
+    }
+    if (!ok) {
+      navigator.clipboard
+        .readText()
+        .then((text) => {
+          if (!text || !view.state) return
+          const { from, to } = view.state.selection
+          view.dispatch(view.state.tr.insertText(text, from, to))
+        })
+        .catch(() => {})
+    }
+  }, [editor, spellPopup])
+
+  const ignoreWord = useCallback(() => {
+    const view = editor.prosemirrorView
+    if (spellPopup && spellPopup.word) {
+      spellStoreRef.current.ignored.add(spellPopup.word.toLowerCase())
+      saveIgnoredWords(doc.id, spellStoreRef.current.ignored)
+      if (view) {
+        clearSpellMatches(view)
+        setSpellDebug('verificando…')
+        runSpellCheck(view, spellStoreRef.current, reportSpellStatus)
+      }
+    }
+    setSpellPopup(null)
+  }, [editor, spellPopup, doc.id, reportSpellStatus])
+
+  useEffect(() => {
+    let cancelled = false
+    let attempts = 0
+    const store = spellStoreRef.current
+
+    const tryInit = () => {
+      if (cancelled) return
+      const view = editor.prosemirrorView
+      const tiptap = (editor as unknown as {
+        _tiptapEditor?: {
+          view?: { dom?: HTMLElement }
+          plugins?: Array<{ key: string }>
+          registerPlugin?: (p: unknown) => unknown
+        }
+      })._tiptapEditor
+
+      if (!view || !tiptap?.view) {
+        if (attempts < 60) {
+          attempts++
+          setTimeout(tryInit, 200)
+        }
+        return
+      }
+
+      const hasPlugin = tiptap.plugins?.some((p) => p.key === (spellKey as unknown as { key: string }).key)
+      if (!hasPlugin) tiptap.registerPlugin?.(createSpellPlugin())
+
+      const dom = view.dom as HTMLElement
+      if (dom) dom.setAttribute('spellcheck', 'false')
+
+      const viewReady = editor.prosemirrorView
+      if (viewReady) {
+        setSpellDebug('verificando…')
+        runSpellCheck(viewReady, store, (s) => {
+          if (!cancelled) reportSpellStatus(s)
+        })
+      }
+    }
+
+    tryInit()
+
+    return () => {
+      cancelled = true
+      store.runToken++
+      editor._tiptapEditor.unregisterPlugin('spellCheck')
+    }
+  }, [editor, reportSpellStatus])
+
+  const toggleSpellCheck = useCallback(() => {
+    const next = !spellStoreRef.current.enabled
+    spellStoreRef.current.enabled = next
+    setSpellEnabled(next)
+    setSpellPopup(null)
+    if (!next) setSpellDebug('')
+    const view = editor.prosemirrorView
+    if (!next && view) clearSpellMatches(view)
+    if (next) scheduleSpellCheck()
+  }, [editor, scheduleSpellCheck])
+
+  const handleEditorChange = useCallback(() => {
+    handleAutoSave()
+    scheduleSpellCheck()
+  }, [handleAutoSave, scheduleSpellCheck])
 
   const fmt = {
     toggleBold: () => editor.toggleStyles({ bold: true }),
@@ -145,7 +384,7 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
   return (
     <div className="doc-editor-overlay">
       <div className="doc-editor-toolbar">
-        <button className="doc-editor-back" onClick={onCancel} type="button">
+        <button className="doc-editor-back" onClick={() => { flushSave(); onCancel() }} type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="19" y1="12" x2="5" y2="12" />
             <polyline points="12 19 5 12 12 5" />
@@ -279,10 +518,23 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
             </svg>
           </ToolbarBtn>
         </div>
+
+        <ToolbarSep />
+
+        <div className="doc-format-group">
+          <ToolbarBtn
+            title={spellEnabled ? 'Desativar corretor ortográfico' : 'Ativar corretor ortográfico'}
+            active={spellEnabled}
+            onClick={toggleSpellCheck}
+          >
+            <span className="doc-toolbar-label doc-spell-btn-label">ABC</span>
+          </ToolbarBtn>
+          {spellDebug ? <span className="doc-spell-debug" title="Diagnóstico do corretor">{spellDebug}</span> : null}
+        </div>
       </div>
 
       <div className="doc-editor-body">
-        <div className={`doc-editor-paper ${paperStyle === 'white' ? 'paper-white' : ''}`}>
+        <div className={`doc-editor-paper ${paperStyle === 'white' ? 'paper-white' : ''}`} onContextMenu={handleContextMenu}>
           <div className="doc-paper-margin" />
           <div className="doc-paper-holes">
             <span /><span /><span />
@@ -291,11 +543,31 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
             <BlockNoteView
               editor={editor}
               theme="dark"
-              onChange={handleAutoSave}
+              onChange={handleEditorChange}
             />
           </div>
         </div>
       </div>
+
+      {spellPopup ? (
+        <SpellContextMenu
+          anchor={spellPopup}
+          suggestions={spellSuggestions}
+          message={spellMessage}
+          loading={spellLoading}
+          onPick={(value) => {
+            const view = editor.prosemirrorView
+            if (view && spellPopup && spellPopup.from >= 0) {
+              view.dispatch(view.state.tr.insertText(value, spellPopup.from, spellPopup.to))
+            }
+            setSpellPopup(null)
+          }}
+          onCopy={copyAtPos}
+          onPaste={pasteAtPos}
+          onIgnore={ignoreWord}
+          onClose={() => setSpellPopup(null)}
+        />
+      ) : null}
     </div>
   )
 }

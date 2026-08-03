@@ -15,15 +15,22 @@ A página "Documentos" é um sistema completo de criação, organização e visu
 src/
 ├── types/
 │   └── doc.ts                    # Tipos, interfaces e constantes
+├── lib/
+│   ├── spellcheck.ts             # Flatten do documento, mapeamento offset→pos, chunking, client do LanguageTool
+│   └── spellcheckPlugin.ts       # Plugin ProseMirror com decorators (linha vermelha/azul)
 ├── components/
 │   ├── AddDocCard.tsx             # Card "+" para criar novo documento
 │   ├── DocCard.tsx                # Card de documento existente
-│   └── DocEditor.tsx              # Editor full-screen com BlockNote
+│   ├── DocEditor.tsx              # Editor full-screen com BlockNote
+│   └── SpellContextMenu.tsx       # Menu de contexto do corretor (botão direito)
 ├── pages/
 │   └── home/
 │       └── Documentos.tsx         # Página principal (orquestra tudo)
 └── styles/
     └── documentos.css             # Todos os estilos (~1600 linhas)
+
+api/
+└── spellcheck.ts                  # Serverless Vercel: proxy para a API pública do LanguageTool
 ```
 
 ---
@@ -388,6 +395,68 @@ Ao trocar de aba:
 ```
 
 ---
+
+## Corretor Ortográfico (estilo Google Docs)
+
+O editor possui um corretor com linha reta vermelha (grafia) ou azul (gramática) e um menu de contexto personalizado (botão direito), usando a [API pública do LanguageTool](https://languagetool.org/http-api) (`pt-BR`).
+
+### Fluxo
+
+```
+1. Usuário digita → onChange → debounce de 500ms
+   ↓
+2. flattenDocument(view) extrai o texto plano do doc ProseMirror
+   (blocos separados por \n, ignorando código) + mapa offset→pos
+   ↓
+3. Texto é enviado (em chunks ≤ 18KB se preciso) para /api/spellcheck
+   (serverless Vercel → LanguageTool). Fallback: chamada direta à API da LT
+   ↓
+4. Respostas são mapeadas para posições do doc e despachadas via meta
+   do plugin → props.decorations renderiza os spans .bn-spell-error (vermelho)
+   e .bn-spell-grammar (azul) com linha reta
+   ↓
+5. Botão direito (contextmenu) no papel → SpellContextMenu (portal no body)
+   ├── Detecção da palavra pelo span decorado (.bn-spell-error/.bn-spell-grammar,
+   │   via data-from/data-to), com fallback por posAtCoords
+   ├── Sobre uma palavra marcada: SUGESTÕES (do resultado em cache; se vazio,
+   │   busca on-demand via suggestForWord)
+   │   ├── Substituir → view.dispatch(tr.insertText(sugestão, from, to))
+   │   └── Seleciona a palavra marcada no doc
+   ├── Sem palavra marcada: apenas Copiar / Colar
+   │   ├── Copiar: seleção atual, senão a palavra marcada (Clipboard API)
+   │   └── Colar: execCommand('paste') com fallback clipboard.readText + insertText
+   ├── Ignorar erro: adiciona a palavra (minúscula) a `store.ignored` e re-checa o
+   │   documento — todas as ocorrências da palavra deixam de ser marcadas na sessão
+   └── Footer com link para languagetool.org (requisito da API pública)
+```
+
+### Componentes internos
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `src/lib/spellcheckPlugin.ts` | `PluginKey('spellCheck')`, estado `{matches}`, `props.decorations`, helpers `getSpellMatches`/`setSpellMatches`/`clearSpellMatches` |
+| `src/lib/spellcheck.ts` | `flattenDocument`, `mapMatches`, `splitChunks`, `fetchSpellcheck` (proxy → fallback direto), `runSpellCheck`, `suggestForWord` |
+| `src/components/SpellContextMenu.tsx` | Menu de contexto (botão direito), posicionado/clampado à viewport, com sugestões + Copiar/Colar/Ignorar erro e link LT |
+| `api/spellcheck.ts` | POST `{text, language}` → `https://api.languagetool.org/v2/check` (form-urlencoded) |
+
+### Regras do corretor
+
+- Categoria `TYPOS` → vermelho; `GRAMMAR`/`CASING`/outras → azul; `STYLE`/`UNCATEGORIZED` são ignoradas.
+- A linha de destaque é **reta** (`text-decoration: underline solid`, não `wavy`).
+- Qualquer digitação limpa as decorações imediatamente (evita underline em posição errada); o debounce re-checa.
+- Respostas obsoletas são descartadas via `store.runToken` + comparação de identidade do doc.
+- Limites do LanguageTool (grátis): 20 req/min/IP e 20KB por request — o chunking respeita isso.
+
+### Notas
+
+- **Local dev**: com `npm run dev` o `/api/spellcheck` não existe; o client cai no fallback direto para a API da LT (CORS permitido). Com `vercel dev` o proxy é usado.
+- O corretor é inicializado por um `useEffect` que faz *polling* até o `prosemirrorView` existir (não usa `editor.onMount`, que no BlockNote pode disparar antes do efeito se registrar). O plugin é registrado com dedup por key; o `spellcheck="false"` é setado no DOM do editor (o BlockNote não trata o prop `spellCheck`).
+- Um diagnóstico visual aparece na barra de ferramentas ao lado do botão ABC (ocorrências/erro), útil para depurar.
+- O menu de contexto do editor substitui o menu nativo do navegador **apenas** dentro do papel do documento (`onContextMenu` no `.doc-editor-paper`); o restante do site mantém o menu padrão.
+- "Colar" usa `execCommand('paste')` (sem prompt de permissão); se o navegador bloquear, cai para `navigator.clipboard.readText()` + `insertText`.
+- O botão **ABC** na format-bar liga/desliga o corretor.
+- **Salvar ao fechar**: fechar o documento (Voltar, Esc ou navegação/desmonte) executa `flushSave()` — o salvamento pendente é feito na hora; o salvamento manual (Ctrl+S) marca o estado como salvo para evitar duplicatas.
+- **Ignorar erro é persistente (localStorage)**: a lista de palavras ignoradas é guardada por documento (`localStorage` chave `mendonca:doc:ignored:<id>`), sem tocar no banco; ao reabrir o documento, as palavras ignoradas continuam sem marcação.
 
 ## Notas Técnicas
 
