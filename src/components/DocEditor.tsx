@@ -87,6 +87,12 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
         handleSave()
       }
       if (e.key === 'Escape') {
+        e.stopPropagation()
+        const active = document.activeElement as HTMLElement | null
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+          active.blur()
+          return
+        }
         if (autoSaveRef.current) clearTimeout(autoSaveRef.current)
         onCancel()
       }

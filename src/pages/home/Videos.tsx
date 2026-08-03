@@ -6,8 +6,10 @@ import VideoPlayer, { type VideoPlayerHandle } from '../../components/VideoPlaye
 import NotesPanel from '../../components/NotesPanel'
 import MasteryTest from '../../components/MasteryTest'
 import { extractYoutubeId } from '../../utils/youtube'
-import { fetchVideos, createVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, deleteAllVideoNotes, updateVideoDuration, logActivity, recordAction, fetchAllVideoProgress, upsertVideoProgress } from '../../lib/db'
+import { fetchVideos, createVideo, updateVideo, deleteVideo, fetchVideoNotes, createVideoNote, deleteVideoNote, deleteAllVideoNotes, updateVideoDuration, logActivity, recordAction, fetchAllVideoProgress, upsertVideoProgress } from '../../lib/db'
 import Tooltip from '../../components/Tooltip'
+import HoverPreview from '../../components/HoverPreview'
+import { supabase } from '../../lib/supabase'
 import '../../styles/videos.css'
 
 import { formatTimestamp } from '../../utils/format'
@@ -40,9 +42,10 @@ function getProgressKey(videoId: string) { return `video_progress_${videoId}` }
 export default function Videos() {
   const [videos, setVideos] = useState<VideoMeta[]>([])
   const [watchingVideo, setWatchingVideo] = useState<VideoMeta | null>(null)
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [addForm, setAddForm] = useState({ title: '', description: '', videoUrl: '', subject: null as Subject | null })
+  const [videoModal, setVideoModal] = useState<{ mode: 'add' | 'edit'; video?: VideoMeta } | null>(null)
+  const [videoForm, setVideoForm] = useState({ title: '', description: '', videoUrl: '', subject: null as Subject | null })
   const [deleteTarget, setDeleteTarget] = useState<VideoMeta | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [notes, setNotes] = useState<VideoNote[]>([])
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -92,6 +95,7 @@ export default function Videos() {
     row.style.userSelect = 'none'
     row.style.scrollSnapType = 'none'
     row.style.scrollBehavior = 'auto'
+    row.setAttribute('data-dragging', 'true')
 
     const onMove = (e: MouseEvent) => {
       const d = dragRef.current
@@ -108,6 +112,7 @@ export default function Videos() {
         d.el.style.userSelect = ''
         d.el.style.scrollSnapType = ''
         d.el.style.scrollBehavior = ''
+        d.el.removeAttribute('data-dragging')
       }
       dragRef.current = { active: false, el: null, startX: 0, scrollLeft: 0 }
       document.removeEventListener('mousemove', onMove)
@@ -156,13 +161,14 @@ export default function Videos() {
   }, [])
 
   const handleAdd = useCallback(async () => {
-    if (!addForm.videoUrl.trim() || !addForm.subject) return
+    if (!videoForm.videoUrl.trim() || !videoForm.subject) return
     const newVideo: VideoMeta = {
       id: crypto.randomUUID(),
-      title: addForm.title || 'Novo Vídeo',
-      description: addForm.description || undefined,
-      subject: addForm.subject,
-      videoUrl: addForm.videoUrl,
+      userId: currentUserId || undefined,
+      title: videoForm.title || 'Novo Vídeo',
+      description: videoForm.description || undefined,
+      subject: videoForm.subject,
+      videoUrl: videoForm.videoUrl.trim(),
       isPublic: true,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -171,12 +177,46 @@ export default function Videos() {
       await createVideo(newVideo)
       setVideos(prev => [newVideo, ...prev])
       logActivity('video_added', `Adicionou "${newVideo.title}"`, 'video', '#c85050').catch(() => {})
-      setAddForm({ title: '', description: '', videoUrl: '', subject: null })
-      setShowAddModal(false)
+      setVideoForm({ title: '', description: '', videoUrl: '', subject: null })
+      setVideoModal(null)
     } catch (e) {
       console.error('Erro ao salvar vídeo:', e)
     }
-  }, [addForm])
+  }, [videoForm, currentUserId])
+
+  const openEdit = useCallback((video: VideoMeta) => {
+    setVideoForm({
+      title: video.title,
+      description: video.description || '',
+      videoUrl: video.videoUrl,
+      subject: video.subject,
+    })
+    setVideoModal({ mode: 'edit', video })
+  }, [])
+
+  const handleSaveEdit = useCallback(async () => {
+    const target = videoModal?.video
+    if (!target || !videoForm.videoUrl.trim() || !videoForm.subject) return
+    const urlChanged = videoForm.videoUrl.trim() !== target.videoUrl
+    const updated: VideoMeta = {
+      ...target,
+      title: videoForm.title || target.title,
+      description: videoForm.description || undefined,
+      subject: videoForm.subject,
+      videoUrl: videoForm.videoUrl.trim(),
+      duration: urlChanged ? undefined : target.duration,
+      updatedAt: Date.now(),
+    }
+    try {
+      await updateVideo(updated)
+      setVideos(prev => prev.map(v => v.id === updated.id ? updated : v))
+      setWatchingVideo(prev => prev && prev.id === updated.id ? updated : prev)
+      logActivity('video_edited', `Editou "${updated.title}"`, 'video', '#c85050').catch(() => {})
+      setVideoModal(null)
+    } catch (e) {
+      console.error('Erro ao editar vídeo:', e)
+    }
+  }, [videoModal, videoForm])
 
   const handleDelete = useCallback(async (id: string) => {
     try {
@@ -215,6 +255,7 @@ export default function Videos() {
     if (!watchingVideo) return
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.stopPropagation()
         handleLeaveVideo()
       }
     }
@@ -227,18 +268,24 @@ export default function Videos() {
   }, [])
 
   useEffect(() => {
-    if (!showAddModal) return
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUserId(user?.id ?? null)
+    }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!videoModal) return
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setShowAddModal(false)
+      if (e.key === 'Escape') { e.stopPropagation(); setVideoModal(null) }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
-  }, [showAddModal])
+  }, [videoModal])
 
   useEffect(() => {
     if (!deleteTarget) return
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setDeleteTarget(null)
+      if (e.key === 'Escape') { e.stopPropagation(); setDeleteTarget(null) }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
@@ -382,7 +429,14 @@ export default function Videos() {
               </button>
             )}
           </div>
-          <button className="videos-add-btn" onClick={() => setShowAddModal(true)} type="button">
+          <button
+            className="videos-add-btn"
+            onClick={() => {
+              setVideoForm({ title: '', description: '', videoUrl: '', subject: null })
+              setVideoModal({ mode: 'add' })
+            }}
+            type="button"
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
@@ -492,10 +546,40 @@ export default function Videos() {
                   const ytId = extractYoutubeId(video.videoUrl)
                   const vColors = SUBJECT_COLORS[video.subject]
                   return (
-                    <div
+                    <HoverPreview
                       key={video.id}
+                      preview={
+                        <>
+                          <div className="hover-preview-card-media">
+                            {ytId ? (
+                              <iframe
+                                src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&controls=0&rel=0&playsinline=1`}
+                                title={video.title}
+                                allow="autoplay; encrypted-media; picture-in-picture"
+                                allowFullScreen
+                              />
+                            ) : video.thumbnail ? (
+                              <img src={video.thumbnail} alt={video.title} />
+                            ) : (
+                              <video src={video.videoUrl} autoPlay muted loop playsInline />
+                            )}
+                          </div>
+                          <div className="hover-preview-card-info">
+                            <span className="hover-preview-card-title">{video.title}</span>
+                            {video.description && (
+                              <span className="hover-preview-card-desc">{video.description}</span>
+                            )}
+                          </div>
+                        </>
+                      }
+                    >
+                      {bind => (
+                    <div
                       className="video-card"
                       onClick={() => handleOpenVideo(video)}
+                      ref={bind.ref}
+                      onMouseEnter={bind.onMouseEnter}
+                      onMouseLeave={bind.onMouseLeave}
                     >
                       <div className="video-card-thumb">
                         {ytId ? (
@@ -520,6 +604,34 @@ export default function Videos() {
                           </svg>
                         </div>
                         {video.duration && <span className="video-card-duration">{video.duration}</span>}
+                        {currentUserId && video.userId === currentUserId && (
+                          <>
+                            <button
+                              className="video-card-edit"
+                              title="Editar vídeo"
+                              onClick={e => { e.stopPropagation(); openEdit(video) }}
+                              type="button"
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                              </svg>
+                            </button>
+                            <button
+                              className="video-card-delete"
+                              title="Deletar vídeo"
+                              onClick={e => { e.stopPropagation(); setDeleteTarget(video) }}
+                              type="button"
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                <line x1="10" y1="11" x2="10" y2="17" />
+                                <line x1="14" y1="11" x2="14" y2="17" />
+                              </svg>
+                            </button>
+                          </>
+                        )}
                     {savedProgressMap.has(video.id) && (
                       <div className="video-card-progress-bar">
                         <div
@@ -546,6 +658,8 @@ export default function Videos() {
                         </div>
                       </div>
                     </div>
+                      )}
+                    </HoverPreview>
                   )
                 })}
               </div>
@@ -717,10 +831,12 @@ export default function Videos() {
         </div>
       )}
 
-      {showAddModal && (
-        <div className="video-modal-overlay" onClick={() => setShowAddModal(false)}>
+      {videoModal && (
+        <div className="video-modal-overlay" onClick={() => setVideoModal(null)}>
           <div className="video-modal" onClick={e => e.stopPropagation()}>
-            <h3 className="video-modal-title">Adicionar vídeo</h3>
+            <h3 className="video-modal-title">
+              {videoModal.mode === 'edit' ? 'Editar vídeo' : 'Adicionar vídeo'}
+            </h3>
 
             <div className="video-form-field">
               <label className="video-form-label">URL do vídeo</label>
@@ -728,8 +844,8 @@ export default function Videos() {
                 className="video-form-input"
                 type="url"
                 placeholder="https://youtube.com/watch?v=..."
-                value={addForm.videoUrl}
-                onChange={e => setAddForm(f => ({ ...f, videoUrl: e.target.value }))}
+                value={videoForm.videoUrl}
+                onChange={e => setVideoForm(f => ({ ...f, videoUrl: e.target.value }))}
               />
               <span className="video-form-hint">Suporta YouTube ou links diretos de vídeo</span>
             </div>
@@ -740,8 +856,8 @@ export default function Videos() {
                 className="video-form-input"
                 type="text"
                 placeholder="Ex: Derivadas — Conceito e Regras"
-                value={addForm.title}
-                onChange={e => setAddForm(f => ({ ...f, title: e.target.value }))}
+                value={videoForm.title}
+                onChange={e => setVideoForm(f => ({ ...f, title: e.target.value }))}
               />
             </div>
 
@@ -751,8 +867,8 @@ export default function Videos() {
                 className="video-form-textarea"
                 placeholder="Breve descrição do conteúdo..."
                 rows={2}
-                value={addForm.description}
-                onChange={e => setAddForm(f => ({ ...f, description: e.target.value }))}
+                value={videoForm.description}
+                onChange={e => setVideoForm(f => ({ ...f, description: e.target.value }))}
               />
             </div>
 
@@ -761,7 +877,7 @@ export default function Videos() {
               <div className="video-form-subjects">
                 {SUBJECTS.map(s => {
                   const colors = SUBJECT_COLORS[s]
-                  const selected = addForm.subject === s
+                  const selected = videoForm.subject === s
                   return (
                     <button
                       key={s}
@@ -771,7 +887,7 @@ export default function Videos() {
                         color: selected ? '#1a1714' : colors.text,
                         borderColor: selected ? colors.text : colors.text + '33',
                       }}
-                      onClick={() => setAddForm(f => ({ ...f, subject: selected ? null : s }))}
+                      onClick={() => setVideoForm(f => ({ ...f, subject: selected ? null : s }))}
                       type="button"
                     >
                       {s}
@@ -782,16 +898,16 @@ export default function Videos() {
             </div>
 
             <div className="video-form-actions">
-              <button className="video-form-cancel" onClick={() => setShowAddModal(false)} type="button">
+              <button className="video-form-cancel" onClick={() => setVideoModal(null)} type="button">
                 Cancelar
               </button>
               <button
                 className="video-form-confirm"
-                disabled={!addForm.subject || !addForm.videoUrl}
-                onClick={handleAdd}
+                disabled={!videoForm.subject || !videoForm.videoUrl}
+                onClick={videoModal.mode === 'edit' ? handleSaveEdit : handleAdd}
                 type="button"
               >
-                Adicionar
+                {videoModal.mode === 'edit' ? 'Salvar' : 'Adicionar'}
               </button>
             </div>
           </div>

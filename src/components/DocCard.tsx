@@ -1,11 +1,13 @@
 import type { DocMeta } from '../types/doc'
 import { SUBJECT_COLORS } from '../types/doc'
+import type { HoverPreviewBind } from './HoverPreview'
 
 interface DocCardProps {
   doc: DocMeta
   onClick: () => void
   onDelete?: () => void
   onEditProps?: () => void
+  hoverBind?: HoverPreviewBind
 }
 
 function formatDate(ts: number): string {
@@ -22,11 +24,27 @@ function fileSizeLabel(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export default function DocCard({ doc, onClick, onDelete, onEditProps }: DocCardProps) {
+export default function DocCard({ doc, onClick, onDelete, onEditProps, hoverBind }: DocCardProps) {
   const subjectColors = doc.subject ? SUBJECT_COLORS[doc.subject] : null
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onClick()
+    }
+  }
+
   return (
-    <button className="doc-card" onClick={onClick} type="button">
+    <div
+      className="doc-card"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      ref={hoverBind?.ref}
+      onMouseEnter={hoverBind?.onMouseEnter}
+      onMouseLeave={hoverBind?.onMouseLeave}
+    >
       <div className={`doc-card-preview ${doc.type === 'editor' ? 'paper-bg' : ''}`}>
         {doc.type === 'pdf' ? (
           doc.thumbnail ? (
@@ -101,6 +119,6 @@ export default function DocCard({ doc, onClick, onDelete, onEditProps }: DocCard
           )}
         </div>
       </div>
-    </button>
+    </div>
   )
 }

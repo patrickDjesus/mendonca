@@ -577,7 +577,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
   if (view === 'results' && lastResult) {
     const total = lastResult.correctCount + lastResult.wrongCount
     const accuracy = total > 0 ? Math.round((lastResult.correctCount / total) * 100) : 0
-    const isWin = accuracy === 100
+    const isWin = lastResult.correctCount > lastResult.wrongCount
     return (
       <div className="desafios-page">
         <div className="results-container">
@@ -822,7 +822,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
         </div>
         <div className="desafio-stat-card">
           <div className="desafio-stat-icon total"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg></div>
-          <div className="desafio-stat-info"><span className="desafio-stat-value">{attempts.length}/{challenges.length}</span><span className="desafio-stat-label">Resolvidos <Tooltip content="Quantidade de desafios que você já completou pelo menos uma vez." /></span></div>
+          <div className="desafio-stat-info"><span className="desafio-stat-value">{attemptIds.size}/{challenges.length}</span><span className="desafio-stat-label">Resolvidos <Tooltip content="Quantidade de desafios que você já completou pelo menos uma vez." /></span></div>
         </div>
       </div>
 
@@ -837,13 +837,16 @@ const [questionHidden, setQuestionHidden] = useState(false)
               const challenge = challenges.find(c => c.id === savedQuiz.challengeId)
               if (!challenge) { clearSavedQuiz(); setSavedQuiz(null); return }
               setActiveChallenge(challenge); setCurrentQIndex(savedQuiz.currentQIndex); setAnswers(savedQuiz.answers); setLastResult(null); setView('quiz')
+              challengeEndedRef.current = false
+              stopMemoryTimer()
+              setQuestionHidden(false)
               if (timerRef.current) clearInterval(timerRef.current)
               if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current)
               const restored = savedQuiz.startTimeMs + (Date.now() - savedQuiz.savedAt)
               startTimeRef.current = Date.now() - restored; setElapsed(restored)
               timerRef.current = setInterval(() => setElapsed(Date.now() - startTimeRef.current), 200)
               autoSaveTimerRef.current = setInterval(() => {
-                saveQuizState(challenge.id, savedQuiz.currentQIndex, answers, startTimeRef.current)
+                saveQuizState(challenge.id, currentQIndexRef.current, answersRef.current, startTimeRef.current)
               }, 5000)
               setSavedQuiz(null)
             }} type="button">Retomar</button>
@@ -921,7 +924,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
       <div className="desafios-grid">
         {filteredChallenges.map(challenge => {
           const isAttempted = attemptIds.has(challenge.id)
-          const attemptCount = attempts.filter(a => a.challengeId === challenge.id && a.correctCount > a.wrongCount).length
+          const attemptCount = attempts.filter(a => a.challengeId === challenge.id).length
           return (
             <div key={challenge.id} className={`desafio-card ${isAttempted ? 'attempted' : ''}`} onClick={() => setViewingChallengeDetails(challenge)}>
               <div className="desafio-card-top">
@@ -933,7 +936,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
               </div>
               {isAttempted && (
                 <div className="desafio-card-medal">
-                  <Tooltip content="Quantas vezes você venceu este desafio" hideIcon>
+                  <Tooltip content="Quantas vezes você fez este desafio" hideIcon>
                     <img src="/trophy.png" alt="" className="desafio-card-trophy" />
                   </Tooltip>
                   <span className="desafio-card-medal-count">{attemptCount}</span>

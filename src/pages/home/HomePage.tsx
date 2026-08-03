@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { recordAction } from '../../lib/db'
-import FloatingCalculator from '../../components/FloatingCalculator'
+import ToolWheel from '../../components/ToolWheel'
 import '../../styles/home.css'
 
 export default function HomePage() {
@@ -90,6 +90,14 @@ export default function HomePage() {
             <span>Desafios</span>
           </NavLink>
 
+          <NavLink to="/home/flashcards" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="5" width="20" height="14" rx="2" />
+              <line x1="2" y1="10" x2="22" y2="10" />
+            </svg>
+            <span>Flash Cards</span>
+          </NavLink>
+
           <NavLink to="/home/perfil" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -117,7 +125,7 @@ export default function HomePage() {
       <main className="dashboard-content">
         <Outlet context={{ userName }} />
       </main>
-      <FloatingCalculator />
+      <ToolWheel />
     </div>
   )
 }

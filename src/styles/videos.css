@@ -518,6 +518,88 @@
   transition: width 0.3s ease;
 }
 
+.video-card-thumb::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.video-card:hover .video-card-thumb::after {
+  opacity: 1;
+}
+
+.video-card-edit {
+  position: absolute;
+  top: 8px;
+  right: 44px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid rgba(232, 220, 200, 0.25);
+  background: #1d1a16;
+  color: #e8dcc8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: all 0.15s ease;
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.video-card-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 138, 138, 0.35);
+  background: #1d1a16;
+  color: #ff8a8a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: all 0.15s ease;
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.video-card:hover .video-card-edit,
+.video-card:hover .video-card-delete {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.video-card-edit:hover {
+  background: #2c2822;
+  border-color: rgba(232, 220, 200, 0.5);
+}
+
+.video-card-delete:hover {
+  background: rgba(200, 80, 80, 0.35);
+  border-color: #ff8a8a;
+  color: #ffb3b3;
+}
+
+.video-card-edit svg,
+.video-card-delete svg {
+  width: 15px;
+  height: 15px;
+}
+
 .video-card-info {
   padding: 12px 14px 14px;
 }

@@ -4,6 +4,7 @@ import { ACHIEVEMENT_MAP } from '../data/achievements'
 import type { ChallengeQuestion, Challenge, ChallengeAttempt, UserStreak, ChallengeModifier } from '../types/challenge'
 import type { DocMeta, Subject } from '../types/doc'
 import type { VideoMeta, VideoNote, MasteryStage } from '../types/video'
+import type { Flashcard, FlashcardGroup } from '../types/flashcard'
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -480,6 +481,25 @@ export async function createVideo(v: VideoMeta): Promise<VideoMeta> {
   return v
 }
 
+export async function updateVideo(v: VideoMeta): Promise<VideoMeta> {
+  const { error } = await supabase
+    .from('videos')
+    .update({
+      title: v.title,
+      description: v.description || null,
+      subject: v.subject,
+      video_url: v.videoUrl,
+      thumbnail: v.thumbnail || null,
+      duration: v.duration || null,
+      is_public: v.isPublic,
+      updated_at: new Date(v.updatedAt).toISOString(),
+    })
+    .eq('id', v.id)
+
+  if (error) throw error
+  return v
+}
+
 export async function deleteVideo(id: string): Promise<void> {
   const { error } = await supabase.from('videos').delete().eq('id', id)
   if (error) throw error
@@ -493,6 +513,7 @@ export async function updateVideoDuration(id: string, duration: string): Promise
 function rowToVideo(row: Record<string, unknown>): VideoMeta {
   return {
     id: row.id as string,
+    userId: (row.user_id as string) || undefined,
     title: row.title as string,
     description: (row.description as string) || undefined,
     subject: row.subject as VideoMeta['subject'],
@@ -1134,4 +1155,195 @@ export async function callMasteryTest(payload: {
     throw new Error(err.error || `HTTP ${res.status}`)
   }
   return res.json()
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FLASH CARDS
+   ═══════════════════════════════════════════════════════════ */
+
+function rowToFlashcard(row: Record<string, unknown>): Flashcard {
+  return {
+    id: row.id as string,
+    front: row.front as string,
+    back: row.back as string,
+    subject: row.subject as Subject,
+    known: (row.known as boolean) ?? false,
+    groupId: (row.group_id as string) || undefined,
+    createdAt: new Date(row.created_at as string).getTime(),
+    updatedAt: new Date(row.updated_at as string).getTime(),
+  }
+}
+
+function rowToFlashcardGroup(row: Record<string, unknown>): FlashcardGroup {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    subject: row.subject as Subject,
+    description: (row.description as string) || undefined,
+    createdAt: new Date(row.created_at as string).getTime(),
+    updatedAt: new Date(row.updated_at as string).getTime(),
+  }
+}
+
+function flashcardToRow(card: Flashcard, userId: string): Record<string, unknown> {
+  return {
+    id: card.id,
+    user_id: userId,
+    front: card.front,
+    back: card.back,
+    subject: card.subject,
+    known: card.known,
+  }
+}
+
+export async function fetchFlashcards(): Promise<Flashcard[]> {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('flashcards')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data || []).map(rowToFlashcard)
+}
+
+export async function createFlashcard(card: Omit<Flashcard, 'id' | 'known' | 'createdAt' | 'updatedAt'>): Promise<Flashcard> {
+  const userId = await getUserId()
+  const newCard: Flashcard = {
+    id: uid(),
+    front: card.front,
+    back: card.back,
+    subject: card.subject,
+    known: false,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  }
+  const { error } = await supabase.from('flashcards').insert(flashcardToRow(newCard, userId))
+  if (error) throw error
+  return newCard
+}
+
+export async function updateFlashcard(id: string, patch: Partial<Omit<Flashcard, 'id' | 'createdAt'>>): Promise<void> {
+  const userId = await getUserId()
+  const row: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (patch.front !== undefined) row.front = patch.front
+  if (patch.back !== undefined) row.back = patch.back
+  if (patch.subject !== undefined) row.subject = patch.subject
+  if (patch.known !== undefined) row.known = patch.known
+
+  const { error } = await supabase.from('flashcards').update(row).eq('id', id).eq('user_id', userId)
+  if (error) throw error
+}
+
+export async function deleteFlashcard(id: string): Promise<void> {
+  const userId = await getUserId()
+  const { error } = await supabase.from('flashcards').delete().eq('id', id).eq('user_id', userId)
+  if (error) throw error
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FLASH CARD GROUPS
+   ═══════════════════════════════════════════════════════════ */
+
+export async function fetchFlashcardGroups(): Promise<FlashcardGroup[]> {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('flashcard_groups')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data || []).map(rowToFlashcardGroup)
+}
+
+export interface FlashcardGroupInput {
+  name: string
+  subject: Subject
+  description?: string
+  cards: Array<{ id?: string; front: string; back: string; subject: Subject }>
+}
+
+export async function createFlashcardGroup(input: FlashcardGroupInput): Promise<FlashcardGroup> {
+  const userId = await getUserId()
+  const groupId = uid()
+
+  const { error: groupError } = await supabase
+    .from('flashcard_groups')
+    .insert({ id: groupId, user_id: userId, name: input.name, subject: input.subject, description: input.description || null })
+  if (groupError) throw groupError
+
+  if (input.cards.length > 0) {
+    const rows = input.cards.map(c => ({
+      id: uid(),
+      user_id: userId,
+      front: c.front,
+      back: c.back,
+      subject: c.subject,
+      group_id: groupId,
+    }))
+    const { error: cardsError } = await supabase.from('flashcards').insert(rows)
+    if (cardsError) throw cardsError
+  }
+
+  return {
+    id: groupId,
+    name: input.name,
+    subject: input.subject,
+    description: input.description,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  }
+}
+
+export async function updateFlashcardGroup(groupId: string, input: FlashcardGroupInput): Promise<void> {
+  const userId = await getUserId()
+
+  const { error: metaError } = await supabase
+    .from('flashcard_groups')
+    .update({ name: input.name, subject: input.subject, description: input.description || null, updated_at: new Date().toISOString() })
+    .eq('id', groupId)
+    .eq('user_id', userId)
+  if (metaError) throw metaError
+
+  const keptIds: string[] = []
+
+  for (const c of input.cards) {
+    if (c.id) {
+      keptIds.push(c.id)
+      const { error } = await supabase
+        .from('flashcards')
+        .update({ front: c.front, back: c.back, subject: c.subject, updated_at: new Date().toISOString() })
+        .eq('id', c.id)
+        .eq('user_id', userId)
+      if (error) throw error
+    } else {
+      const { error } = await supabase
+        .from('flashcards')
+        .insert({ id: uid(), user_id: userId, front: c.front, back: c.back, subject: c.subject, group_id: groupId })
+      if (error) throw error
+    }
+  }
+
+  const { data: currentCards, error: fetchError } = await supabase
+    .from('flashcards')
+    .select('id')
+    .eq('group_id', groupId)
+    .eq('user_id', userId)
+  if (fetchError) throw fetchError
+
+  const toDelete = (currentCards || [])
+    .map(r => r.id as string)
+    .filter(id => !keptIds.includes(id))
+  if (toDelete.length > 0) {
+    const { error: delError } = await supabase.from('flashcards').delete().in('id', toDelete).eq('user_id', userId)
+    if (delError) throw delError
+  }
+}
+
+export async function deleteFlashcardGroup(groupId: string): Promise<void> {
+  const userId = await getUserId()
+  const { error } = await supabase.from('flashcard_groups').delete().eq('id', groupId).eq('user_id', userId)
+  if (error) throw error
 }

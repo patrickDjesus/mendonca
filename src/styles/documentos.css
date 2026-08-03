@@ -178,7 +178,15 @@
   flex-direction: column;
   text-align: left;
   font-family: inherit;
+  font-size: inherit;
+  color: inherit;
   padding: 0;
+  outline: none;
+}
+
+.doc-card:focus-visible {
+  border-color: rgba(218, 160, 60, 0.6);
+  box-shadow: 0 0 0 2px rgba(218, 160, 60, 0.25);
 }
 
 .doc-card:hover {

@@ -446,7 +446,7 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
             <div className="qb-wizard-dot" />
           </div>
           <h2 className="qb-wizard-title">Qual a matéria?</h2>
-          <p className="qb-wizard-desc">Todas as {totalCount} questões serão dessa matéria.</p>
+          <p className="qb-wizard-desc">{totalCount === 1 ? 'Esta questão será dessa matéria.' : `Todas as ${totalCount} questões serão dessa matéria.`}</p>
           <div className="qb-wizard-subject-grid">
             {SUBJECTS.map(s => {
               const colors = SUBJECT_COLORS[s]
@@ -462,7 +462,7 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
           <div className="qb-wizard-actions">
             <button className="qb-cancel-btn" onClick={() => setWizardStep('count')} type="button">Voltar</button>
             <button className="qb-save-btn" onClick={() => { const qs = Array.from({ length: totalCount }, () => emptyQuestion('multipla', batchSubject)); setBatchQuestions(qs); setQ(qs[0]); setCurrentIndex(0); setWizardStep('questions') }} type="button">
-              Criar questões
+              {totalCount === 1 ? 'Criar questão' : 'Criar questões'}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
             </button>
           </div>
@@ -518,7 +518,7 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
           <button className="qb-save-btn" onClick={handleSaveWizard} type="button">
             {isLast ? (
               <>
-                Salvar todas
+                {totalCount === 1 ? 'Salvar questão' : 'Salvar todas'}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}><polyline points="20 6 9 17 4 12" /></svg>
               </>
             ) : (

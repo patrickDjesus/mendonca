@@ -3,6 +3,7 @@ import type { DocMeta, DocTab, Subject } from '../../types/doc'
 import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
 import DocCard from '../../components/DocCard'
 import AddDocCard from '../../components/AddDocCard'
+import HoverPreview from '../../components/HoverPreview'
 import '../../styles/documentos.css'
 import { generatePdfThumbnail } from '../../utils/pdfThumbnails'
 import { fetchMyDocs, fetchPublicDocs, createDoc, updateDoc, deleteDoc, logActivity, recordAction, checkMaterialOuro } from '../../lib/db'
@@ -245,7 +246,7 @@ export default function Documentos() {
   useEffect(() => {
     if (!deleteTarget) return
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setDeleteTarget(null)
+      if (e.key === 'Escape') { e.stopPropagation(); setDeleteTarget(null) }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
@@ -254,7 +255,7 @@ export default function Documentos() {
   useEffect(() => {
     if (!wheelState.open) return
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') handleWheelClose()
+      if (e.key === 'Escape') { e.stopPropagation(); handleWheelClose() }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
@@ -263,7 +264,7 @@ export default function Documentos() {
   useEffect(() => {
     if (!viewingPdf) return
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setViewingPdf(null)
+      if (e.key === 'Escape') { e.stopPropagation(); setViewingPdf(null) }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
@@ -272,7 +273,7 @@ export default function Documentos() {
   useEffect(() => {
     if (!editPropsDoc) return
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setEditPropsDoc(null)
+      if (e.key === 'Escape') { e.stopPropagation(); setEditPropsDoc(null) }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
@@ -394,13 +395,41 @@ export default function Documentos() {
             </div>
           )}
           {visibleFiltered.map(doc => (
-            <DocCard
+            <HoverPreview
               key={doc.id}
-              doc={doc}
-              onClick={() => openDoc(doc)}
-              onDelete={activeTab === 'mine' ? () => setDeleteTarget(doc) : undefined}
-              onEditProps={activeTab === 'mine' ? () => openEditProps(doc) : undefined}
-            />
+              preview={
+                <>
+                  <div className="hover-preview-card-media">
+                    {doc.type === 'pdf' && doc.thumbnail ? (
+                      <img src={doc.thumbnail} alt={doc.title} />
+                    ) : (
+                      <div className="hover-preview-card-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className="hover-preview-card-info">
+                    <span className="hover-preview-card-title">{doc.title}</span>
+                    {doc.description && (
+                      <span className="hover-preview-card-desc">{doc.description}</span>
+                    )}
+                  </div>
+                </>
+              }
+            >
+              {bind => (
+                <DocCard
+                  doc={doc}
+                  onClick={() => openDoc(doc)}
+                  onDelete={activeTab === 'mine' ? () => setDeleteTarget(doc) : undefined}
+                  onEditProps={activeTab === 'mine' ? () => openEditProps(doc) : undefined}
+                  hoverBind={bind}
+                />
+              )}
+            </HoverPreview>
           ))}
           {activeTab === 'public' && visibleCount < filtered.length && (
             <div ref={sentinelRef} className="docs-sentinel">

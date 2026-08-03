@@ -1003,11 +1003,16 @@
 /* ================================
    Floating Calculator
    ================================ */
-.calc-fab {
+.tool-wheel-root {
   position: fixed;
   bottom: 24px;
   right: 24px;
   z-index: 500;
+}
+
+.tool-fab {
+  position: relative;
+  z-index: 502;
   width: 56px;
   height: 56px;
   border-radius: 16px;
@@ -1022,24 +1027,449 @@
   transition: all 0.2s ease;
 }
 
-.calc-fab:hover {
+.tool-fab:hover {
   transform: scale(1.08);
   box-shadow: 0 6px 28px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(218, 160, 60, 0.25);
   background: linear-gradient(145deg, #322c28, #242018);
 }
 
-.calc-fab:active {
+.tool-fab:active {
   transform: scale(0.95);
 }
 
-.calc-fab svg {
+.tool-fab-plus {
   width: 24px;
   height: 24px;
+  transition: transform 0.25s ease;
+}
+
+.tool-fab-open .tool-fab-plus {
+  transform: rotate(45deg);
+}
+
+.tool-wheel {
+  position: absolute;
+  bottom: 76px;
+  right: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.tool-wheel-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  animation: wheelOptionIn 0.25s ease both;
+}
+
+@keyframes wheelOptionIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tool-wheel-option-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid rgba(200, 180, 140, 0.22);
+  background: linear-gradient(145deg, #2a2420, #1e1a16);
+  color: #daa03c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(200, 180, 140, 0.08);
+  transition: all 0.15s ease;
+}
+
+.tool-wheel-option-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.tool-wheel-option:hover .tool-wheel-option-icon {
+  transform: scale(1.1);
+  border-color: rgba(218, 160, 60, 0.5);
+  color: #f0c46a;
+}
+
+.tool-wheel-option-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8dcc8;
+  background: rgba(26, 22, 18, 0.92);
+  border: 1px solid rgba(200, 180, 140, 0.15);
+  padding: 6px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.tool-wheel-option:hover .tool-wheel-option-label {
+  border-color: rgba(218, 160, 60, 0.45);
+}
+
+/* ================================
+   Floating Timer
+   ================================ */
+.timer-panel {
+  position: fixed;
+  bottom: 92px;
+  right: 24px;
+  z-index: 501;
+  width: 280px;
+  background: linear-gradient(180deg, #1e1a16, #1a1612);
+  border: 1px solid rgba(200, 180, 140, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(200, 180, 140, 0.06);
+  overflow: hidden;
+  animation: calcSlideUp 0.2s ease-out;
+  padding-bottom: 14px;
+}
+
+.timer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 8px;
+}
+
+.timer-title {
+  font-family: 'Caveat', cursive;
+  font-size: 16px;
+  font-weight: 600;
+  color: #c8b898;
+}
+
+.timer-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(200, 180, 140, 0.06);
+  color: #7a6a5a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.timer-close:hover {
+  background: rgba(200, 80, 80, 0.15);
+  color: #c87070;
+}
+
+.timer-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+.timer-display {
+  margin: 0 14px;
+  background: rgba(200, 180, 140, 0.04);
+  border: 1px solid rgba(200, 180, 140, 0.1);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.timer-time {
+  font-size: 44px;
+  font-weight: 700;
+  color: #e8dcc8;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+}
+
+.timer-running .timer-time {
+  color: #f0c46a;
+}
+
+.timer-done {
+  border-color: rgba(232, 80, 80, 0.5);
+}
+
+.timer-done .timer-time {
+  color: #e85050;
+}
+
+.timer-status {
+  font-size: 12px;
+  color: #8a7a6a;
+}
+
+.timer-done .timer-status {
+  color: #e87070;
+  font-weight: 600;
+}
+
+.timer-inputs {
+  margin: 14px 14px 0;
+  display: flex;
+  gap: 10px;
+}
+
+.timer-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.timer-field span {
+  font-size: 11px;
+  color: #8a7a6a;
+  text-align: center;
+}
+
+.timer-input {
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(200, 180, 140, 0.12);
+  background: rgba(200, 180, 140, 0.05);
+  color: #e8dcc8;
+  font-size: 20px;
+  font-weight: 600;
+  font-family: inherit;
+  text-align: center;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.timer-input:focus {
+  border-color: rgba(218, 160, 60, 0.5);
+}
+
+.timer-actions {
+  margin: 14px 14px 0;
+  display: flex;
+  gap: 10px;
+}
+
+.timer-btn {
+  flex: 1;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(200, 180, 140, 0.1);
+  background: rgba(200, 180, 140, 0.08);
+  color: #c8b898;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.timer-btn:hover {
+  background: rgba(200, 180, 140, 0.16);
+}
+
+.timer-btn-start {
+  background: linear-gradient(145deg, rgba(218, 160, 60, 0.35), rgba(218, 160, 60, 0.2));
+  color: #1a1410;
+}
+
+.timer-btn-start:hover {
+  background: linear-gradient(145deg, rgba(218, 160, 60, 0.5), rgba(218, 160, 60, 0.35));
+}
+
+.timer-btn-reset {
+  color: #c87070;
+}
+
+/* ================================
+   Floating Draw Tool
+   ================================ */
+.draw-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.draw-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.draw-text-input {
+  position: absolute;
+  min-width: 140px;
+  max-width: 60vw;
+  padding: 2px 6px;
+  background: rgba(26, 22, 18, 0.85);
+  border: 1px dashed rgba(218, 160, 60, 0.6);
+  border-radius: 6px;
+  color: #e8dcc8;
+  font-family: 'Caveat', cursive;
+  font-size: 26px;
+  font-weight: 500;
+  outline: none;
+  z-index: 2;
+}
+
+.draw-text-input::placeholder {
+  color: rgba(232, 220, 200, 0.35);
+}
+
+.draw-toolbar {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  max-width: calc(100vw - 28px);
+  padding: 10px 14px;
+  background: rgba(26, 22, 18, 0.92);
+  border: 1px solid rgba(200, 180, 140, 0.15);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+.draw-tools,
+.draw-colors,
+.draw-sizes,
+.draw-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.draw-tool {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid rgba(200, 180, 140, 0.1);
+  background: rgba(200, 180, 140, 0.05);
+  color: #c8b898;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+}
+
+.draw-tool svg {
+  width: 17px;
+  height: 17px;
+}
+
+.draw-tool:hover {
+  background: rgba(200, 180, 140, 0.16);
+}
+
+.draw-tool-active {
+  background: rgba(218, 160, 60, 0.2);
+  border-color: rgba(218, 160, 60, 0.5);
+  color: #f0c46a;
+}
+
+.draw-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: all 0.12s ease;
+}
+
+.draw-swatch:hover {
+  transform: scale(1.15);
+}
+
+.draw-swatch-active {
+  border-color: #e8dcc8;
+  transform: scale(1.15);
+}
+
+.draw-sizes {
+  border-left: 1px solid rgba(200, 180, 140, 0.15);
+  padding-left: 14px;
+}
+
+.draw-size {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid rgba(200, 180, 140, 0.12);
+  background: rgba(200, 180, 140, 0.06);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+}
+
+.draw-size span {
+  border-radius: 50%;
+  background: #c8b898;
+}
+
+.draw-size-active {
+  border-color: rgba(218, 160, 60, 0.6);
+  background: rgba(218, 160, 60, 0.15);
+}
+
+.draw-actions {
+  border-left: 1px solid rgba(200, 180, 140, 0.15);
+  padding-left: 14px;
+}
+
+.draw-btn {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 9px;
+  border: 1px solid rgba(200, 180, 140, 0.12);
+  background: rgba(200, 180, 140, 0.08);
+  color: #c8b898;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.draw-btn:hover {
+  background: rgba(200, 180, 140, 0.18);
+}
+
+.draw-btn-close {
+  color: #c87070;
+  border-color: rgba(200, 80, 80, 0.25);
+}
+
+.draw-btn-close:hover {
+  background: rgba(200, 80, 80, 0.2);
 }
 
 .calc-panel {
   position: fixed;
-  bottom: 24px;
+  bottom: 92px;
   right: 24px;
   z-index: 501;
   width: 300px;
@@ -1197,19 +1627,50 @@
 }
 
 @media (max-width: 480px) {
-  .calc-fab {
+  .tool-wheel-root {
     bottom: 16px;
     right: 16px;
+  }
+
+  .tool-fab {
     width: 48px;
     height: 48px;
     border-radius: 14px;
   }
 
-  .calc-panel {
-    bottom: 16px;
+  .tool-wheel {
+    bottom: 68px;
+    right: 1px;
+  }
+
+  .tool-wheel-option-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .tool-wheel-option-label {
+    font-size: 11px;
+  }
+
+  .calc-panel,
+  .timer-panel {
+    bottom: 76px;
     right: 16px;
     width: calc(100vw - 32px);
     max-width: 300px;
+  }
+
+  .draw-toolbar {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .draw-actions {
+    padding-left: 8px;
+  }
+
+  .draw-btn {
+    padding: 0 10px;
   }
 }
 

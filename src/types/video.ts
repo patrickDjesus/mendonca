@@ -2,6 +2,7 @@ import type { Subject } from './doc'
 
 export interface VideoMeta {
   id: string
+  userId?: string
   title: string
   description?: string
   subject: Subject

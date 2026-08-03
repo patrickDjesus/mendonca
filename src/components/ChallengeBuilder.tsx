@@ -220,6 +220,8 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
     return { base: baseXp, questions: questionBonus, modifiers: modifierBonus, total: baseXp + questionBonus + modifierBonus }
   }, [difficulty, selectedIds, modifiers])
 
+  const minBet = Math.max(1, Math.ceil(selectedIds.length * 0.2))
+
   const steps: { key: BuilderStep; label: string; desc: string }[] = [
     { key: 'info', label: 'Informações', desc: 'Título, matérias e dificuldade' },
     { key: 'questions', label: 'Questões', desc: 'Selecionar e ordenar' },
@@ -430,9 +432,9 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
           {modifiers.includes('aposta_cega') && (
             <div className="cb-section-card">
               <h4 className="cb-section-title">Aposta Cega — mínimo de acertos</h4>
-              <p className="cb-section-desc">O aluno deve apostar quantas questões vai acertar. Lance mínimo: {Math.max(1, Math.ceil(selectedIds.length * 0.2))} ({Math.round(20)}% de {selectedIds.length})</p>
+              <p className="cb-section-desc">O aluno deve apostar quantas questões vai acertar. Lance mínimo: {minBet} ({selectedIds.length > 0 ? Math.round((minBet / selectedIds.length) * 100) : 0}% de {selectedIds.length})</p>
               <div className="cb-aposta-input">
-                <input type="range" min={Math.max(1, Math.ceil(selectedIds.length * 0.2))} max={selectedIds.length} value={apostaCegaMin} onChange={e => setApostaCegaMin(Number(e.target.value))} className="qb-range" />
+                <input type="range" min={minBet} max={selectedIds.length} value={apostaCegaMin} onChange={e => setApostaCegaMin(Number(e.target.value))} className="qb-range" />
                 <span className="cb-aposta-value">{apostaCegaMin} questões</span>
               </div>
             </div>
