@@ -1139,9 +1139,54 @@
   border: none;
 }
 
+.video-watch-player-yt-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.video-watch-player-html5-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .video-watch-player-html5 {
   object-fit: contain;
   background: #000;
+}
+
+.video-watch-pip-btn {
+  position: absolute;
+  right: 12px;
+  bottom: 52px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.video-watch-pip-btn:hover,
+.video-watch-pip-btn:focus-visible,
+.video-watch-pip-btn.active {
+  background: rgba(218, 160, 60, 0.85);
+}
+
+.video-watch-pip-btn.active:hover {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.video-watch-pip-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* ── Video Info ──────────────────────────────────────── */
