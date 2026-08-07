@@ -1,0 +1,92 @@
+FUNCOES DOS DOCUMENTOS E VIDEOS
+===============================
+
+Este texto lista, de forma concisa, o que a area de DOCUMENTOS e a area de
+VIDEOAULAS ja fazem hoje, para facilitar a identificacao de possiveis adicoes.
+
+------------------------------------------------------------
+1) DOCUMENTOS (pagina "Documentos")
+------------------------------------------------------------
+  1.1. Lista e navegacao
+      1. Duas abas: "Meus Documentos" e "Documentos Publicos".
+      2. Busca por titulo ou descricao.
+      3. Filtro por disciplina (8 materias: Fisica, Quimica, Biologia,
+         Matematica, Linguagens, Geografia, Historia, Filosofia).
+      4. Grade de cards com miniatura (PDF gera thumbnail automatica na 1a pagina).
+      5. Carga infinita (paginas de 8 itens) na aba publica.
+      6. Pre-visualizacao ao passar o mouse (hover) com miniatura/placeholder.
+
+  1.2. Criar e importar
+      7. Botao "+" abre uma roda de opcoes: Criar (editor de texto) ou Upload (PDF).
+      8. Criar documento pede nome, descricao, disciplina e opcao "Tornar publico".
+      9. Upload de PDF envia o arquivo ao storage (Supabase), salva URL e gera thumbnail.
+      10. Edicao de propriedades de um documento (nome, descricao, disciplina, publico).
+
+  1.3. Editor de texto (BlockNote/ProseMirror)
+      11. Barra de formatacao: paragrafo, H1/H2/H3, negrito, italico, sublinhado,
+          tachado, marca-texto, lista com marcadores, lista numerada, lista de
+          tarefas e codigo inline.
+      12. Troca de estilo de papel: "marrom" (padrao) ou "branco".
+      13. Salvar manual (botao, Ctrl+S) e auto-save a cada 3s; salva ao sair.
+      14. Titulo editavel no topo; se vazio, usa o titulo do 1o bloco.
+      15. Correcao ortografica em portugues: sublinha erros, sugestoes,
+          "ignorar palavra", copiar e colar a partir do menu de contexto.
+      16. Fecha com Esc (antes salva automaticamente).
+
+  1.4. Visualizador de PDF
+      17. Abre o PDF (via blob), com zoom (50% a 300%), tela cheia (tecla F),
+          contador de paginas e pagina atual detectada pela rolagem.
+      18. Lembra a posicao de leitura por documento (restaura o scroll).
+
+  1.5. Acoes gerais
+      19. Deletar com confirmacao (modal).
+      20. Log de atividade (criacao/upload) e registro de XP/acoes (gamificacao).
+      21. Deteccao de "Material de Ouro" no conteudo dos documentos.
+      22. Documentos publicos sao somente leitura para outros usuarios.
+
+------------------------------------------------------------
+2) VIDEOAULAS (pagina "Videoaulas")
+------------------------------------------------------------
+  2.1. Lista e navegacao
+      1. Hero (video mais recente) em destaque no topo.
+      2. Secoes por disciplina, com carrossel horizontal (botao < e >) e
+         arrastar com o mouse.
+      3. Busca por titulo/descricao (filtra hero e secoes).
+      4. Cards com thumbnail do YouTube, duracao e progresso ja assistido.
+
+  2.2. Gerenciar videos
+      5. Adicionar video (URL do YouTube ou link direto de video), titulo,
+         descricao e disciplina.
+      6. Editar e deletar videos proprios (com confirmacao).
+      7. Duracao detectada automaticamente quando assiste e salva no registro.
+
+  2.3. Player
+      8. Player integrado (YouTube ou video HTML5) com reproducao automatica.
+      9. Continuar de onde parou (prompt "Continuar assistindo?" ou "Do começo").
+      10. Progresso salvo localmente e no servidor (sincronizado por usuario).
+      11. Estatisticas ao vivo: tempo assistido na sessao, materia, anotacoes,
+          duracao e % de progresso.
+
+  2.4. Anotacoes
+      12. Criar anotacao com timestamp do momento exato do video.
+      13. Clicar no timestamp volta o video para aquele momento.
+      14. Modos de ordenacao: por recente (agrupadas por Hoje/Ontem/Semana/Antigas)
+          ou por momento do video.
+      15. Grupos personalizados: criar, renomear, deletar, colapsar/expandir,
+          grupos aninhados (sub-grupos) e mover grupos (drag & drop ou menu).
+      16. Arrastar anotacoes para dentro de grupos (uma a uma ou em lote).
+      17. Modo de selecao em lote: selecionar todas, mover varias para um grupo.
+      18. Copiar anotacoes (clipboard) e exportar para .txt.
+
+  2.5. Gamificacao
+      19. Teste de Maestria (libera com 3+ anotacoes): IA gera teste em 3 etapas
+          (resumo, multipla escolha e questoes abertas), vale +50 XP.
+      20. Registro de XP/acoes por minutos assistidos e anotacoes criadas.
+
+------------------------------------------------------------
+3) SUGESTOES DE POSSIVEIS ADICOES (espaco para voce anotar)
+------------------------------------------------------------
+  - Ex.: exportar documento em PDF/Word; favoritar documentos; compartilhar
+    por link; comparar versoes; anotacoes dentro do editor; adicionar imagens
+    embutidas; marcar videos como concluidos; playlist por materia; transcricao
+    do video; integracao de capitulos do video; etc.

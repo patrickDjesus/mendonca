@@ -1,5 +1,5 @@
 import type { DocMeta } from '../types/doc'
-import { SUBJECT_COLORS } from '../types/doc'
+import { getSubjectColors } from '../lib/subjects'
 import type { HoverPreviewBind } from './HoverPreview'
 
 interface DocCardProps {
@@ -25,7 +25,8 @@ function fileSizeLabel(bytes: number): string {
 }
 
 export default function DocCard({ doc, onClick, onDelete, onEditProps, hoverBind }: DocCardProps) {
-  const subjectColors = doc.subject ? SUBJECT_COLORS[doc.subject] : null
+  const subjectLabel = doc.subject || 'N/A'
+  const subjectColors = getSubjectColors(subjectLabel)
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -109,14 +110,13 @@ export default function DocCard({ doc, onClick, onDelete, onEditProps, hoverBind
             {formatDate(doc.updatedAt)}
             {doc.type === 'pdf' && doc.fileSize && ` · ${fileSizeLabel(doc.fileSize)}`}
           </span>
-          {doc.subject && subjectColors && (
-            <span
-              className="doc-card-subject"
-              style={{ background: subjectColors.bg, color: subjectColors.text }}
-            >
-              {doc.subject}
-            </span>
-          )}
+          <span
+            className="doc-card-subject"
+            style={{ background: subjectColors.bg, color: subjectColors.text }}
+            data-subject-editable={subjectLabel}
+          >
+            {subjectLabel}
+          </span>
         </div>
       </div>
     </div>

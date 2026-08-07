@@ -2,7 +2,7 @@ import type { Block } from '@blocknote/core'
 
 export type DocType = 'editor' | 'pdf'
 
-export type Subject =
+export type StandardSubject =
   | 'Física'
   | 'Química'
   | 'Biologia'
@@ -12,7 +12,11 @@ export type Subject =
   | 'História'
   | 'Filosofia'
 
-export const SUBJECTS: Subject[] = [
+export type Subject = StandardSubject | (string & {})
+
+export const NA_SUBJECT = 'N/A'
+
+export const SUBJECTS: StandardSubject[] = [
   'Física',
   'Química',
   'Biologia',
@@ -32,6 +36,7 @@ export const SUBJECT_COLORS: Record<Subject, { bg: string; text: string }> = {
   'Geografia':            { bg: 'rgba(60,160,100,0.15)',  text: '#3ca064' },
   'História':             { bg: 'rgba(200,100,80,0.15)',  text: '#c86450' },
   'Filosofia':            { bg: 'rgba(140,120,200,0.15)', text: '#8c78c8' },
+  'N/A':                  { bg: 'rgba(150,150,150,0.15)', text: '#969696' },
 }
 
 export type PaperStyle = 'default' | 'white'

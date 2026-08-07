@@ -253,6 +253,12 @@
   border-color: rgba(200, 180, 140, 0.2);
 }
 
+.desafios-subject-add {
+  padding: 7px 14px;
+  border-radius: 20px;
+  align-self: center;
+}
+
 .desafios-section-label {
   font-size: 18px;
   font-weight: 700;
@@ -3384,6 +3390,17 @@
   margin: 0 auto;
 }
 
+.qb-wizard-subject-create {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.qb-wizard-subject-emoji {
+  font-size: 24px;
+  line-height: 1;
+}
+
 .qb-wizard-subject-btn {
   display: flex;
   flex-direction: column;
@@ -5098,6 +5115,18 @@
 .cb-subject-icon-wrap svg {
   width: 22px;
   height: 22px;
+}
+
+.cb-subject-emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.cb-subject-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 68px;
 }
 
 .cb-subject-btn-new .cb-subject-name {

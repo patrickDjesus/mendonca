@@ -1,8 +1,9 @@
-import { useState, useCallback, useMemo, type ReactNode } from 'react'
+import { useState, useCallback, useMemo, useEffect, type ReactNode } from 'react'
 import type { Challenge, ChallengeQuestion, ChallengeDifficulty, ChallengeModifier } from '../types/challenge'
 import { QUESTION_TYPE_LABELS, MODIFIER_LABELS, MODIFIER_DESCRIPTIONS } from '../types/challenge'
 import type { Subject } from '../types/doc'
-import { SUBJECTS, SUBJECT_COLORS } from '../types/doc'
+import { useSubjects, getSubjectColors, getSubjectEmoji } from '../lib/subjects'
+import SubjectCreator from './SubjectCreator'
 
 interface Props {
   allQuestions: ChallengeQuestion[]
@@ -106,6 +107,7 @@ const SUBJECT_ICONS: Record<Subject, ReactNode> = {
 type BuilderStep = 'info' | 'questions' | 'modifiers'
 
 export default function ChallengeBuilder({ allQuestions, initial, onSave, onCancel }: Props) {
+  const allSubjects = useSubjects()
   const [step, setStep] = useState<BuilderStep>('info')
   const [title, setTitle] = useState(initial?.title || '')
   const [description, setDescription] = useState(initial?.description || '')
@@ -118,6 +120,13 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
   const [searchQuery, setSearchQuery] = useState('')
   const [timeLimit, setTimeLimit] = useState(initial?.timeLimit || 300)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    setSubjects(prev => {
+      const next = prev.filter(s => allSubjects.includes(s))
+      return next.length === prev.length ? prev : next
+    })
+  }, [allSubjects])
 
   const primarySubject = subjects[0] || 'Matemática'
   const crossSubjects = subjects.slice(1)
@@ -290,20 +299,23 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
             </h4>
             <p className="cb-section-desc">A primeira selecionada é a principal. Clique para adicionar ou remover matérias cruzadas.</p>
             <div className="cb-subject-grid-new">
-              {SUBJECTS.map(s => {
-                const colors = SUBJECT_COLORS[s]
+              {allSubjects.map(s => {
+                const colors = getSubjectColors(s)
                 const isSelected = subjects.includes(s)
                 const isPrimary = subjects[0] === s
                 return (
-                  <button key={s} className={`cb-subject-btn-new ${isSelected ? 'active' : ''} ${isPrimary ? 'primary' : ''}`} style={{ '--subject-color': colors.text, '--subject-bg': colors.bg } as React.CSSProperties} onClick={() => toggleSubject(s)} type="button">
+                  <button key={s} className={`cb-subject-btn-new ${isSelected ? 'active' : ''} ${isPrimary ? 'primary' : ''}`} style={{ '--subject-color': colors.text, '--subject-bg': colors.bg } as React.CSSProperties} onClick={() => toggleSubject(s)} type="button" data-subject-editable={s}>
                     <div className="cb-subject-icon-wrap">
-                      {SUBJECT_ICONS[s]}
+                      {SUBJECT_ICONS[s] || <span className="cb-subject-emoji">{getSubjectEmoji(s)}</span>}
                     </div>
                     <span className="cb-subject-name">{s}</span>
                     {isPrimary && <span className="cb-subject-badge">Principal</span>}
                   </button>
                 )
               })}
+              <div className="cb-subject-add">
+                <SubjectCreator onCreated={s => setSubjects(prev => prev.includes(s) ? prev : [...prev, s])} label="Nova matéria" />
+              </div>
             </div>
           </div>
 
@@ -361,7 +373,7 @@ export default function ChallengeBuilder({ allQuestions, initial, onSave, onCanc
                   </div>
                 <select className="qb-select qb-select-sm" value={filterSubject} onChange={e => { setFilterSubject(e.target.value as Subject | 'Todas'); setSearchQuery('') }}>
                   <option value="Todas">Todas as matérias</option>
-                  {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+                  {allSubjects.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
             </div>

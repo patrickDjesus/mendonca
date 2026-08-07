@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import type { Subject } from '../types/doc'
 import { SUBJECTS } from '../types/doc'
+import { getAllSubjects } from '../lib/subjects'
 
 export interface ImportedFlashcard {
   front: string
@@ -58,7 +59,7 @@ function validateAndTransform(raw: ParsedItem[], defaultSubject: Subject): Valid
     }
     let subject = defaultSubject
     if (item.subject !== undefined) {
-      if (typeof item.subject !== 'string' || !SUBJECTS.includes(item.subject as Subject)) {
+      if (typeof item.subject !== 'string' || !getAllSubjects().includes(item.subject)) {
         problems.push(`matéria inválida (use: ${SUBJECTS.join(', ')})`)
       } else {
         subject = item.subject as Subject

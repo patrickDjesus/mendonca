@@ -1,8 +1,10 @@
-import { useState, useCallback, type ReactNode } from 'react'
+import { useState, useCallback, useEffect, type ReactNode } from 'react'
 import type { ChallengeQuestion, QuestionType, ChallengeOption, TrueFalseStatement, OrderItem, CompletarBlank, ChallengeDifficulty } from '../types/challenge'
 import { QUESTION_TYPE_LABELS } from '../types/challenge'
 import type { Subject } from '../types/doc'
-import { SUBJECTS, SUBJECT_COLORS } from '../types/doc'
+import { useSubjects, getSubjectColors, getSubjectEmoji } from '../lib/subjects'
+import SubjectCreator from './SubjectCreator'
+import SubjectSelector from './SubjectSelector'
 
 const QUESTION_TYPES: QuestionType[] = [
   'multipla',
@@ -193,6 +195,7 @@ function emptyQuestion(type: QuestionType = 'multipla', subject: Subject = 'Mate
 type WizardStep = 'count' | 'subject' | 'questions' | 'single_edit'
 
 export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
+  const allSubjects = useSubjects()
   const [q, setQ] = useState<ChallengeQuestion>(initial || emptyQuestion())
   const [error, setError] = useState('')
 
@@ -201,6 +204,10 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [batchSubject, setBatchSubject] = useState<Subject>('Matemática')
   const [batchQuestions, setBatchQuestions] = useState<ChallengeQuestion[]>([])
+
+  useEffect(() => {
+    if (!allSubjects.includes(batchSubject)) setBatchSubject('Matemática')
+  }, [allSubjects, batchSubject])
 
   const setField = useCallback(<K extends keyof ChallengeQuestion>(key: K, val: ChallengeQuestion[K]) => {
     setQ(prev => ({ ...prev, [key]: val }))
@@ -448,16 +455,19 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
           <h2 className="qb-wizard-title">Qual a matéria?</h2>
           <p className="qb-wizard-desc">{totalCount === 1 ? 'Esta questão será dessa matéria.' : `Todas as ${totalCount} questões serão dessa matéria.`}</p>
           <div className="qb-wizard-subject-grid">
-            {SUBJECTS.map(s => {
-              const colors = SUBJECT_COLORS[s]
+            {allSubjects.map(s => {
+              const colors = getSubjectColors(s)
               const selected = batchSubject === s
               return (
-                <button key={s} className={`qb-wizard-subject-btn ${selected ? 'active' : ''}`} style={{ '--subject-color': colors.text, '--subject-bg': colors.bg } as React.CSSProperties} onClick={() => setBatchSubject(s)} type="button">
-                  <div className="qb-wizard-subject-icon">{SUBJECT_ICONS[s]}</div>
+                <button key={s} className={`qb-wizard-subject-btn ${selected ? 'active' : ''}`} style={{ '--subject-color': colors.text, '--subject-bg': colors.bg } as React.CSSProperties} onClick={() => setBatchSubject(s)} type="button" data-subject-editable={s}>
+                  <div className="qb-wizard-subject-icon">{SUBJECT_ICONS[s] || <span className="qb-wizard-subject-emoji">{getSubjectEmoji(s)}</span>}</div>
                   <span className="qb-wizard-subject-name">{s}</span>
                 </button>
               )
             })}
+          </div>
+          <div className="qb-wizard-subject-create">
+            <SubjectCreator onCreated={s => setBatchSubject(s)} label="Nova matéria" />
           </div>
           <div className="qb-wizard-actions">
             <button className="qb-cancel-btn" onClick={() => setWizardStep('count')} type="button">Voltar</button>
@@ -482,7 +492,7 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
         <div className="qb-header">
           <div className="qb-header-left">
             <h3 className="qb-title">Questão {currentIndex + 1} de {totalCount}</h3>
-            <span className="qb-wizard-subject-badge" style={{ background: SUBJECT_COLORS[batchSubject]?.bg, color: SUBJECT_COLORS[batchSubject]?.text }}>{batchSubject}</span>
+            <span className="qb-wizard-subject-badge" style={{ background: getSubjectColors(batchSubject).bg, color: getSubjectColors(batchSubject).text }}>{batchSubject}</span>
           </div>
           <div className="qb-header-actions">
             {currentIndex > 0 && (
@@ -546,17 +556,13 @@ export default function QuestionBuilder({ initial, onSave, onCancel }: Props) {
       </div>
       {error && <div className="qb-error">{error}</div>}
       <div className="qb-body">
-        <div className="qb-field-row">
-          <div className="qb-field" style={{ flex: 2 }}>
-            <label className="qb-label">Título da questão *</label>
-            <input className="qb-input" value={q.title} placeholder="Ex: Cinética newtoniana..." onChange={e => setField('title', e.target.value)} />
-          </div>
-          <div className="qb-field" style={{ flex: 1 }}>
-            <label className="qb-label">Matéria *</label>
-            <select className="qb-select" value={q.subject} onChange={e => setField('subject', e.target.value as Subject)}>
-              {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
+        <div className="qb-field">
+          <label className="qb-label">Título da questão *</label>
+          <input className="qb-input" value={q.title} placeholder="Ex: Cinética newtoniana..." onChange={e => setField('title', e.target.value)} />
+        </div>
+        <div className="qb-field">
+          <label className="qb-label">Matéria *</label>
+          <SubjectSelector value={q.subject} onChange={s => { if (s) setField('subject', s) }} onCreated={s => setField('subject', s)} />
         </div>
         {renderDifficultyRow(q.difficulty, d => setField('difficulty', d))}
         {renderTypeGrid(q.type, t => setField('type', t))}

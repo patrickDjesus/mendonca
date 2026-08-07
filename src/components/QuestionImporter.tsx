@@ -3,6 +3,7 @@ import type { ChallengeQuestion, QuestionType, ChallengeDifficulty } from '../ty
 import { QUESTION_TYPE_LABELS } from '../types/challenge'
 import type { Subject } from '../types/doc'
 import { SUBJECTS } from '../types/doc'
+import { getAllSubjects } from '../lib/subjects'
 
 const VALID_TYPES: QuestionType[] = ['multipla', 'multipla_multipla', 'verdadeiro_falso', 'aberta', 'ordem', 'completar']
 const VALID_DIFFICULTIES: ChallengeDifficulty[] = ['facil', 'medio', 'dificil']
@@ -100,7 +101,7 @@ function validateAndTransform(raw: ParsedQuestion[]): ValidationResult {
     if (!item.type || !VALID_TYPES.includes(item.type as QuestionType)) {
       problems.push(`tipo inválido (use: ${VALID_TYPES.join(', ')})`)
     }
-    if (!item.subject || !SUBJECTS.includes(item.subject as Subject)) {
+    if (!item.subject || !getAllSubjects().includes(item.subject)) {
       problems.push(`matéria inválida (use: ${SUBJECTS.join(', ')})`)
     }
     if (!item.difficulty || !VALID_DIFFICULTIES.includes(item.difficulty as ChallengeDifficulty)) {

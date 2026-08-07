@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import { NotificationProvider } from './components/NotificationProvider'
 import ErrorBoundary from './components/ErrorBoundary'
+import SubjectEditHost from './components/SubjectEditHost'
 import AuthPage from './pages/AuthPage'
 import HomePage from './pages/home/HomePage'
 
@@ -55,6 +56,7 @@ function App() {
   return (
     <ErrorBoundary>
       <NotificationProvider>
+        <SubjectEditHost />
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>}>

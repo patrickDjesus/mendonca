@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import type { VideoMeta, VideoNote } from '../../types/video'
 import type { Subject } from '../../types/doc'
-import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
+import { useSubjects, getSubjectColors } from '../../lib/subjects'
+import SubjectSelector from '../../components/SubjectSelector'
 import VideoPlayer, { type VideoPlayerHandle } from '../../components/VideoPlayer'
 import NotesPanel from '../../components/NotesPanel'
 import MasteryTest from '../../components/MasteryTest'
@@ -63,6 +64,7 @@ export default function Videos() {
   const dragRowCleanup = useRef<(() => void) | null>(null)
 
   const [serverProgress, setServerProgress] = useState<Map<string, number>>(new Map())
+  const allSubjects = useSubjects()
 
   useEffect(() => {
     fetchAllVideoProgress().then(map => {
@@ -130,18 +132,18 @@ export default function Videos() {
 
   const grouped = useMemo(() => {
     const map = new Map<Subject, VideoMeta[]>()
-    for (const s of SUBJECTS) map.set(s, [])
+    for (const s of allSubjects) map.set(s, [])
     for (const v of videos) {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
         const match = v.title.toLowerCase().includes(q) || (v.description || '').toLowerCase().includes(q)
         if (!match) continue
       }
-      const arr = map.get(v.subject)
-      if (arr) arr.push(v)
+      if (!map.has(v.subject)) map.set(v.subject, [])
+      map.get(v.subject)!.push(v)
     }
     return Array.from(map.entries()).filter(([, vids]) => vids.length > 0)
-  }, [videos, searchQuery])
+  }, [videos, searchQuery, allSubjects])
 
   const heroVideo = useMemo(() => {
     const filtered = searchQuery.trim()
@@ -266,6 +268,20 @@ export default function Videos() {
   useEffect(() => {
     fetchVideos().then(setVideos).catch(console.error)
   }, [])
+
+  useEffect(() => {
+    const onDeleted = () => {
+      fetchVideos().then(setVideos).catch(console.error)
+    }
+    window.addEventListener('mendonca:subjects-deleted', onDeleted)
+    return () => window.removeEventListener('mendonca:subjects-deleted', onDeleted)
+  }, [])
+
+  useEffect(() => {
+    if (videoForm.subject && !allSubjects.includes(videoForm.subject)) {
+      setVideoForm(f => ({ ...f, subject: null }))
+    }
+  }, [allSubjects, videoForm.subject])
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -395,7 +411,7 @@ export default function Videos() {
     return `${s}s`
   }, [])
 
-  const heroColors = heroVideo ? SUBJECT_COLORS[heroVideo.subject] : null
+  const heroColors = heroVideo ? getSubjectColors(heroVideo.subject) : null
   const heroYoutubeId = heroVideo ? extractYoutubeId(heroVideo.videoUrl) : null
 
   return (
@@ -473,7 +489,7 @@ export default function Videos() {
           </div>
           <div className="video-hero-info">
             {heroColors && (
-              <span className="video-hero-badge" style={{ background: heroColors.bg, color: heroColors.text }}>
+              <span className="video-hero-badge" style={{ background: heroColors.bg, color: heroColors.text }} data-subject-editable={heroVideo.subject}>
                 {heroVideo.subject}
               </span>
             )}
@@ -499,11 +515,11 @@ export default function Videos() {
 
       <div className="videos-sections">
         {grouped.map(([subject, vids]) => {
-          const colors = SUBJECT_COLORS[subject]
+          const colors = getSubjectColors(subject)
           return (
             <section key={subject} className="video-section">
               <div className="video-section-header">
-                <div className="video-section-title-group">
+                <div className="video-section-title-group" data-subject-editable={subject}>
                   <div className="video-section-dot" style={{ background: colors.text }} />
                   <h3 className="video-section-title">{subject}</h3>
                   <span className="video-section-count">{vids.length}</span>
@@ -544,7 +560,7 @@ export default function Videos() {
               >
                 {vids.map(video => {
                   const ytId = extractYoutubeId(video.videoUrl)
-                  const vColors = SUBJECT_COLORS[video.subject]
+                  const vColors = getSubjectColors(video.subject)
                   return (
                     <HoverPreview
                       key={video.id}
@@ -754,7 +770,7 @@ export default function Videos() {
               </div>
 
               <div className="video-watch-stat">
-                <div className="video-watch-stat-icon" style={{ background: SUBJECT_COLORS[watchingVideo.subject]?.bg, color: SUBJECT_COLORS[watchingVideo.subject]?.text }}>
+                <div className="video-watch-stat-icon" style={{ background: getSubjectColors(watchingVideo.subject).bg, color: getSubjectColors(watchingVideo.subject).text }}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
                     <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
@@ -874,27 +890,11 @@ export default function Videos() {
 
             <div className="video-form-field">
               <label className="video-form-label">Disciplina</label>
-              <div className="video-form-subjects">
-                {SUBJECTS.map(s => {
-                  const colors = SUBJECT_COLORS[s]
-                  const selected = videoForm.subject === s
-                  return (
-                    <button
-                      key={s}
-                      className={`video-form-chip ${selected ? 'selected' : ''}`}
-                      style={{
-                        background: selected ? colors.text : colors.bg,
-                        color: selected ? '#1a1714' : colors.text,
-                        borderColor: selected ? colors.text : colors.text + '33',
-                      }}
-                      onClick={() => setVideoForm(f => ({ ...f, subject: selected ? null : s }))}
-                      type="button"
-                    >
-                      {s}
-                    </button>
-                  )
-                })}
-              </div>
+              <SubjectSelector
+                value={videoForm.subject}
+                onChange={s => setVideoForm(f => ({ ...f, subject: s }))}
+                onCreated={s => setVideoForm(f => ({ ...f, subject: s }))}
+              />
             </div>
 
             <div className="video-form-actions">

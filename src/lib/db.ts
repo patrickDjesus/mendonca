@@ -3,6 +3,7 @@ import { pushNotification } from '../components/NotificationProvider'
 import { ACHIEVEMENT_MAP } from '../data/achievements'
 import type { ChallengeQuestion, Challenge, ChallengeAttempt, UserStreak, ChallengeModifier } from '../types/challenge'
 import type { DocMeta, Subject } from '../types/doc'
+import { NA_SUBJECT } from '../types/doc'
 import type { VideoMeta, VideoNote, MasteryStage } from '../types/video'
 import type { Flashcard, FlashcardGroup } from '../types/flashcard'
 
@@ -425,7 +426,7 @@ function rowToDoc(row: Record<string, unknown>): DocMeta {
     title: row.title as string,
     description: (row.description as string) || undefined,
     type: row.doc_type as 'editor' | 'pdf',
-    subject: (row.subject as Subject) || null,
+    subject: (row.subject as Subject) || undefined,
     content: (row.content as DocMeta['content']) || undefined,
     fileName: (row.file_name as string) || undefined,
     fileUrl: (row.file_url as string) || undefined,
@@ -503,6 +504,22 @@ export async function updateVideo(v: VideoMeta): Promise<VideoMeta> {
 export async function deleteVideo(id: string): Promise<void> {
   const { error } = await supabase.from('videos').delete().eq('id', id)
   if (error) throw error
+}
+
+export async function reassignSubjectToNA(subject: string): Promise<void> {
+  const userId = await getUserId()
+  const docRes = await supabase
+    .from('documents')
+    .update({ subject: NA_SUBJECT })
+    .eq('user_id', userId)
+    .eq('subject', subject)
+  if (docRes.error) throw docRes.error
+  const vidRes = await supabase
+    .from('videos')
+    .update({ subject: NA_SUBJECT })
+    .eq('user_id', userId)
+    .eq('subject', subject)
+  if (vidRes.error) throw vidRes.error
 }
 
 export async function updateVideoDuration(id: string, duration: string): Promise<void> {

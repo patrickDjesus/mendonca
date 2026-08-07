@@ -2,10 +2,11 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import type { Challenge, ChallengeQuestion, QuestionAnswer, ChallengeAttempt, UserStreak, ChallengeDifficulty } from '../../types/challenge'
 import { QUESTION_TYPE_LABELS, MODIFIER_LABELS, MODIFIER_ICONS, MODIFIER_COLORS, MODIFIER_DESCRIPTIONS } from '../../types/challenge'
 import type { Subject } from '../../types/doc'
-import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
+import { useSubjects, getSubjectColors } from '../../lib/subjects'
 import QuestionBuilder from '../../components/QuestionBuilder'
 import QuestionImporter from '../../components/QuestionImporter'
 import ChallengeBuilder from '../../components/ChallengeBuilder'
+import SubjectCreator from '../../components/SubjectCreator'
 import { fetchQuestions, fetchChallenges, fetchAttempts, fetchStreak, createQuestion, updateQuestion, deleteQuestion, createChallenge, updateChallenge, deleteChallenge, createAttempt, logActivity, recordAction, checkModeHardcore, checkMasoquista } from '../../lib/db'
 import { supabase } from '../../lib/supabase'
 import Tooltip from '../../components/Tooltip'
@@ -75,6 +76,7 @@ function shuffleArray<T>(arr: T[]): T[] {
 type View = 'list' | 'quiz' | 'results' | 'create_question' | 'import_questions' | 'create_challenge' | 'edit_question' | 'edit_challenge' | 'list_questions' | 'list_challenges'
 
 export default function Desafios() {
+  const allSubjects = useSubjects()
   const [questions, setQuestions] = useState<ChallengeQuestion[]>([])
   const [challenges, setChallenges] = useState<Challenge[]>([])
   const [attempts, setAttempts] = useState<ChallengeAttempt[]>([])
@@ -535,7 +537,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
         )}
         <div className="quiz-card">
           <div className="quiz-q-header">
-            <span className="quiz-q-badge subject" style={{ background: SUBJECT_COLORS[q.subject]?.bg, color: SUBJECT_COLORS[q.subject]?.text }}>{q.subject}</span>
+            <span className="quiz-q-badge subject" style={{ background: getSubjectColors(q.subject).bg, color: getSubjectColors(q.subject).text }}>{q.subject}</span>
             <span className="quiz-q-badge type">{QUESTION_TYPE_LABELS[q.type]}</span>
             <span className={`quiz-q-badge diff diff-${q.difficulty}`}>{DIFFICULTY_LABELS[q.difficulty]}</span>
             {q.source === 'enem' && (
@@ -663,7 +665,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
           <input className="dt-search" value={tableFilter} onChange={e => setTableFilter(e.target.value)} placeholder="Buscar questões..." />
           <select className="qb-select" value={tableSubjectFilter} onChange={e => setTableSubjectFilter(e.target.value as Subject | 'Todas')}>
             <option value="Todas">Todas as matérias</option>
-            {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+            {allSubjects.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         <div className="dt-table-wrap">
@@ -681,7 +683,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
               {filteredTableQuestions.map(q => (
                 <tr key={q.id}>
                   <td className="dt-cell-title">{q.title}</td>
-                  <td><span className="dt-badge" style={{ background: SUBJECT_COLORS[q.subject]?.bg, color: SUBJECT_COLORS[q.subject]?.text }}>{q.subject}</span></td>
+                  <td><span className="dt-badge" style={{ background: getSubjectColors(q.subject).bg, color: getSubjectColors(q.subject).text }}>{q.subject}</span></td>
                   <td><span className="dt-badge type">{QUESTION_TYPE_LABELS[q.type]}</span></td>
                   <td><span className={`dt-badge diff-${q.difficulty}`}>{DIFFICULTY_LABELS[q.difficulty]}</span></td>
                   <td className="dt-actions">
@@ -736,7 +738,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
           <input className="dt-search" value={tableFilter} onChange={e => setTableFilter(e.target.value)} placeholder="Buscar desafios..." />
           <select className="qb-select" value={tableSubjectFilter} onChange={e => setTableSubjectFilter(e.target.value as Subject | 'Todas')}>
             <option value="Todas">Todas as matérias</option>
-            {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+            {allSubjects.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         <div className="dt-table-wrap">
@@ -755,7 +757,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
               {filteredTableChallenges.map(c => (
                 <tr key={c.id}>
                   <td className="dt-cell-title">{c.title}</td>
-                  <td><span className="dt-badge" style={{ background: SUBJECT_COLORS[c.subject]?.bg, color: SUBJECT_COLORS[c.subject]?.text }}>{c.subject}</span></td>
+                  <td><span className="dt-badge" style={{ background: getSubjectColors(c.subject).bg, color: getSubjectColors(c.subject).text }}>{c.subject}</span></td>
                   <td><span className={`dt-badge diff-${c.difficulty}`}>{DIFFICULTY_LABELS[c.difficulty]}</span></td>
                   <td>{c.questionIds.length}</td>
                   <td>{c.xpBase} XP</td>
@@ -916,7 +918,8 @@ const [questionHidden, setQuestionHidden] = useState(false)
       <div className="desafios-filters">
         <div className="desafios-subjects">
           <button className={`desafios-subject-chip ${selectedSubject === 'Todas' ? 'active' : ''}`} onClick={() => setSelectedSubject('Todas')} type="button">Todas</button>
-          {SUBJECTS.map(s => <button key={s} className={`desafios-subject-chip ${selectedSubject === s ? 'active' : ''}`} onClick={() => setSelectedSubject(s)} type="button">{s}</button>)}
+          {allSubjects.map(s => <button key={s} className={`desafios-subject-chip ${selectedSubject === s ? 'active' : ''}`} onClick={() => setSelectedSubject(s)} type="button" data-subject-editable={s}>{s}</button>)}
+          <SubjectCreator onCreated={() => {}} label="Nova matéria" triggerClassName="desafios-subject-add" />
         </div>
       </div>
 
@@ -945,7 +948,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
               <h4 className="desafio-card-title">{challenge.title}</h4>
               <p className="desafio-card-desc">{challenge.description}</p>
               <div className="desafio-card-footer">
-                <span className="desafio-card-subject" style={{ background: SUBJECT_COLORS[challenge.subject]?.bg, color: SUBJECT_COLORS[challenge.subject]?.text }}>{challenge.subject}</span>
+                <span className="desafio-card-subject" style={{ background: getSubjectColors(challenge.subject).bg, color: getSubjectColors(challenge.subject).text }}>{challenge.subject}</span>
                 {challenge.crossSubjects && challenge.crossSubjects.length > 0 && <span className="desafio-card-cross">+ {challenge.crossSubjects.join(', ')}</span>}
               </div>
             </div>
@@ -975,7 +978,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
             <div className="desafio-detail-info">
               <div className="desafio-detail-info-item">
                 <span className="desafio-detail-info-label">Matéria</span>
-                <span className="desafio-detail-info-value subject" style={{ background: SUBJECT_COLORS[viewingChallengeDetails.subject]?.bg, color: SUBJECT_COLORS[viewingChallengeDetails.subject]?.text }}>{viewingChallengeDetails.subject}</span>
+                <span className="desafio-detail-info-value subject" style={{ background: getSubjectColors(viewingChallengeDetails.subject).bg, color: getSubjectColors(viewingChallengeDetails.subject).text }}>{viewingChallengeDetails.subject}</span>
               </div>
               <div className="desafio-detail-info-item">
                 <span className="desafio-detail-info-label">Dificuldade</span>
@@ -1064,7 +1067,7 @@ const [questionHidden, setQuestionHidden] = useState(false)
                         <div className="qv-card-info">
                           <span className="qv-card-title"><MathRenderer text={q.title} /></span>
                           <div className="qv-card-badges">
-                            <span className="qv-badge subject" style={{ background: SUBJECT_COLORS[q.subject]?.bg, color: SUBJECT_COLORS[q.subject]?.text }}>{q.subject}</span>
+                            <span className="qv-badge subject" style={{ background: getSubjectColors(q.subject).bg, color: getSubjectColors(q.subject).text }}>{q.subject}</span>
                             <span className="qv-badge type">{QUESTION_TYPE_LABELS[q.type]}</span>
                             <span className={`qv-badge difficulty diff-${q.difficulty}`}>{DIFFICULTY_LABELS[q.difficulty]}</span>
                             {detailCount > 0 && <span className="qv-badge detail-count">{detailCount} itens</span>}

@@ -479,7 +479,7 @@ export default function FloatingDraw({ open, onClose }: FloatingDrawProps) {
             ))}
           </div>
 
-          <div className="draw-actions">
+          <div className="draw-actions" onPointerDown={e => e.stopPropagation()}>
             <button className="draw-btn" onClick={undo} type="button" title="Ctrl+Z">Desfazer</button>
             <button className="draw-btn" onClick={redo} type="button" title="Ctrl+Shift+Z">Refazer</button>
             <button className="draw-btn" onClick={clear} type="button">Limpar</button>

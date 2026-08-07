@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from 'react'
 import type { DocMeta, DocTab, Subject } from '../../types/doc'
-import { SUBJECTS, SUBJECT_COLORS } from '../../types/doc'
+import { useSubjects } from '../../lib/subjects'
+import SubjectSelector from '../../components/SubjectSelector'
 import DocCard from '../../components/DocCard'
 import AddDocCard from '../../components/AddDocCard'
 import HoverPreview from '../../components/HoverPreview'
@@ -43,13 +44,25 @@ export default function Documentos() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
+  const allSubjects = useSubjects()
 
-  useEffect(() => {
+  const loadDocs = useCallback(() => {
     Promise.all([fetchMyDocs(), fetchPublicDocs()]).then(([mine, pubs]) => {
       setMyDocs(mine)
       setPublicDocs(pubs)
     }).catch(console.error)
   }, [])
+
+  useEffect(() => { loadDocs() }, [loadDocs])
+
+  useEffect(() => {
+    window.addEventListener('mendonca:subjects-deleted', loadDocs)
+    return () => window.removeEventListener('mendonca:subjects-deleted', loadDocs)
+  }, [loadDocs])
+
+  useEffect(() => {
+    if (subjectFilter && !allSubjects.includes(subjectFilter)) setSubjectFilter(null)
+  }, [allSubjects, subjectFilter])
 
   const allDocs = useMemo(() => [...myDocs, ...publicDocs], [myDocs, publicDocs])
   const docs = useMemo(() => {
@@ -368,12 +381,13 @@ export default function Documentos() {
         >
           Todas
         </button>
-        {SUBJECTS.map(s => (
+        {allSubjects.map(s => (
           <button
             key={s}
             className={`docs-subject-chip ${subjectFilter === s ? 'active' : ''}`}
             onClick={() => setSubjectFilter(subjectFilter === s ? null : s)}
             type="button"
+            data-subject-editable={s}
           >
             {s}
           </button>
@@ -621,27 +635,11 @@ export default function Documentos() {
 
             <div className="picker-field">
               <label className="picker-label">Disciplina</label>
-              <div className="subject-picker-grid">
-                {SUBJECTS.map(s => {
-                  const colors = SUBJECT_COLORS[s]
-                  const selected = pickerForm.subject === s
-                  return (
-                    <button
-                      key={s}
-                      className={`subject-picker-chip ${selected ? 'selected' : ''}`}
-                      style={{
-                        background: selected ? colors.text : colors.bg,
-                        color: selected ? '#1a1714' : colors.text,
-                        borderColor: selected ? colors.text : colors.text + '33',
-                      }}
-                      onClick={() => setPickerForm(f => ({ ...f, subject: selected ? null : s }))}
-                      type="button"
-                    >
-                      {s}
-                    </button>
-                  )
-                })}
-              </div>
+              <SubjectSelector
+                value={pickerForm.subject}
+                onChange={s => setPickerForm(f => ({ ...f, subject: s }))}
+                onCreated={s => setPickerForm(f => ({ ...f, subject: s }))}
+              />
             </div>
 
             <div className="picker-field picker-toggle-row">
@@ -707,27 +705,11 @@ export default function Documentos() {
 
             <div className="picker-field">
               <label className="picker-label">Disciplina</label>
-              <div className="subject-picker-grid">
-                {SUBJECTS.map(s => {
-                  const colors = SUBJECT_COLORS[s]
-                  const selected = propsForm.subject === s
-                  return (
-                    <button
-                      key={s}
-                      className={`subject-picker-chip ${selected ? 'selected' : ''}`}
-                      style={{
-                        background: selected ? colors.text : colors.bg,
-                        color: selected ? '#1a1714' : colors.text,
-                        borderColor: selected ? colors.text : colors.text + '33',
-                      }}
-                      onClick={() => setPropsForm(f => ({ ...f, subject: selected ? null : s }))}
-                      type="button"
-                    >
-                      {s}
-                    </button>
-                  )
-                })}
-              </div>
+              <SubjectSelector
+                value={propsForm.subject}
+                onChange={s => setPropsForm(f => ({ ...f, subject: s }))}
+                onCreated={s => setPropsForm(f => ({ ...f, subject: s }))}
+              />
             </div>
 
             <div className="picker-field picker-toggle-row">
