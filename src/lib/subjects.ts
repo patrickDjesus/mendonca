@@ -1,6 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import type { Subject } from '../types/doc'
 import { SUBJECTS, SUBJECT_COLORS, NA_SUBJECT } from '../types/doc'
+import { fetchSubjects, fetchDeletedSubjectNames, upsertSubject, deleteSubject } from './db'
 
 export interface CustomSubject {
   name: string
@@ -122,16 +123,101 @@ export function getSubjectEmoji(name: string): string {
 type Listener = () => void
 const listeners = new Set<Listener>()
 let cache: CustomSubject[] | null = null
+let memory: CustomSubject[] | null = null
+
+function safeLocalGet(key: string): string | null {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function safeLocalSet(key: string, value: string): boolean {
+  try {
+    localStorage.setItem(key, value)
+    return true
+  } catch {
+    return false
+  }
+}
 
 function readCustom(): CustomSubject[] {
+  const raw = safeLocalGet(STORAGE_KEY)
+  if (raw !== null) {
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        const valid = parsed.filter(c => c && typeof c.name === 'string' && typeof c.bg === 'string' && typeof c.text === 'string')
+        memory = valid
+        return valid
+      }
+    } catch {
+      // conteúdo corrompido — cai para o fallback em memória
+    }
+  }
+  return memory ?? []
+}
+
+function persist(customs: CustomSubject[]): void {
+  memory = customs
+  safeLocalSet(STORAGE_KEY, JSON.stringify(customs))
+}
+
+function pushSubjectToServer(s: CustomSubject): void {
+  upsertSubject(s).catch(err => {
+    console.error('[subjects] Falha ao sincronizar matéria no servidor:', err)
+  })
+}
+
+function pushSubjectUpdateToServer(oldName: string, s: CustomSubject): void {
+  if (oldName === s.name) {
+    pushSubjectToServer(s)
+    return
+  }
+  // renomear = recriar o nome novo (reativa se estava soft-deleted) + soft-delete do antigo
+  Promise.all([
+    upsertSubject(s),
+    deleteSubject(oldName),
+  ]).catch(err => {
+    console.error('[subjects] Falha ao renomear matéria no servidor:', err)
+  })
+}
+
+function pushSubjectDeleteToServer(name: string): void {
+  deleteSubject(name).catch(err => {
+    console.error('[subjects] Falha ao excluir matéria no servidor:', err)
+  })
+}
+
+export async function syncSubjectsFromServer(): Promise<void> {
+  let server: CustomSubject[]
+  let deleted: string[]
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter(c => c && typeof c.name === 'string' && typeof c.bg === 'string' && typeof c.text === 'string')
-  } catch {
-    return []
+    server = await fetchSubjects()
+    deleted = await fetchDeletedSubjectNames()
+  } catch (err) {
+    console.error('[subjects] Falha ao buscar matérias do servidor:', err)
+    return
+  }
+
+  const deletedSet = new Set(deleted)
+  const local = getCustom()
+  const byName = new Map<string, CustomSubject>()
+  for (const s of server) byName.set(s.name, s)
+  for (const s of local) {
+    if (deletedSet.has(s.name)) continue
+    if (!byName.has(s.name)) byName.set(s.name, s)
+  }
+  const merged = [...byName.values()]
+  persist(merged)
+  emit()
+
+  for (const s of local) {
+    if (deletedSet.has(s.name)) continue
+    if (!server.some(x => x.name === s.name)) {
+      pushSubjectToServer(s)
+    }
   }
 }
 
@@ -182,9 +268,10 @@ export function addCustomSubject(name: string, color?: SubjectColor, emoji?: str
   if (!trimmed || trimmed === NA_SUBJECT) return false
   if (getAllSubjects().some(s => s === trimmed)) return false
   const palette = color ?? SUBJECT_PALETTE[getCustom().length % SUBJECT_PALETTE.length]
-  const customs = [...getCustom(), { name: trimmed, bg: palette.bg, text: palette.text, emoji: emoji?.trim() || DEFAULT_SUBJECT_EMOJI }]
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(customs))
+  const custom: CustomSubject = { name: trimmed, bg: palette.bg, text: palette.text, emoji: emoji?.trim() || DEFAULT_SUBJECT_EMOJI }
+  persist([...getCustom(), custom])
   emit()
+  pushSubjectToServer(custom)
   return true
 }
 
@@ -197,15 +284,17 @@ export function updateCustomSubject(oldName: string, next: { name: string; color
       ? { name: trimmed, bg: next.color.bg, text: next.color.text, emoji: next.emoji?.trim() || c.emoji || DEFAULT_SUBJECT_EMOJI }
       : c,
   )
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(customs))
+  persist(customs)
   emit()
+  const updated = customs.find(c => c.name === trimmed)
+  if (updated) pushSubjectUpdateToServer(oldName, updated)
   return true
 }
 
 export function removeCustomSubject(name: string): void {
-  const customs = getCustom().filter(c => c.name !== name)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(customs))
+  persist(getCustom().filter(c => c.name !== name))
   emit()
+  pushSubjectDeleteToServer(name)
 }
 
 export function getSubjectColors(name: string): { bg: string; text: string } {

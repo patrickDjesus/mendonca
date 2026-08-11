@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
+import { syncSubjectsFromServer } from './lib/subjects'
 import { NotificationProvider } from './components/NotificationProvider'
 import ErrorBoundary from './components/ErrorBoundary'
 import SubjectEditHost from './components/SubjectEditHost'
@@ -33,9 +34,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setAuthed(!!session)
       setLoading(false)
+      if (session) syncSubjectsFromServer()
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setAuthed(!!session)
+      if (session) syncSubjectsFromServer()
     })
     return () => subscription.unsubscribe()
   }, [])

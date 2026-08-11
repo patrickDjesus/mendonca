@@ -459,6 +459,79 @@ function docToRow(d: DocMeta, userId: string): Record<string, unknown> {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   CUSTOM SUBJECTS
+   ═══════════════════════════════════════════════════════════ */
+
+export interface CustomSubjectRow {
+  name: string
+  bg: string
+  text: string
+  emoji: string
+}
+
+export async function fetchSubjects(): Promise<CustomSubjectRow[]> {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('subjects')
+    .select('*')
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+    .order('name', { ascending: true })
+
+  if (error) throw error
+  return (data || []).map(row => ({
+    name: row.name as string,
+    bg: row.color_bg as string,
+    text: row.color_text as string,
+    emoji: (row.emoji as string) || '📚',
+  }))
+}
+
+export async function fetchDeletedSubjectNames(): Promise<string[]> {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('subjects')
+    .select('name')
+    .eq('user_id', userId)
+    .not('deleted_at', 'is', null)
+
+  if (error) throw error
+  return (data || []).map(row => row.name as string)
+}
+
+export async function upsertSubject(s: CustomSubjectRow): Promise<void> {
+  const userId = await getUserId()
+  const { error } = await supabase
+    .from('subjects')
+    .upsert(
+      {
+        user_id: userId,
+        name: s.name,
+        color_bg: s.bg,
+        color_text: s.text,
+        emoji: s.emoji,
+        deleted_at: null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,name' },
+    )
+
+  if (error) throw error
+}
+
+export async function deleteSubject(name: string): Promise<void> {
+  const userId = await getUserId()
+  const { error } = await supabase
+    .from('subjects')
+    .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .eq('name', name)
+    .is('deleted_at', null)
+
+  if (error) throw error
+}
+
+/* ═══════════════════════════════════════════════════════════
    VIDEOS
    ═══════════════════════════════════════════════════════════ */
 
@@ -506,20 +579,56 @@ export async function deleteVideo(id: string): Promise<void> {
   if (error) throw error
 }
 
-export async function reassignSubjectToNA(subject: string): Promise<void> {
+export async function reassignSubject(from: string, to: string): Promise<void> {
+  if (from === to) return
   const userId = await getUserId()
-  const docRes = await supabase
-    .from('documents')
-    .update({ subject: NA_SUBJECT })
+
+  const subjectTables = ['documents', 'videos', 'questions', 'challenges', 'flashcards', 'flashcard_groups'] as const
+  for (const table of subjectTables) {
+    const { error } = await supabase
+      .from(table)
+      .update({ subject: to })
+      .eq('user_id', userId)
+      .eq('subject', from)
+    if (error) throw error
+  }
+
+  const { data: challengeRows, error: chErr } = await supabase
+    .from('challenges')
+    .select('id, cross_subjects')
     .eq('user_id', userId)
-    .eq('subject', subject)
-  if (docRes.error) throw docRes.error
-  const vidRes = await supabase
-    .from('videos')
-    .update({ subject: NA_SUBJECT })
+  if (chErr) throw chErr
+  for (const row of challengeRows || []) {
+    const arr = row.cross_subjects as string[] | null
+    if (!Array.isArray(arr) || !arr.includes(from)) continue
+    const { error: updErr } = await supabase
+      .from('challenges')
+      .update({ cross_subjects: arr.map(s => (s === from ? to : s)) })
+      .eq('id', row.id as string)
+      .eq('user_id', userId)
+    if (updErr) throw updErr
+  }
+
+  const { data: streakRow, error: stErr } = await supabase
+    .from('user_streaks')
+    .select('user_id, watched_subjects')
     .eq('user_id', userId)
-    .eq('subject', subject)
-  if (vidRes.error) throw vidRes.error
+    .maybeSingle()
+  if (stErr) throw stErr
+  if (streakRow) {
+    const arr = streakRow.watched_subjects as string[] | null
+    if (Array.isArray(arr) && arr.includes(from)) {
+      const { error: updErr } = await supabase
+        .from('user_streaks')
+        .update({ watched_subjects: arr.map(s => (s === from ? to : s)) })
+        .eq('user_id', userId)
+      if (updErr) throw updErr
+    }
+  }
+}
+
+export async function reassignSubjectToNA(subject: string): Promise<void> {
+  await reassignSubject(subject, NA_SUBJECT)
 }
 
 export async function updateVideoDuration(id: string, duration: string): Promise<void> {

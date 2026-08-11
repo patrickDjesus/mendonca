@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { getCustomSubject, hexToColor, isCustomSubject, removeCustomSubject, SUBJECT_PALETTE, SUBJECT_EMOJIS, DEFAULT_SUBJECT_EMOJI, updateCustomSubject } from '../lib/subjects'
-import { reassignSubjectToNA } from '../lib/db'
+import { reassignSubject, reassignSubjectToNA } from '../lib/db'
 import '../styles/subjects.css'
 
 interface HoverState {
@@ -149,7 +149,7 @@ export default function SubjectEditHost() {
     setMenuOpen(true)
   }
 
-  const save = () => {
+  const save = async () => {
     const name = editNameRef.current
     if (!name) return
     const trimmed = formName.trim()
@@ -160,6 +160,13 @@ export default function SubjectEditHost() {
     if (!updateCustomSubject(name, { name: trimmed, color: hexToColor(formColor), emoji: formEmoji })) {
       setError('Já existe uma matéria com esse nome.')
       return
+    }
+    if (trimmed !== name) {
+      try {
+        await reassignSubject(name, trimmed)
+      } catch (err) {
+        console.error('Erro ao atualizar matéria em documentos/vídeos:', err)
+      }
     }
     editNameRef.current = trimmed
     closeMenu()

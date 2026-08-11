@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useRef, useState } from 'react'
-import { useCreateBlockNote } from '@blocknote/react'
+import { useCreateBlockNote, useActiveStyles, useSelectedBlocks } from '@blocknote/react'
+import { SuggestionMenu } from '@blocknote/core'
 import { BlockNoteView } from '@blocknote/mantine'
 import '@blocknote/mantine/style.css'
 import type { DocMeta } from '../types/doc'
@@ -57,6 +58,10 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
       ? doc.content
       : [{ type: 'heading', props: { level: 1 }, content: [{ type: 'text', text: doc.title, styles: {} }] }],
   })
+
+  const activeStyles = useActiveStyles(editor)
+  const selectedBlocks = useSelectedBlocks(editor)
+  const activeBlock = selectedBlocks[0]
 
   const titleRef = useRef<HTMLInputElement>(null)
   const titleValue = useRef(doc.title)
@@ -152,6 +157,10 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
+      if (e.key === ' ') {
+        const sm = editor.getExtension(SuggestionMenu)
+        if (sm?.shown()) sm.closeMenu()
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
         handleSave()
@@ -170,7 +179,7 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
-  }, [handleSave, flushSave, onCancel])
+  }, [handleSave, flushSave, onCancel, editor])
 
   const reportSpellStatus = useCallback((s: SpellCheckStatus) => {
     if (s.error) setSpellDebug(`erro: ${s.error}`)
@@ -419,20 +428,20 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
 
       <div className="doc-format-bar">
         <div className="doc-format-group">
-          <ToolbarBtn title="Parágrafo" onClick={fmt.paragraph}>
+          <ToolbarBtn title="Parágrafo" active={activeBlock?.type === 'paragraph'} onClick={fmt.paragraph}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="6" x2="21" y2="6" />
               <line x1="3" y1="12" x2="15" y2="12" />
               <line x1="3" y1="18" x2="18" y2="18" />
             </svg>
           </ToolbarBtn>
-          <ToolbarBtn title="Título 1" onClick={fmt.heading1}>
+          <ToolbarBtn title="Título 1" active={activeBlock?.type === 'heading' && activeBlock.props.level === 1} onClick={fmt.heading1}>
             <span className="doc-toolbar-label">H1</span>
           </ToolbarBtn>
-          <ToolbarBtn title="Título 2" onClick={fmt.heading2}>
+          <ToolbarBtn title="Título 2" active={activeBlock?.type === 'heading' && activeBlock.props.level === 2} onClick={fmt.heading2}>
             <span className="doc-toolbar-label">H2</span>
           </ToolbarBtn>
-          <ToolbarBtn title="Título 3" onClick={fmt.heading3}>
+          <ToolbarBtn title="Título 3" active={activeBlock?.type === 'heading' && activeBlock.props.level === 3} onClick={fmt.heading3}>
             <span className="doc-toolbar-label">H3</span>
           </ToolbarBtn>
         </div>
@@ -440,33 +449,33 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
         <ToolbarSep />
 
         <div className="doc-format-group">
-          <ToolbarBtn title="Negrito (Ctrl+B)" onClick={fmt.toggleBold}>
+          <ToolbarBtn title="Negrito (Ctrl+B)" active={!!activeStyles.bold} onClick={fmt.toggleBold}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
               <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
             </svg>
           </ToolbarBtn>
-          <ToolbarBtn title="Itálico (Ctrl+I)" onClick={fmt.toggleItalic}>
+          <ToolbarBtn title="Itálico (Ctrl+I)" active={!!activeStyles.italic} onClick={fmt.toggleItalic}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="4" x2="10" y2="4" />
               <line x1="14" y1="20" x2="5" y2="20" />
               <line x1="15" y1="4" x2="9" y2="20" />
             </svg>
           </ToolbarBtn>
-          <ToolbarBtn title="Sublinhado (Ctrl+U)" onClick={fmt.toggleUnderline}>
+          <ToolbarBtn title="Sublinhado (Ctrl+U)" active={!!activeStyles.underline} onClick={fmt.toggleUnderline}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3" />
               <line x1="4" y1="21" x2="20" y2="21" />
             </svg>
           </ToolbarBtn>
-          <ToolbarBtn title="Tachado" onClick={fmt.toggleStrike}>
+          <ToolbarBtn title="Tachado" active={!!activeStyles.strike} onClick={fmt.toggleStrike}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M16 4H9a3 3 0 0 0-2.83 4" />
               <path d="M14 12a4 4 0 0 1 0 8H6" />
               <line x1="4" y1="12" x2="20" y2="12" />
             </svg>
           </ToolbarBtn>
-          <ToolbarBtn title="Marca-texto" onClick={fmt.toggleHighlight}>
+          <ToolbarBtn title="Marca-texto" active={activeStyles.backgroundColor === 'yellow'} onClick={fmt.toggleHighlight}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 20h9" />
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
@@ -477,7 +486,7 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
         <ToolbarSep />
 
         <div className="doc-format-group">
-          <ToolbarBtn title="Lista com marcadores" onClick={fmt.bulletList}>
+          <ToolbarBtn title="Lista com marcadores" active={activeBlock?.type === 'bulletListItem'} onClick={fmt.bulletList}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="9" y1="6" x2="20" y2="6" />
               <line x1="9" y1="12" x2="20" y2="12" />
@@ -487,7 +496,7 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
               <circle cx="5" cy="18" r="1" fill="currentColor" />
             </svg>
           </ToolbarBtn>
-              <ToolbarBtn title="Lista numerada" onClick={fmt.numberedList}>
+              <ToolbarBtn title="Lista numerada" active={activeBlock?.type === 'numberedListItem'} onClick={fmt.numberedList}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="10" y1="6" x2="21" y2="6" />
               <line x1="10" y1="12" x2="21" y2="12" />
@@ -497,7 +506,7 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
               <text x="4" y="20" fontSize="7" fill="currentColor" stroke="none" fontFamily="Inter">3</text>
             </svg>
           </ToolbarBtn>
-          <ToolbarBtn title="Lista de tarefas" onClick={fmt.checkList}>
+          <ToolbarBtn title="Lista de tarefas" active={activeBlock?.type === 'checkListItem'} onClick={fmt.checkList}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="5" width="6" height="6" rx="1" />
               <polyline points="4.5 8 6 9.5 8 6.5" />
@@ -511,7 +520,7 @@ export default function DocEditor({ doc, onSave, onAutoSave, onCancel }: DocEdit
         <ToolbarSep />
 
         <div className="doc-format-group">
-          <ToolbarBtn title="Código inline" onClick={fmt.inlineCode}>
+          <ToolbarBtn title="Código inline" active={!!activeStyles.code} onClick={fmt.inlineCode}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="16 18 22 12 16 6" />
               <polyline points="8 6 2 12 8 18" />
