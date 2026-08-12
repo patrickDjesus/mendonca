@@ -6,6 +6,7 @@ import type { DocMeta, Subject } from '../types/doc'
 import { NA_SUBJECT } from '../types/doc'
 import type { VideoMeta, VideoNote, MasteryStage } from '../types/video'
 import type { Flashcard, FlashcardGroup } from '../types/flashcard'
+import type { Redacao, RedacaoCorrection } from '../types/redacao'
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -1471,5 +1472,73 @@ export async function updateFlashcardGroup(groupId: string, input: FlashcardGrou
 export async function deleteFlashcardGroup(groupId: string): Promise<void> {
   const userId = await getUserId()
   const { error } = await supabase.from('flashcard_groups').delete().eq('id', groupId).eq('user_id', userId)
+  if (error) throw error
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REDAÇÕES
+   ═══════════════════════════════════════════════════════════ */
+
+function rowToRedacao(row: Record<string, unknown>): Redacao {
+  const correction = row.correction as RedacaoCorrection | null | undefined
+  return {
+    id: row.id as string,
+    themeId: row.theme_id as string,
+    themeTitle: row.theme_title as string,
+    themeFonte: (row.theme_fonte as string) || '',
+    text: row.text as string,
+    grade: (row.grade as number) || 0,
+    correction: correction && typeof correction === 'object' ? correction : { grade: 0, resumo: '', competencias: [], marcas: [], comentarios: [], sugestoesReescrita: [], conectivos: { usados: [], sugestao: '' } },
+    createdAt: new Date(row.created_at as string).getTime(),
+    updatedAt: new Date(row.updated_at as string).getTime(),
+  }
+}
+
+export async function fetchRedacoes(): Promise<Redacao[]> {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('redacoes')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data || []).map(rowToRedacao)
+}
+
+export async function createRedacao(input: Omit<Redacao, 'id' | 'createdAt' | 'updatedAt'>): Promise<Redacao> {
+  const userId = await getUserId()
+  const id = uid()
+  const now = new Date().toISOString()
+  const { error } = await supabase.from('redacoes').insert({
+    id,
+    user_id: userId,
+    theme_id: input.themeId,
+    theme_title: input.themeTitle,
+    theme_fonte: input.themeFonte || null,
+    text: input.text,
+    grade: input.grade,
+    correction: input.correction as unknown as Record<string, unknown>,
+    created_at: now,
+    updated_at: now,
+  })
+
+  if (error) throw error
+  return {
+    id,
+    themeId: input.themeId,
+    themeTitle: input.themeTitle,
+    themeFonte: input.themeFonte,
+    text: input.text,
+    grade: input.grade,
+    correction: input.correction,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  }
+}
+
+export async function deleteRedacao(id: string): Promise<void> {
+  const userId = await getUserId()
+  const { error } = await supabase.from('redacoes').delete().eq('id', id).eq('user_id', userId)
   if (error) throw error
 }
