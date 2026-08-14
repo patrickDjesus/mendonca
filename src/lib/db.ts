@@ -6,6 +6,7 @@ import type { DocMeta, Subject } from '../types/doc'
 import { NA_SUBJECT } from '../types/doc'
 import type { VideoMeta, VideoNote, MasteryStage } from '../types/video'
 import type { Flashcard, FlashcardGroup } from '../types/flashcard'
+import type { RedacaoModel } from '../types/redacao'
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -1471,5 +1472,95 @@ export async function updateFlashcardGroup(groupId: string, input: FlashcardGrou
 export async function deleteFlashcardGroup(groupId: string): Promise<void> {
   const userId = await getUserId()
   const { error } = await supabase.from('flashcard_groups').delete().eq('id', groupId).eq('user_id', userId)
+  if (error) throw error
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REDAÇÃO MODELS (Treino de Redação)
+   ═══════════════════════════════════════════════════════════ */
+
+export async function fetchRedacaoModels(): Promise<RedacaoModel[]> {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('redacao_models')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data || []).map(rowToRedacaoModel)
+}
+
+export async function createRedacaoModel(input: { title: string; content: string }): Promise<RedacaoModel> {
+  const userId = await getUserId()
+  const now = new Date().toISOString()
+  const model: RedacaoModel = {
+    id: uid(),
+    title: input.title,
+    content: input.content,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  }
+  const { error } = await supabase.from('redacao_models').insert({
+    id: model.id,
+    user_id: userId,
+    title: model.title,
+    content: model.content,
+    created_at: now,
+    updated_at: now,
+  })
+  if (error) throw error
+  return model
+}
+
+export async function updateRedacaoModel(id: string, patch: { title?: string; content?: string }): Promise<void> {
+  const userId = await getUserId()
+  const row: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (patch.title !== undefined) row.title = patch.title
+  if (patch.content !== undefined) row.content = patch.content
+
+  const { error } = await supabase.from('redacao_models').update(row).eq('id', id).eq('user_id', userId)
+  if (error) throw error
+}
+
+export async function deleteRedacaoModel(id: string): Promise<void> {
+  const userId = await getUserId()
+  const { error } = await supabase.from('redacao_models').delete().eq('id', id).eq('user_id', userId)
+  if (error) throw error
+}
+
+function rowToRedacaoModel(row: Record<string, unknown>): RedacaoModel {
+  return {
+    id: row.id as string,
+    title: row.title as string,
+    content: row.content as string,
+    createdAt: new Date(row.created_at as string).getTime(),
+    updatedAt: new Date(row.updated_at as string).getTime(),
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHANGELOG SEEN (Novidades)
+   ═══════════════════════════════════════════════════════════ */
+
+export async function fetchLastSeenChangelogId(): Promise<string | null> {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('changelog_seen')
+    .select('last_seen_id')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (error) throw error
+  return (data?.last_seen_id as string) ?? null
+}
+
+export async function saveSeenChangelogId(lastSeenId: string): Promise<void> {
+  const userId = await getUserId()
+  const now = new Date().toISOString()
+  const { error } = await supabase
+    .from('changelog_seen')
+    .upsert({ user_id: userId, last_seen_id: lastSeenId, updated_at: now }, { onConflict: 'user_id' })
+
   if (error) throw error
 }

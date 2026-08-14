@@ -1,14 +1,45 @@
-import { useEffect, useState } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { recordAction } from '../../lib/db'
 import ToolWheel from '../../components/ToolWheel'
+import Changelog from '../../components/Changelog'
 import '../../styles/home.css'
 
 export default function HomePage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [userName, setUserName] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const [submenuPos, setSubmenuPos] = useState<{ top: number; left: number } | null>(null)
+  const moreBtnRef = useRef<HTMLButtonElement>(null)
+  const submenuRef = useRef<HTMLDivElement>(null)
+
+  const moreActive = location.pathname === '/home/perfil' || location.pathname === '/home/treino'
+
+  useEffect(() => {
+    if (!moreOpen) return
+    const onDown = (e: MouseEvent) => {
+      if (moreBtnRef.current?.contains(e.target as Node)) return
+      if (submenuRef.current?.contains(e.target as Node)) return
+      setMoreOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [moreOpen])
+
+  const toggleMore = () => {
+    const next = !moreOpen
+    if (next && moreBtnRef.current) {
+      const rect = moreBtnRef.current.getBoundingClientRect()
+      setSubmenuPos({
+        top: Math.max(rect.top, 10),
+        left: Math.min(rect.right + 10, window.innerWidth - 212),
+      })
+    }
+    setMoreOpen(next)
+  }
 
   useEffect(() => {
     let mounted = true
@@ -98,15 +129,44 @@ export default function HomePage() {
             <span>Flash Cards</span>
           </NavLink>
 
-          <NavLink to="/home/perfil" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
+          <button
+            ref={moreBtnRef}
+            type="button"
+            className={`sidebar-item sidebar-more ${moreActive || moreOpen ? 'open' : ''}`}
+            onClick={toggleMore}
+            aria-expanded={moreOpen}
+            aria-label="Mais opções"
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
             </svg>
-            <span>Perfil</span>
-          </NavLink>
+            <span>Mais opções</span>
+          </button>
 
         </nav>
+
+        {moreOpen && submenuPos && (
+          <div className="sidebar-submenu" ref={submenuRef} style={{ top: submenuPos.top, left: submenuPos.left }}>
+            <NavLink to="/home/perfil" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`} onClick={() => setMoreOpen(false)}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <span>Perfil</span>
+            </NavLink>
+
+            <NavLink to="/home/treino" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`} onClick={() => setMoreOpen(false)}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+              </svg>
+              <span>Treino</span>
+            </NavLink>
+          </div>
+        )}
 
         <div className="sidebar-divider" />
 
@@ -126,6 +186,7 @@ export default function HomePage() {
         <Outlet context={{ userName }} />
       </main>
       <ToolWheel />
+      <Changelog />
     </div>
   )
 }

@@ -128,6 +128,91 @@
 }
 
 /* ================================
+   Sidebar "Mais opções" Submenu
+   ================================ */
+.sidebar-more {
+  background: none;
+  border: none;
+  font-family: inherit;
+  width: 100%;
+}
+
+.sidebar-more.open {
+  background: rgba(200, 180, 140, 0.12);
+  color: #e8dcc8;
+}
+
+.sidebar-more.open::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: #a89878;
+  border-radius: 0 2px 2px 0;
+}
+
+.sidebar-submenu {
+  position: fixed;
+  z-index: 120;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: linear-gradient(180deg, #1e1a16, #1a1612);
+  border: 1px solid rgba(200, 180, 140, 0.16);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(200, 180, 140, 0.06);
+  animation: submenuSlideIn 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: left center;
+}
+
+@keyframes submenuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.sidebar-submenu .sidebar-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.sidebar-submenu .sidebar-item svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.sidebar-submenu .sidebar-item span {
+  position: static;
+  opacity: 1;
+  bottom: auto;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sidebar-submenu .sidebar-item.active {
+  background: rgba(200, 180, 140, 0.14);
+  color: #e8dcc8;
+}
+
+/* ================================
    Sidebar Divider
    ================================ */
 .sidebar-divider {
