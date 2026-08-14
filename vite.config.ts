@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { apiDevPlugin } from './server/vite-api-plugin.ts'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), apiDevPlugin()],
   optimizeDeps: {
     include: ['pdfjs-dist'],
   },

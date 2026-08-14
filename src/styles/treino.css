@@ -1,0 +1,969 @@
+/* ═══════════════════════════════════════════════════════════
+   TREINO — Writing & Math Trainer
+   ═══════════════════════════════════════════════════════════ */
+
+.treino-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.treino-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  background: none;
+  border: 1px solid rgba(200, 180, 140, 0.12);
+  border-radius: 10px;
+  padding: 8px 14px;
+  color: #8a7a6a;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.treino-back:hover {
+  background: rgba(200, 180, 140, 0.08);
+  color: #c8b898;
+  border-color: rgba(200, 180, 140, 0.25);
+}
+
+.treino-back svg {
+  width: 16px;
+  height: 16px;
+}
+
+.treino-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.treino-title {
+  font-family: 'Caveat', cursive;
+  font-size: 40px;
+  font-weight: 700;
+  color: #e8dcc8;
+  margin: 0;
+}
+
+.treino-subtitle {
+  font-size: 14px;
+  color: #8a7a6a;
+  margin: 0;
+}
+
+/* ── Mode selection ─────────────────────────────────────── */
+
+.treino-mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.treino-mode-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(200, 180, 140, 0.12);
+  background: rgba(200, 180, 140, 0.05);
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: all 0.2s ease;
+  position: relative;
+  text-align: center;
+}
+
+.treino-mode-card:hover {
+  background: rgba(200, 180, 140, 0.09);
+  border-color: rgba(200, 180, 140, 0.25);
+  transform: translateY(-2px);
+}
+
+.treino-mode-card-soon {
+  opacity: 0.9;
+}
+
+.treino-mode-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.treino-mode-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.treino-mode-icon-redacao {
+  background: rgba(218, 160, 60, 0.12);
+  color: #daa03c;
+}
+
+.treino-mode-icon-matematica {
+  background: rgba(80, 140, 200, 0.12);
+  color: #508cc8;
+}
+
+.treino-mode-name {
+  font-family: 'Caveat', cursive;
+  font-size: 26px;
+  font-weight: 600;
+  color: #e8dcc8;
+}
+
+.treino-mode-desc {
+  font-size: 13px;
+  color: #8a7a6a;
+  line-height: 1.5;
+}
+
+.treino-mode-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1a1410;
+  background: #daa03c;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+/* ── Math levels ────────────────────────────────────────── */
+
+.treino-math-levels {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.treino-level-chip {
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(200, 180, 140, 0.15);
+  background: rgba(200, 180, 140, 0.06);
+  color: #8a7a6a;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.treino-level-chip:hover {
+  border-color: rgba(200, 180, 140, 0.3);
+  color: #c8b898;
+}
+
+.treino-level-chip.active {
+  background: rgba(218, 160, 60, 0.2);
+  border-color: rgba(218, 160, 60, 0.5);
+  color: #f0c46a;
+}
+
+.treino-math-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.treino-math-level-desc {
+  font-size: 14px;
+  color: #c8b898;
+  margin: 0;
+}
+
+.treino-math-training {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.treino-math-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.treino-math-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(200, 180, 140, 0.12);
+  background: rgba(200, 180, 140, 0.04);
+}
+
+.treino-math-stat-label {
+  font-size: 11px;
+  color: #8a7a6a;
+  text-align: center;
+}
+
+.treino-math-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #f0c46a;
+  font-variant-numeric: tabular-nums;
+}
+
+.treino-math-card {
+  background: #1e1b17;
+  border: 1px solid rgba(200, 180, 140, 0.14);
+  border-radius: 16px;
+  padding: 36px 32px 32px;
+  cursor: text;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.treino-math-level-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a7a6a;
+}
+
+.treino-math-question {
+  font-size: 40px;
+  font-weight: 700;
+  color: #e8dcc8;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  animation: questionIn 0.25s ease-out;
+  text-align: center;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+}
+
+@keyframes questionIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.treino-math-input {
+  width: 100%;
+  max-width: 220px;
+  height: 52px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  border-radius: 12px;
+  border: 1px solid rgba(218, 160, 60, 0.4);
+  background: rgba(218, 160, 60, 0.06);
+  color: #f0c46a;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.treino-math-input::placeholder {
+  color: #6a5a4a;
+}
+
+.treino-math-input:focus {
+  border-color: rgba(218, 160, 60, 0.75);
+  box-shadow: 0 0 0 3px rgba(218, 160, 60, 0.12);
+}
+
+.treino-math-input:disabled {
+  opacity: 0.6;
+}
+
+.treino-math-feedback-slot {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.treino-math-feedback {
+  font-size: 16px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 999px;
+  animation: feedbackIn 0.2s ease-out;
+}
+
+.treino-math-feedback.correct {
+  color: #3ca064;
+  background: rgba(60, 160, 100, 0.15);
+  border: 1px solid rgba(60, 160, 100, 0.4);
+}
+
+.treino-math-feedback.wrong {
+  color: #e87070;
+  background: rgba(232, 112, 112, 0.12);
+  border: 1px solid rgba(232, 112, 112, 0.4);
+}
+
+@keyframes feedbackIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.treino-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 60px 24px;
+  border: 1px dashed rgba(200, 180, 140, 0.15);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.treino-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(200, 180, 140, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6a5a4a;
+  margin-bottom: 4px;
+}
+
+.treino-empty-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.treino-empty-title {
+  font-family: 'Caveat', cursive;
+  font-size: 26px;
+  font-weight: 600;
+  color: #c8b898;
+  margin: 0;
+}
+
+.treino-empty-desc {
+  font-size: 13px;
+  color: #8a7a6a;
+  margin: 0;
+  max-width: 300px;
+}
+
+/* ── Redação setup ──────────────────────────────────────── */
+
+.treino-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.treino-textarea {
+  width: 100%;
+  background-color: #1e1b17;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 26px,
+    rgba(218, 160, 60, 0.14) 26px,
+    rgba(218, 160, 60, 0.14) 27px
+  );
+  background-attachment: local;
+  border: 1px solid rgba(200, 180, 140, 0.14);
+  border-radius: 14px;
+  padding: 27px 18px 18px;
+  color: #e8dcc8;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 18px;
+  line-height: 27px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.treino-textarea::placeholder {
+  color: #6a5a4a;
+}
+
+.treino-textarea:focus {
+  border-color: rgba(218, 160, 60, 0.45);
+}
+
+.treino-setup-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: #8a7a6a;
+  line-height: 1.5;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(218, 160, 60, 0.06);
+  border: 1px solid rgba(218, 160, 60, 0.15);
+}
+
+.treino-setup-hint svg {
+  width: 18px;
+  height: 18px;
+  color: #daa03c;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.treino-saved-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid rgba(200, 180, 140, 0.12);
+  border-radius: 12px;
+  background: rgba(200, 180, 140, 0.04);
+}
+
+.treino-saved-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.treino-saved-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #c8b898;
+}
+
+.treino-saved-label svg {
+  width: 16px;
+  height: 16px;
+  color: #daa03c;
+}
+
+.treino-saved-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(218, 160, 60, 0.35);
+  background: rgba(218, 160, 60, 0.1);
+  color: #daa03c;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.treino-saved-toggle:hover:not(:disabled) {
+  background: rgba(218, 160, 60, 0.2);
+  border-color: rgba(218, 160, 60, 0.55);
+}
+
+.treino-saved-toggle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.treino-saved-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+.treino-saved-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.treino-saved-select {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(200, 180, 140, 0.14);
+  background: #1e1b17;
+  color: #e8dcc8;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.treino-saved-select:focus {
+  border-color: rgba(218, 160, 60, 0.45);
+}
+
+.treino-saved-import {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 9px;
+  border: 1px solid rgba(200, 180, 140, 0.16);
+  background: rgba(200, 180, 140, 0.08);
+  color: #c8b898;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.treino-saved-import:hover:not(:disabled) {
+  background: rgba(200, 180, 140, 0.16);
+  border-color: rgba(200, 180, 140, 0.3);
+}
+
+.treino-saved-import:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.treino-saved-delete {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  border: 1px solid rgba(200, 80, 80, 0.2);
+  background: rgba(200, 80, 80, 0.08);
+  color: #c87070;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.treino-saved-delete:hover:not(:disabled) {
+  background: rgba(200, 80, 80, 0.18);
+  border-color: rgba(200, 80, 80, 0.4);
+}
+
+.treino-saved-delete:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.treino-saved-delete svg {
+  width: 16px;
+  height: 16px;
+}
+
+.treino-saved-empty {
+  font-size: 12px;
+  color: #6a5a4a;
+  margin: 0;
+}
+
+.treino-save-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.treino-save-input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(218, 160, 60, 0.35);
+  background: #1e1b17;
+  color: #e8dcc8;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.treino-save-input::placeholder {
+  color: #6a5a4a;
+}
+
+.treino-save-input:focus {
+  border-color: rgba(218, 160, 60, 0.6);
+}
+
+.treino-save-btn {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 9px;
+  border: 1px solid rgba(218, 160, 60, 0.4);
+  background: linear-gradient(145deg, rgba(218, 160, 60, 0.35), rgba(218, 160, 60, 0.18));
+  color: #1a1410;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.treino-save-btn:hover:not(:disabled) {
+  background: linear-gradient(145deg, rgba(218, 160, 60, 0.5), rgba(218, 160, 60, 0.32));
+}
+
+.treino-save-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.treino-save-cancel {
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: none;
+  background: none;
+  color: #8a7a6a;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.treino-save-cancel:hover {
+  color: #c87070;
+}
+
+.treino-start-btn {
+  align-self: center;
+  padding: 14px 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(218, 160, 60, 0.4);
+  background: linear-gradient(145deg, rgba(218, 160, 60, 0.35), rgba(218, 160, 60, 0.18));
+  color: #1a1410;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.treino-start-btn:hover:not(:disabled) {
+  background: linear-gradient(145deg, rgba(218, 160, 60, 0.5), rgba(218, 160, 60, 0.32));
+  transform: translateY(-1px);
+}
+
+.treino-start-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Training view ──────────────────────────────────────── */
+
+.treino-training {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.treino-training-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.treino-progress-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.treino-part-label {
+  font-size: 12px;
+  color: #8a7a6a;
+  white-space: nowrap;
+}
+
+.treino-progress-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(200, 180, 140, 0.1);
+  overflow: hidden;
+}
+
+.treino-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #a87830, #daa03c);
+  transition: width 0.2s ease;
+}
+
+.treino-overall {
+  font-size: 12px;
+  font-weight: 700;
+  color: #daa03c;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.treino-timer {
+  font-size: 14px;
+  font-weight: 700;
+  color: #c8b898;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  background: rgba(200, 180, 140, 0.06);
+  border: 1px solid rgba(200, 180, 140, 0.12);
+  padding: 6px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.treino-typing-card {
+  position: relative;
+  background: #1e1b17;
+  border: 1px solid rgba(200, 180, 140, 0.14);
+  border-radius: 16px;
+  padding: 40px 32px;
+  cursor: text;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.treino-typing-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 35px,
+    rgba(218, 160, 60, 0.06) 35px,
+    rgba(218, 160, 60, 0.06) 36px
+  );
+  pointer-events: none;
+  border-radius: 16px;
+}
+
+.treino-ghost {
+  position: relative;
+  z-index: 1;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 22px;
+  line-height: 36px;
+  color: #e8dcc8;
+  max-width: 100%;
+  overflow-wrap: normal;
+  white-space: normal;
+  user-select: none;
+  animation: partIn 0.35s ease-out;
+}
+
+@keyframes partIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.treino-char {
+  transition: opacity 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+  border-radius: 3px;
+}
+
+.treino-char.ghost {
+  opacity: 0.45;
+  color: #c8b898;
+}
+
+.treino-char.done {
+  opacity: 0.12;
+}
+
+.treino-char.current {
+  opacity: 1;
+  color: #f0c46a;
+  background: rgba(218, 160, 60, 0.18);
+  box-shadow: 0 1px 0 0 #daa03c;
+}
+
+.treino-char.current.error {
+  color: #e87070;
+  background: rgba(232, 112, 112, 0.2);
+  box-shadow: 0 1px 0 0 #e85050;
+}
+
+.treino-typing-hint {
+  position: relative;
+  z-index: 1;
+  margin-top: 24px;
+  font-size: 12px;
+  color: #6a5a4a;
+  text-align: center;
+}
+
+.treino-hidden-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.treino-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.treino-ghost-btn {
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: 1px solid rgba(200, 180, 140, 0.16);
+  background: rgba(200, 180, 140, 0.07);
+  color: #c8b898;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.treino-ghost-btn:hover {
+  background: rgba(200, 180, 140, 0.15);
+  border-color: rgba(200, 180, 140, 0.3);
+}
+
+/* ── Done ───────────────────────────────────────────────── */
+
+.treino-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 56px 24px;
+  border: 1px solid rgba(200, 180, 140, 0.12);
+  border-radius: 16px;
+  background: rgba(200, 180, 140, 0.04);
+  text-align: center;
+}
+
+.treino-done-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(60, 160, 100, 0.15);
+  border: 1px solid rgba(60, 160, 100, 0.4);
+  color: #3ca064;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: donePop 0.35s ease-out;
+}
+
+.treino-done-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+@keyframes donePop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.treino-done-title {
+  font-family: 'Caveat', cursive;
+  font-size: 30px;
+  font-weight: 600;
+  color: #e8dcc8;
+  margin: 0;
+}
+
+.treino-done-stats {
+  font-size: 13px;
+  color: #8a7a6a;
+  margin: 0;
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .treino-mode-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .treino-saved-row {
+    flex-wrap: wrap;
+  }
+
+  .treino-saved-select {
+    flex-basis: 100%;
+  }
+
+  .treino-typing-card {
+    padding: 28px 20px;
+  }
+
+  .treino-math-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .treino-math-question {
+    font-size: 32px;
+  }
+
+  .treino-title {
+    font-size: 32px;
+  }
+}

@@ -76,7 +76,7 @@ export default function Documentos() {
     return matchSearch && matchSubject
   }), [docs, searchQuery, subjectFilter])
 
-  const visibleFiltered = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount])
+  const visibleFiltered = useMemo(() => (activeTab === 'public' ? filtered.slice(0, visibleCount) : filtered), [activeTab, filtered, visibleCount])
 
   const openDoc = useCallback((doc: DocMeta) => {
     if (doc.type === 'pdf') {
