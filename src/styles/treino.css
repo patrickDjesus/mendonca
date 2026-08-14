@@ -63,7 +63,7 @@
 
 .treino-mode-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 20px;
 }
 
@@ -117,6 +117,11 @@
 .treino-mode-icon-matematica {
   background: rgba(80, 140, 200, 0.12);
   color: #508cc8;
+}
+
+.treino-mode-icon-tabela {
+  background: rgba(80, 200, 160, 0.12);
+  color: #50c8a0;
 }
 
 .treino-mode-name {
@@ -269,6 +274,63 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.treino-table-element {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(80, 200, 160, 0.16);
+  background: rgba(80, 200, 160, 0.05);
+  animation: questionIn 0.25s ease-out;
+}
+
+.treino-table-number {
+  font-size: 13px;
+  font-weight: 700;
+  color: #50c8a0;
+  letter-spacing: 0.08em;
+}
+
+.treino-table-symbol {
+  font-size: 76px;
+  font-weight: 700;
+  line-height: 1;
+  color: #e8dcc8;
+}
+
+.treino-table-mass {
+  font-size: 13px;
+  color: #8a7a6a;
+  font-variant-numeric: tabular-nums;
+}
+
+.treino-table-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  animation: questionIn 0.25s ease-out;
+}
+
+.treino-table-fact {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #b8a890;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(80, 200, 160, 0.12);
+  background: rgba(80, 200, 160, 0.05);
+}
+
+.treino-table-fact strong {
+  color: #50c8a0;
+  font-weight: 700;
 }
 
 .treino-math-input {

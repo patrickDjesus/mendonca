@@ -1,9 +1,27 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchRedacaoModels, createRedacaoModel, deleteRedacaoModel } from '../../lib/db'
+import { PERIODIC_TABLE } from '../../data/periodicTable'
+import type { PeriodicElement } from '../../data/periodicTable'
 import type { RedacaoModel } from '../../types/redacao'
 import '../../styles/treino.css'
 
 type MathLevel = 'facil' | 'medio' | 'dificil'
+
+type TableLevel = 'facil' | 'medio' | 'dificil'
+
+const TABLE_LEVELS: { id: TableLevel; label: string; desc: string }[] = [
+  { id: 'facil', label: 'Fácil', desc: 'Informações gerais e onde o elemento é usado' },
+  { id: 'medio', label: 'Médio', desc: 'Número atômico, símbolo e massa' },
+  { id: 'dificil', label: 'Difícil', desc: 'Apenas o símbolo' },
+]
+
+function normalizeText(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
 
 const MATH_LEVELS: { id: MathLevel; label: string; desc: string }[] = [
   { id: 'facil', label: 'Fácil', desc: 'Contas de 1 dígito' },
@@ -149,7 +167,7 @@ function formatTime(totalSeconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
 }
 
-type View = 'menu' | 'redacao' | 'matematica'
+type View = 'menu' | 'redacao' | 'matematica' | 'tabela'
 type Stage = 'setup' | 'training' | 'done'
 
 export default function Treino() {
@@ -172,9 +190,18 @@ export default function Treino() {
   const [mathFeedback, setMathFeedback] = useState<{ answerText: string } | null>(null)
   const [mathStats, setMathStats] = useState({ correct: 0, wrong: 0, streak: 0, best: 0 })
   const [mathRound, setMathRound] = useState(0)
+  const [tableLevel, setTableLevel] = useState(TABLE_LEVELS[0])
+  const [tableStage, setTableStage] = useState<'setup' | 'playing'>('setup')
+  const [tableElement, setTableElement] = useState<PeriodicElement | null>(null)
+  const [tableInput, setTableInput] = useState('')
+  const [tableFeedback, setTableFeedback] = useState<{ name: string } | null>(null)
+  const [tableStats, setTableStats] = useState({ correct: 0, wrong: 0, streak: 0, best: 0 })
+  const [tableRound, setTableRound] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const mathInputRef = useRef<HTMLInputElement>(null)
   const mathTimerRef = useRef<number | null>(null)
+  const tableInputRef = useRef<HTMLInputElement>(null)
+  const tableTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (view !== 'redacao') return
@@ -205,6 +232,7 @@ export default function Treino() {
   useEffect(() => {
     return () => {
       if (mathTimerRef.current) window.clearTimeout(mathTimerRef.current)
+      if (tableTimerRef.current) window.clearTimeout(tableTimerRef.current)
     }
   }, [])
 
@@ -392,6 +420,99 @@ export default function Treino() {
     }
   }
 
+  const randomElement = () => PERIODIC_TABLE[Math.floor(Math.random() * PERIODIC_TABLE.length)]
+
+  const startTable = () => {
+    if (tableTimerRef.current) window.clearTimeout(tableTimerRef.current)
+    setTableStage('playing')
+    setTableStats({ correct: 0, wrong: 0, streak: 0, best: 0 })
+    setTableInput('')
+    setTableFeedback(null)
+    setTableRound(r => r + 1)
+    setTableElement(randomElement())
+  }
+
+  const resetTable = () => startTable()
+
+  const exitTable = () => {
+    if (tableTimerRef.current) window.clearTimeout(tableTimerRef.current)
+    setTableStage('setup')
+    setTableElement(null)
+    setTableFeedback(null)
+    setTableInput('')
+  }
+
+  const selectTableLevel = (level: (typeof TABLE_LEVELS)[number]) => {
+    setTableLevel(level)
+    setTableStage('setup')
+    setTableElement(null)
+    setTableFeedback(null)
+    setTableInput('')
+  }
+
+  const nextTable = () => {
+    if (tableTimerRef.current) window.clearTimeout(tableTimerRef.current)
+    setTableElement(randomElement())
+    setTableRound(r => r + 1)
+    setTableInput('')
+    setTableFeedback(null)
+    tableInputRef.current?.focus()
+  }
+
+  const countTableResult = (correct: boolean) => {
+    setTableStats(prev => {
+      const streak = correct ? prev.streak + 1 : 0
+      return {
+        correct: prev.correct + (correct ? 1 : 0),
+        wrong: prev.wrong + (correct ? 0 : 1),
+        streak,
+        best: Math.max(prev.best, streak),
+      }
+    })
+  }
+
+  const submitTable = () => {
+    if (!tableElement) return
+    const normalized = normalizeText(tableInput)
+    if (!normalized) {
+      if (tableFeedback) nextTable()
+      return
+    }
+    if (normalized === normalizeText(tableElement.name)) {
+      countTableResult(true)
+      nextTable()
+      return
+    }
+    countTableResult(false)
+    if (tableTimerRef.current) window.clearTimeout(tableTimerRef.current)
+    setTableFeedback({ name: tableElement.name })
+    setTableInput('')
+    tableTimerRef.current = window.setTimeout(nextTable, 800)
+    tableInputRef.current?.focus()
+  }
+
+  const handleTableChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (tableFeedback) {
+      setTableFeedback(null)
+      if (tableTimerRef.current) window.clearTimeout(tableTimerRef.current)
+    }
+    const v = e.target.value.replace(/[^a-zA-Z\u00C0-\u024F\s-]/g, '')
+    setTableInput(v)
+    if (tableElement) {
+      if (normalizeText(v) === normalizeText(tableElement.name)) {
+        countTableResult(true)
+        nextTable()
+      }
+    }
+  }
+
+  const handleTableKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      submitTable()
+    }
+  }
+
   if (view === 'menu') {
     return (
       <div className="treino-page">
@@ -423,6 +544,17 @@ export default function Treino() {
             </div>
             <span className="treino-mode-name">Matemática</span>
             <span className="treino-mode-desc">Treino por níveis escolhíveis</span>
+          </button>
+
+          <button type="button" className="treino-mode-card" onClick={() => setView('tabela')}>
+            <div className="treino-mode-icon treino-mode-icon-tabela">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+                <path d="M4 9h16M4 14h16M9 4v16M14 4v16" />
+              </svg>
+            </div>
+            <span className="treino-mode-name">Tabela Periódica</span>
+            <span className="treino-mode-desc">Veja o símbolo e adivinhe o nome do elemento</span>
           </button>
         </div>
       </div>
@@ -525,6 +657,120 @@ export default function Treino() {
             <div className="treino-actions">
               <button type="button" className="treino-ghost-btn" onClick={resetMath}>Reiniciar</button>
               <button type="button" className="treino-ghost-btn" onClick={exitMath}>Trocar nível</button>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  if (view === 'tabela') {
+    return (
+      <div className="treino-page">
+        <button type="button" className="treino-back" onClick={() => setView('menu')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          Voltar
+        </button>
+
+        <div className="treino-header">
+          <h1 className="treino-title">Tabela Periódica</h1>
+          <p className="treino-subtitle">Veja o símbolo e adivinhe o nome do elemento</p>
+        </div>
+
+        {tableStage === 'setup' && (
+          <div className="treino-math-setup">
+            <div className="treino-math-levels">
+              {TABLE_LEVELS.map(level => (
+                <button
+                  key={level.id}
+                  type="button"
+                  className={`treino-level-chip ${tableLevel.id === level.id ? 'active' : ''}`}
+                  onClick={() => selectTableLevel(level)}
+                >
+                  {level.label}
+                </button>
+              ))}
+            </div>
+            <p className="treino-math-level-desc">{tableLevel.desc}</p>
+            <div className="treino-setup-hint">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
+              </svg>
+              <span>É só digitar o nome do elemento (sem acento também vale). Quando acertar, o próximo aparece na hora. Se errar, aperte Enter para ver a resposta.</span>
+            </div>
+            <button type="button" className="treino-start-btn" onClick={startTable}>
+              Começar
+            </button>
+          </div>
+        )}
+
+        {tableStage === 'playing' && tableElement && (
+          <div className="treino-math-training">
+            <div className="treino-math-stats">
+              <div className="treino-math-stat">
+                <span className="treino-math-stat-label">Acertos</span>
+                <span className="treino-math-stat-value">{tableStats.correct}</span>
+              </div>
+              <div className="treino-math-stat">
+                <span className="treino-math-stat-label">Erros</span>
+                <span className="treino-math-stat-value">{tableStats.wrong}</span>
+              </div>
+              <div className="treino-math-stat">
+                <span className="treino-math-stat-label">Sequência</span>
+                <span className="treino-math-stat-value">{tableStats.streak}</span>
+              </div>
+              <div className="treino-math-stat">
+                <span className="treino-math-stat-label">Melhor</span>
+                <span className="treino-math-stat-value">{tableStats.best}</span>
+              </div>
+            </div>
+
+            <div key={tableRound} className="treino-math-card" onClick={() => tableInputRef.current?.focus()}>
+              <span className="treino-math-level-label">{tableLevel.label} · Qual o nome deste elemento?</span>
+              <div className="treino-table-element">
+                {tableLevel.id !== 'dificil' && (
+                  <span className="treino-table-number">{tableElement.number}</span>
+                )}
+                <span className="treino-table-symbol">{tableElement.symbol}</span>
+                {tableLevel.id !== 'dificil' && (
+                  <span className="treino-table-mass">{tableElement.mass}</span>
+                )}
+              </div>
+              {tableLevel.id === 'facil' && (
+                <div className="treino-table-facts">
+                  <p className="treino-table-fact"><strong>Informações:</strong> {tableElement.info}</p>
+                  <p className="treino-table-fact"><strong>Onde é usado:</strong> {tableElement.use}</p>
+                </div>
+              )}
+              <input
+                ref={tableInputRef}
+                className="treino-math-input"
+                value={tableInput}
+                onChange={handleTableChange}
+                onKeyDown={handleTableKeyDown}
+                autoFocus
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="Digite o nome..."
+                aria-label="Digite o nome do elemento"
+              />
+              <div className="treino-math-feedback-slot">
+                {tableFeedback && (
+                  <div className="treino-math-feedback wrong">
+                    Errou! Nome: {tableFeedback.name}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="treino-actions">
+              <button type="button" className="treino-ghost-btn" onClick={resetTable}>Reiniciar</button>
+              <button type="button" className="treino-ghost-btn" onClick={exitTable}>Trocar modo</button>
             </div>
           </div>
         )}
